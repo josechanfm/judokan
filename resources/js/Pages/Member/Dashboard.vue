@@ -2,7 +2,10 @@
 import MemberLayout from "@/Layouts/MemberLayout.vue";
 import axios from "axios";
 import QRCodeVue3 from "qrcode-vue3";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
+
+const qrcodeKey = ref(0);
+const REFRESH_SECONT=5;
 
 export default {
     components: {
@@ -35,6 +38,10 @@ export default {
               },
             ],
           showQrcode:false,
+          qrcodeValue:"",
+          qrcodeKey:0,
+          qrrefresh:null,
+          refreshTimer:REFRESH_SECONT
         }
     },
     created() {
@@ -43,20 +50,26 @@ export default {
     },
     methods:{
       onShowQrcode(){
+        this.loadData();
         this.showQrcode=!this.showQrcode;
         // this.loadData();
-        // setInterval(function(){
-        //   this.loadData();
-        // }.bind(this),5000);
+        if(!this.showQrcode)
+          clearInterval(this.qrrefresh);
+        else{
+
+        this.qrrefresh = setInterval(function(){
+          this.loadData();
+         }.bind(this),REFRESH_SECONT*1000);
+        }
       },
-      // loadData(){
-      //   axios.get('/member/qrcode').then(response=>{
-      //       this.qrcode=response.data;
-      //       this.qrcode='aaaaaaaaaaaaaa'
-      //       console.log(response.data);
-      //     }
-      //   );
-      // }
+       loadData(){
+         axios.get('/member/qrcode').then(response=>{
+             this.qrcodeValue=response.data;
+             this.qrcodeKey=this.qrcodeKey+1;
+             
+           }
+         );
+       }
     }
 
 }
@@ -99,7 +112,8 @@ export default {
             <div class="bg-white relative shadow rounded-lg">
               <!-- QRcode -->
               <div class="flex flex-col justify-center items-center" v-if="showQrcode">
-                <div><QRCodeVue3 v-bind:value="qrcode" image="/images/site_logo.png" 
+                <div>
+                  <QRCodeVue3 :value=qrcodeValue image="/images/site_logo.png" 
                   :dotsOptions="{
                   type: 'dots',
                   color: '#26249a',
@@ -119,7 +133,10 @@ export default {
                 :cornersDotOptions ="{
                   color: '#e00404'
                 }"
-                /></div>
+                :key="qrcodeKey"
+                />
+                Automatic refresh every {{ refreshTimer }} seconds
+                </div>
               </div>
               <!-- card start -->
               <div class="mx-auto relative py-4 w-96 hover:scale-105 transform transition-transform mb-4">
