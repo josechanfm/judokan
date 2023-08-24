@@ -7,8 +7,6 @@
     </template>
     <div class="container mx-auto">
       <div class="bg-white relative shadow rounded-lg p-5">
-        {{ competition }}
-        {{ roles }}
         <div id="pure-html">
               <div v-html="competition.description"/>
           </div>

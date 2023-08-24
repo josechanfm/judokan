@@ -7,6 +7,7 @@ use App\Models\Classify;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Form;
 use App\Models\Member;
 use App\Models\Organization;
 
@@ -15,22 +16,29 @@ class DashboardController extends Controller
     public function index()
     {
         $member=Member::where('user_id',auth()->user()->id)->with('guardian')->first();
-
         //login user has guardian role
         if(auth()->user()->guardian){
             session(['guardian'=>auth()->user()->guardian]);
             return redirect()->route('member.guardian');
         }
-
         //login user is member
         if($member){
-            $organizations=$member->organizations;
+            // $organizations=$member->organizations;
+            //$member->organization;
             $member->portfolios;
+            $member->events;
+
+            if(count($member->organizations)<=0){
+                return redirect()->route('/');
+            }
+            $member->organizations[0]->forms;
             session(['organization'=>$member->organizations[0]]);
+            //session('organization')->forms;
+                
+            //session('organization')->fresh();
             return Inertia::render('Member/Dashboard',[
                 'member'=>$member,
                 'current_organization'=>session('organization'),
-                'qrcode'=>$this->qrcode()
                 //'articles'=>Classify::whereBelongsTo(session('organization'))->first()->articles
             ]);
         }
@@ -46,7 +54,7 @@ class DashboardController extends Controller
         }
                 
     }
-    public function qrcode()
+    public function getQrcode()
     {
         $userId=auth()->user()->id;
         $organizationId= session('organization')->id;
@@ -70,7 +78,6 @@ class DashboardController extends Controller
         //         $security_key, $options, $security_iv);
         // echo '<br>';
         // echo "Decrypted String: " . $decryption;
-
 
     }
    

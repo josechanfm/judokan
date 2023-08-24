@@ -9,6 +9,8 @@ use App\Models\Approbate;
 use App\Models\Portfolio;
 use App\Models\Position;
 use App\Models\Member;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -26,13 +28,13 @@ class ProfileController extends Controller
         //     $portfolio->approbate_id=1;
         //     $portfolio->save();
         // }
-        $member=auth()->user()->member;
+        $member = auth()->user()->member;
         $member->positions;
         $member->athlete;
-        return Inertia::render('Member/Profile',[
-            'member'=>$member,
+        return Inertia::render('Member/Profile', [
+            'member' => $member,
             // 'profile'=>$portfolio,
-            'positions'=>Position::all()
+            'positions' => Position::all()
         ]);
     }
 
@@ -65,7 +67,6 @@ class ProfileController extends Controller
      */
     public function show($id)
     {
-        
     }
 
     /**
@@ -88,10 +89,23 @@ class ProfileController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $data=$request->all();
-        $member=Member::find($id);
+        //dd($request->file('avatar'));
+        $data = $request->all();
+        $member = Member::find($id);
         //$data['positions']=$request->positions;
         $member->update($data);
+
+            $file = $request->file('avatar');
+            $path = Storage::putFile('public/images/avatar', $file);
+            $member->avatar = $path;
+            $member->save();
+
+        // if($request->file('fileList')){
+        //     foreach($request->file('fileList') as $file){
+        //         $enquiry_question->addMedia($file['originFileObj'])
+        //             ->toMediaCollection('enquiryQuestionAttachments');
+        //     }
+        // }
         return response($member);
     }
 
@@ -105,4 +119,6 @@ class ProfileController extends Controller
     {
         //
     }
+
+
 }

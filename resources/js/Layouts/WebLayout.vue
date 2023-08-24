@@ -72,7 +72,10 @@ const showingNavigationDropdown = ref(false);
                             </template>
                             <template v-else>
                                 <li><inertia-link :href="route('login')">Login</inertia-link></li>
+                                <li><inertia-link :href="route('register')">Register</inertia-link></li>
                             </template>
+                            
+                            
                         </ul>
                         <!-- <div class="md:flex items-center hidden space-x-4 ml-8 lg:ml-12">
                             <h1 class="text-text-gray-600  py-2 hover:cursor-pointer hover:text-indigo-600"><inertia-link
@@ -155,14 +158,19 @@ const showingNavigationDropdown = ref(false);
                             class="text-center text-xl my-4  bg-white py-2 rounded-md border-b-2 cursor-pointer  text-gray-600">
                             Service</h1>
                         <div class="bg-white rounded-md list-none  text-center ">
-                            <!-- <li class="py-3 border-b-2"><inertia-link :href="route('enquiry.index')">Enquiry</inertia-link></li>
-                            <li class="py-3 border-b-2"><inertia-link :href="route('forms.index')">Forms</inertia-link></li> -->
-                            <li class="py-3 border-b-2"><a href="http://www.judo.org.mo" target="_blank"
-                                    class="list-none  hover:text-indigo-600">澳門柔道協會</a>
+                            <li class="py-3 border-b-2">
+                                <inertia-link :href="route('competitions.index')">Competitions</inertia-link>
                             </li>
-                            <li class="py-3 border-b-2"><a href="https://www.sport.gov.mo/pt"
-                                    class="list-none  hover:text-indigo-600" target="_blank">澳門體育局</a></li>
-                            <li class="py-3 "><a href="#" class="list-none border-b-2 hover:text-indigo-600">Feature</a>
+                            <li class="py-3 border-b-2">
+                                <inertia-link :href="route('forms.index')">Forms</inertia-link>
+                            </li>
+                            <li class="py-3 border-b-2">
+                                <a href="http://www.judo.org.mo" target="_blank" class="list-none  hover:text-indigo-600">澳門柔道協會</a>
+                            </li>
+                            <li class="py-3 border-b-2">
+                                <a href="https://www.sport.gov.mo/pt" class="list-none  hover:text-indigo-600" target="_blank">澳門體育局</a></li>
+                            <li class="py-3 ">
+                                <a href="#" class="list-none border-b-2 hover:text-indigo-600">Feature</a>
                             </li>
                         </div>
                     </div>

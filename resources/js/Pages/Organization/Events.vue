@@ -17,6 +17,7 @@
                     <template v-if="column.dataIndex=='operation'">
                         <inertia-link :href="route('manage.events.show',record.id)" class="ant-btn">View</inertia-link>
                         <inertia-link :href="route('manage.events.edit',record.id)" class="ant-btn">Edit</inertia-link>
+                        <inertia-link :href="route('manage.event.attendances.index',record.id)" class="ant-btn">Attendances</inertia-link>
                     </template>
                     <template v-else>
                         {{record[column.dataIndex]}}
