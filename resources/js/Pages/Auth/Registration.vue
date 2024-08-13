@@ -1,7 +1,6 @@
 <script>
 import WebLayout from '@/Layouts/WebLayout.vue';
-
-import { reactive } from 'vue';
+import { Modal } from 'ant-design-vue';
 
 export default {
     components: {
@@ -18,14 +17,15 @@ export default {
     },
     methods: {
         onFinish(values) {
-            console.log('Success:', values);
             this.$inertia.post(route('registration.store'), this.formState, {
                 onSuccess: (page) => {
                     console.log(page);
-                    //this.modal.isOpen = false;
                 },
                 onError: (err) => {
-                    console.log(err);
+                    Modal.error({
+                        title: this.$t('registration_error'),
+                        content: this.$t(err.code),
+                    });
                 }
             });
 

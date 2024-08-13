@@ -148,6 +148,7 @@
 
 <script>
 import OrganizationLayout from "@/Layouts/OrganizationLayout.vue";
+
 import {
   UploadOutlined,
   LoadingOutlined,
