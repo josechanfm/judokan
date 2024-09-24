@@ -89,7 +89,7 @@ class CompetitionController extends Controller
                 dd('sorry duplicated');
             }
         }
-        return redirect()->back();
+       
 
         if ($request->file('avatar')) {
             $file = $request->file('avatar');
