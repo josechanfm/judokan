@@ -49,6 +49,7 @@ class CompetitionController extends Controller
         $data = $request->all();
         // dd($data);
         $data['organization_id'] = session('organization')->id;
+        dd($data);
         $competition = Competition::create([...$data, 'staff_options' => $data['staffOptionsSelected'], 'referee_options' => $data['refereeOptionsSelected']]);
         $competition->save();
 
