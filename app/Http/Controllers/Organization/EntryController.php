@@ -220,21 +220,34 @@ class EntryController extends Controller
         DATA;
 
         $url = "https://mlpsmsapi.three.com.mo/v1/externalApi/message";
-        $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        $headers = array(
-            "Content-Type: application/xml",
-            "Accept: application/xml",
-        );
-        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $xml);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        $resp = curl_exec($curl);
-        curl_close($curl);
-        $xml = simplexml_load_string($resp);
+        $options = [
+            'headers' => [
+                'Content-Type' => 'application/xml',
+                'Accept' => 'application/xml',
+            ],
+            'body' => $xml
+        ];
+
+        $client = new Client();
+
+        $response = $client->request('POST', $url, $options);
+
+        return $response->getBody();
+        // $curl = curl_init($url);
+        // curl_setopt($curl, CURLOPT_URL, $url);
+        // curl_setopt($curl, CURLOPT_POST, true);
+        // curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        // $headers = array(
+        //     "Content-Type: application/xml",
+        //     "Accept: application/xml",
+        // );
+        // curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        // curl_setopt($curl, CURLOPT_POSTFIELDS, $xml);
+        // curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        // curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        // $resp = curl_exec($curl);
+        // curl_close($curl);
+        // $xml = simplexml_load_string($resp);
 
         return redirect()->back();
     }

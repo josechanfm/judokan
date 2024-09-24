@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Organization;
 
+use Maatwebsite\Excel\Concerns\WithDrawings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -138,7 +141,14 @@ class CompetitionApplicationController extends Controller
         //echo $applications;
         //dd('aa');
         //dd($competition);
-        return Excel::download(new CompetitionApplicationExport($competition), 'applications.xlsx');
+        // $baser64String = 'iVBORw0KGgoAAAANSUhEUgAAAJ4AAACeCAYAAADDhbN7AAAAAXNSR0IArs4c6QAAAsxJREFUeF7t0kEJACAABEGNaVizKRjC/cwVOFhmnr3OMAU+F5jgfS7u7hUAD4SkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOwWMgKQBekt0peAwkBcBLsjsFj4GkAHhJdqfgMZAUAC/J7hQ8BpIC4CXZnYLHQFIAvCS7U/AYSAqAl2R3Ch4DSQHwkuxOL7pc5wZFewbOAAAAAElFTkSuQmCC';
+        // $image = base64_decode($baser64String);
+        // dd($image);
+        // $path = Storage::disk('public')->put('images/competitions/test.png', $image);
+        // $data['avatar'] = $path;
+        // dd($path);
+        $data = new CompetitionApplicationExport($competition);
+        return Excel::download($data, 'applications.xlsx');
     }
 
     public function success(CompetitionApplication $competitionApplication)

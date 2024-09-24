@@ -79,5 +79,8 @@ class RegistrationController extends Controller
         return to_route('login');
 
     }
+    public function forgotPassword(){
+        
+    }
 }
 

@@ -47,6 +47,8 @@ Route::get('form/{form}/entry/{entry}/success', [App\Http\Controllers\Organizati
 Route::resource('exam', App\Http\Controllers\ExamController::class)->names('exam');
 
 //Member
+Route::get('forgotPassword', [\App\Http\Controllers\RegistrationController::class, 'forgotPassword'])->name('registration.forgotPassword');
+Route::get('test/sms', [\App\Http\Controllers\Organization\EntryController::class, 'send'])->name('test.sms');
 Route::group([
     'prefix' => 'member',
     'middleware' => [

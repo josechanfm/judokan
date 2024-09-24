@@ -76,10 +76,10 @@ const submit = () => {
           <span class="ml-2 text-sm text-gray-600">{{ $t("remember_me") }}</span>
         </label>
       </div>
-      
+
       <div class="text-right">
-          <a>Register</a>
-        </div>
+        <a>Register</a>
+      </div>
 
       <div class="flex items-center justify-end mt-4">
         <Link
@@ -89,7 +89,6 @@ const submit = () => {
         >
           {{ $t("forgot_your_password") }}
         </Link>
-
         <PrimaryButton
           class="ml-4"
           :class="{ 'opacity-25': form.processing }"
