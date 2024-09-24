@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('competitions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id');
-            $table->char('organization_id',5);
+            $table->char('competition_score_id', 5);
             $table->string('title_zh');
             $table->string('title_fn')->nullable();
             $table->text('brief')->nullable();
@@ -32,6 +32,7 @@ return new class extends Migration
             $table->text('referee_options')->nullable();
             $table->string('fee')->nullable();
             $table->boolean('published')->default(false);
+            $table->json('result_scores')->nullable();
             $table->timestamps();
         });
     }

@@ -15,8 +15,8 @@ class Competition extends Model implements HasMedia
     use HasFactory;
     use InteractsWithMedia;
 
-    protected $fillable=['organization_id','competition_score_id','title_zh','title_fn','brief','description','start_date','end_date','match_dates','categories_weights','roles','scope','for_member','staff_options','referee_options','fee','published'];
-    protected $casts=['match_dates'=>'json','categories_weights'=>'json','roles'=>'json','staff_options'=>'array','referee_options'=>'array','result_scores'=>'json'];
+    protected $fillable = ['organization_id', 'competition_score_id', 'title_zh', 'title_fn', 'brief', 'description', 'start_date', 'end_date', 'match_dates', 'categories_weights', 'roles', 'scope', 'for_member', 'staff_options', 'referee_options', 'fee', 'published'];
+    protected $casts = ['match_dates' => 'json', 'categories_weights' => 'json', 'roles' => 'json', 'staff_options' => 'array', 'referee_options' => 'array', 'result_scores' => 'json'];
 
     public function registerMediaConversions(Media $media = null): void
     {
@@ -31,15 +31,17 @@ class Competition extends Model implements HasMedia
         $this->addMediaCollection('competitionBanner')->useDisk('competition');
     }
 
-    public function organization(){
+    public function organization()
+    {
         return $this->belongsTo(Organization::class);
     }
-    public function applications(){
+    public function applications()
+    {
         return $this->hasMany(CompetitionApplication::class);
     }
 
-    public function score(){
-        return $this->belongsTo(CompetitionScore::class,'competition_score_id','id');
+    public function score()
+    {
+        return $this->belongsTo(CompetitionScore::class, 'competition_score_id', 'id');
     }
-
 }

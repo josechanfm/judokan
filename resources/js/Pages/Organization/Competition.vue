@@ -1,5 +1,8 @@
 <template>
-  <OrganizationLayout :title="competition.id?'賽事修改':'賽事新增'" :breadcrumb="breadcrumb">
+  <OrganizationLayout
+    :title="competition ? '賽事修改' : '賽事新增'"
+    :breadcrumb="breadcrumb"
+  >
     <div class="container mx-auto">
       <div class="bg-white relative shadow rounded-lg p-5">
         <a-form
@@ -10,8 +13,15 @@
           :rules="rules"
           @finish="onFinish"
         >
-          <a-form-item :label="$t('competition_score_category')" name="competition_score_id">
-            <a-select v-model:value="competitionData.competition_score_id" :options="competitionScores" :fieldNames="{value:'id',label:'title'}"/>
+          <a-form-item
+            :label="$t('competition_score_category')"
+            name="competition_score_id"
+          >
+            <a-select
+              v-model:value="competitionData.competition_score_id"
+              :options="competitionScores"
+              :fieldNames="{ value: 'id', label: 'title' }"
+            />
           </a-form-item>
           <a-form-item :label="$t('competition_title_zh')" name="title_zh">
             <a-input v-model:value="competitionData.title_zh" />
@@ -96,7 +106,9 @@
             :label="$t('referee_options')"
             name="refereeOptionsSelected"
             v-if="competitionData.roleSelected.includes('referee')"
-            :rules="competitionData.roleSelected.includes('referee') ? [{ required: true }] : []"
+            :rules="
+              competitionData.roleSelected.includes('referee') ? [{ required: true }] : []
+            "
           >
             <a-checkbox-group v-model:value="competitionData.refereeOptionsSelected">
               <a-checkbox
@@ -302,8 +314,8 @@ export default {
   data() {
     return {
       breadcrumb: [
-        { label: "賽事列表", url: route('manage.competitions.index') },
-        { label: this.competition.id?'賽事修改':'賽事新增', url: null }
+        { label: "賽事列表", url: route("manage.competitions.index") },
+        { label: this.competition ? "賽事修改" : "賽事新增", url: null },
       ],
       mode: null,
       showWeightList: false,
@@ -336,7 +348,7 @@ export default {
         competition_score_id: { required: true },
         title_zh: { required: true },
         period: { required: true },
-        match_date: { required: true },
+        match_dates: { required: true },
         roleSelected: { required: true },
         cwSelected: { required: true },
       },
@@ -368,7 +380,9 @@ export default {
   },
   mounted() {},
   created() {
-    this.competitionScores.unshift({id:0,title:"無積分"});
+    if (this.competitionScores != null) {
+      this.competitionScores.unshift({ id: 0, title: "無積分" });
+    }
     if (this.competition == null) {
       this.mode = "CREATE";
       this.competitionData.roleSelected = [];
@@ -384,10 +398,10 @@ export default {
       this.competitionData.roleSelected = this.competition.roles.map((cw) => cw.value);
       // console.log(this.competitionData.roleSelected);
       this.competitionData.staffOptionsSelected = this.competition.staff_options?.map(
-        (so) => so.value
+        (so) => so
       );
       this.competitionData.refereeOptionsSelected = this.competition.referee_options?.map(
-        (ro) => ro.value
+        (ro) => ro
       );
       this.getDaysArray(this.competitionData.period[0], this.competitionData.period[1]);
       // this.competition.period[1] = this.competitionSource.end_date
@@ -426,11 +440,11 @@ export default {
         });
         return false || Upload.LIST_IGNORE;
       }
+      return true;
     },
     beforeAttachmentUpload(file) {
       var isOverSize = file.size / 1024 / 1024 > this.uploadValidator.attachment.size;
       var isFormatInvalid = !this.uploadValidator.attachment.format.includes(file.type);
-
       if (isOverSize || isFormatInvalid) {
         message.error({
           content: () =>
@@ -442,6 +456,7 @@ export default {
         });
         return false || Upload.LIST_IGNORE;
       }
+      return true;
     },
     onFinish() {
       this.competitionData.categories_weights = this.categories_weights.filter((cw) =>
@@ -454,6 +469,7 @@ export default {
         "YYYY-MM-DD"
       );
       this.competitionData.end_date = this.competitionData.period[1].format("YYYY-MM-DD");
+
       if (this.mode == "CREATE") {
         this.$inertia.post(route("manage.competitions.store"), this.competitionData, {
           onSuccess: (page) => {
@@ -464,15 +480,18 @@ export default {
           },
         });
       } else {
-        this.competitionData.referee_options=[]
-        this.competitionData.refereeOptionsSelected.forEach(option=>
-          this.competitionData.referee_options.push(this.refereeOptions.find(r=>r.value==option))
-        )
-        this.competitionData.staff_options=[]
-        this.competitionData.staffOptionsSelected.forEach(option=>
-          this.competitionData.staff_options.push(this.staffOptions.find(s=>s.value==option))
-        )
-        console.log(this.competitionData);
+        this.competitionData.referee_options = [];
+        (this.competitionData.refereeOptionsSelected ?? []).forEach((option) =>
+          this.competitionData.referee_options.push(
+            this.refereeOptions.find((r) => r.value == option)
+          )
+        );
+        this.competitionData.staff_options = [];
+        (this.competitionData.staffOptionsSelected ?? []).forEach((option) =>
+          this.competitionData.staff_options.push(
+            this.staffOptions.find((s) => s.value == option)
+          )
+        );
         this.competitionData._method = "PATCH";
         this.$inertia.post(
           route("manage.competitions.update", this.competitionData.id),

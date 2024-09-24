@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
@@ -17,9 +18,9 @@ class CompetitionController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Organization/Competitions',[
-            'competitions'=>Competition::where('organization_id',session('organization')->id)->paginate()
-        ]);        
+        return Inertia::render('Organization/Competitions', [
+            'competitions' => Competition::where('organization_id', session('organization')->id)->paginate()
+        ]);
     }
     /**
      * Show the form for creating a new resource.
@@ -28,11 +29,12 @@ class CompetitionController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Organization/Competition',[
-            'categories_weights'=>Config::items('categories_weights',null),
-            'staff_options'=>Config::item('staff_options'),
-            'referee_options'=>Config::item('referee_options'),
-            'roles'=>Config::item('competition_roles')
+        return Inertia::render('Organization/Competition', [
+            'categories_weights' => Config::items('categories_weights', null),
+            'competitionScores' => CompetitionScore::where('organization_id', 0)->get(),
+            'staffOptions' => Config::item('staff_options'),
+            'refereeOptions' => Config::item('referee_options'),
+            'roles' => Config::item('competition_roles')
         ]);
     }
 
@@ -44,18 +46,22 @@ class CompetitionController extends Controller
      */
     public function store(Request $request)
     {
-        $data=$request->all();
-        $data['organization_id']=session('organization')->id;
-        $competition=Competition::create($data);
-        $competition->result_scores=$competition->score?$competition->score->toArray():null;
+        $data = $request->all();
+        // dd($data);
+        $data['organization_id'] = session('organization')->id;
+        $competition = Competition::create([...$data, 'staff_options' => $data['staffOptionsSelected'], 'referee_options' => $data['refereeOptionsSelected']]);
         $competition->save();
 
-        if($request->file('banner')){
-            foreach($request->file('banner') as $file){
+        if ($request->file('banner')) {
+            foreach ($request->file('banner') as $file) {
                 $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionBanner');
             }
         };
-
+        if ($request->file('attachment')) {
+            foreach ($request->file('attachment') as $file) {
+                $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionAttachment');
+            }
+        };
         return redirect()->route('manage.competitions.index');
     }
 
@@ -67,16 +73,15 @@ class CompetitionController extends Controller
      */
     public function show(Competition $competition)
     {
-        if($competition->organization_id<>session('organization')->id){
+        if ($competition->organization_id != session('organization')->id) {
             return redirect()->route('manage.competitions.index');
         }
         $competition->getMedia();
-        return Inertia::render('Organization/CompetitionShow',[
-            'competition'=>$competition,
-            'categories_weights'=>Config::items('categories_weights',0),
-            'roles'=>Config::item('competition_roles')
+        return Inertia::render('Organization/CompetitionShow', [
+            'competition' => $competition,
+            'categories_weights' => Config::items('categories_weights', 0),
+            'roles' => Config::item('competition_roles')
         ]);
-        
     }
 
     /**
@@ -87,18 +92,18 @@ class CompetitionController extends Controller
      */
     public function edit(Competition $competition)
     {
-        if($competition->organization_id<>session('organization')->id){
+        if ($competition->organization_id != session('organization')->id) {
             return redirect()->route('manage.competitions.index');
         }
         $competition->getMedia();
-        return Inertia::render('Organization/Competition',[
-            'competition'=>$competition,
-            'competitionScores'=>CompetitionScore::where('organization_id',0)->get(),
-            'scoreCategories'=>Config::item('competition_score_categories'),
-            'categories_weights'=>Config::items('categories_weights',0),
-            'staffOptions'=>Config::item('staff_options'),
-            'refereeOptions'=>Config::item('referee_options'),
-            'roles'=>Config::item('competition_roles')
+        return Inertia::render('Organization/Competition', [
+            'competition' => $competition,
+            'competitionScores' => CompetitionScore::where('organization_id', 0)->get(),
+            'scoreCategories' => Config::item('competition_score_categories'),
+            'categories_weights' => Config::items('categories_weights', 0),
+            'staffOptions' => Config::item('staff_options'),
+            'refereeOptions' => Config::item('referee_options'),
+            'roles' => Config::item('competition_roles')
         ]);
     }
     /**
@@ -111,15 +116,15 @@ class CompetitionController extends Controller
     public function update(Request $request, Competition $competition)
     {
         $competition->update($request->all());
-        $competition->result_scores=$competition->score?$competition->score->toArray():null;
+        $competition->result_scores = $competition->score ? $competition->score->toArray() : null;
         $competition->save();
-        if($request->file('banner')){
-            foreach($request->file('banner') as $file){
+        if ($request->file('banner')) {
+            foreach ($request->file('banner') as $file) {
                 $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionBanner');
             }
         };
-        if($request->file('attachment')){
-            foreach($request->file('attachment') as $file){
+        if ($request->file('attachment')) {
+            foreach ($request->file('attachment') as $file) {
                 $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionAttachment');
             }
         };
@@ -140,15 +145,14 @@ class CompetitionController extends Controller
         //
     }
 
-    public function deleteMedia(Request $request){
-        if($request->type=='banner'){
+    public function deleteMedia(Request $request)
+    {
+        if ($request->type == 'banner') {
             Competition::find($request->competition_id)->clearMediaCollection('competitionBanner');
-        }elseif($request->type=='attachment'){
+        } elseif ($request->type == 'attachment') {
             //dd(Competition::find($request->competition_id)->getMedia('competitionAttachment'));
             Competition::find($request->competition_id)->deleteMedia($request->media_id);
         }
         return redirect()->back();
     }
-
-
 }

@@ -5,7 +5,10 @@
         {{ $t("organizations") }}
       </h2>
     </template>
-    <button @click="createRecord()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-3">
+    <button
+      @click="createRecord()"
+      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded my-3"
+    >
       {{ $t("create_organization") }}
     </button>
     <div class="container mx-auto pt-5">
@@ -32,7 +35,10 @@
               </a-popconfirm>
             </template>
             <template v-else-if="column.dataIndex == 'region'">
-              {{ regions.find((z) => z.value == record[column.dataIndex]).label }}
+              {{
+                regions.find((z) => z.value == record[column.dataIndex]?.label) ??
+                record[column.dataIndex]
+              }}
             </template>
             <template v-else-if="column.dataIndex == 'manager'">
               <ol class="list-decimal">
@@ -162,7 +168,7 @@ export default {
   components: {
     AdminLayout,
   },
-  props: ["regions","organizations", "users"],
+  props: ["regions", "organizations", "users"],
   data() {
     return {
       modal: {
@@ -180,23 +186,28 @@ export default {
           title: "Region",
           i18n: "region",
           dataIndex: "region",
-        },{
+        },
+        {
           title: "Abbreviation",
           i18n: "abbreviation",
           dataIndex: "abbr",
-        },{
+        },
+        {
           title: "Full name",
           i18n: "full_name",
           dataIndex: "full_name",
-        },{
+        },
+        {
           title: "Email",
           i18n: "email",
           dataIndex: "email",
-        },{
+        },
+        {
           title: "Manager",
           i18n: "manager",
           dataIndex: "manager",
-        },{
+        },
+        {
           title: "Operation",
           i18n: "operation",
           dataIndex: "operation",
@@ -208,7 +219,7 @@ export default {
         title: { required: true },
         email: { required: true },
         mobile: { required: true },
-        card_style: { required: true }
+        card_style: { required: true },
       },
       validateMessages: {
         required: "${label} is required!",
