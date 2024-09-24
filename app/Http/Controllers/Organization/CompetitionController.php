@@ -50,7 +50,7 @@ class CompetitionController extends Controller
         // dd($data);
         $data['organization_id'] = session('organization')->id;
         dd($data);
-        $competition = Competition::create([...$data, 'staff_options' => $data['staffOptionsSelected'], 'referee_options' => $data['refereeOptionsSelected']]);
+        $competition = Competition::create($data);
         $competition->save();
 
         if ($request->file('banner')) {
