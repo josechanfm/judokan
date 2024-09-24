@@ -49,7 +49,7 @@ class CompetitionController extends Controller
         $data = $request->all();
         // dd($data);
         $data['organization_id'] = session('organization')->id;
-        dd($data);
+        // dd($data);
         $competition = Competition::create($data);
         $competition->save();
 
