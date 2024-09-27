@@ -22,9 +22,12 @@ export default {
                     console.log(page);
                 },
                 onError: (err) => {
+                    console.log(err)
                     Modal.error({
-                        title: this.$t('registration_error'),
-                        content: this.$t(err.code),
+                        title:'title',
+                        content: 'content'
+                        // title: this.$t('registration_error'),
+                        // content: this.$t(err.code),
                     });
                 }
             });
@@ -61,10 +64,10 @@ export default {
                         <a-select v-model:value="formState.organization_id" :options="organizations"
                             :fieldNames="{ value: 'id', label: 'full_name' }" />
                     </a-form-item>
-                    <a-form-item label="Registration Code" name="registration_code"
+                    <!-- <a-form-item label="Registration Code" name="registration_code"
                         :rules="[{ required: true, message: 'Please input the organization registration' }]">
                         <a-input v-model:value="formState.registration_code" />
-                    </a-form-item>
+                    </a-form-item> -->
                     <a-form-item label="Email (for login)" name="email"
                         :rules="[{ required: true, message: 'Please input your email!' }]">
                         <a-input v-model:value="formState.email" type="email" />

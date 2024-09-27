@@ -23,7 +23,7 @@ class RegistrationController extends Controller
             'given_name'=>'required',
             'family_name'=>'required',
             'organization_id' => 'required',
-            'registration_code' => 'required',
+            //'registration_code' => 'required',
             'email'=>'required|email',
             'password'=>'required',
         ]);
@@ -33,12 +33,12 @@ class RegistrationController extends Controller
             //return redirect()->back()->withErrors(['message'=>'Organization not found']);
         }
 
-        if($request->registration_code != $organization->registration_code){
-            return redirect()->back()->withErrors([
-                'code'=>'code_error',
-                'message'=>'Registration code incorrect, please confirm with the organization administrator.'
-            ]);
-        }
+        // if($request->registration_code != $organization->registration_code){
+        //     return redirect()->back()->withErrors([
+        //         'code'=>'code_error',
+        //         'message'=>'Registration code incorrect, please confirm with the organization administrator.'
+        //     ]);
+        // }
 
         //make sure user account can create
         $user=User::where('email',$request->email)->first();

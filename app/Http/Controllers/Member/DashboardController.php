@@ -25,6 +25,7 @@ class DashboardController extends Controller
         }
         //dd(Config::item('card_style'));
         $member->organizations;
+        
         return Inertia::render('Member/Dashboard', [
             'member' => $member,
             // 'organizations'=>$member->organizations,
