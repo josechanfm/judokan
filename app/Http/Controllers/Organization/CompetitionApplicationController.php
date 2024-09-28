@@ -90,11 +90,12 @@ class CompetitionApplicationController extends Controller
         // return response()->json($competitionApplication);
         // return response()->json($request->all());
         $data=$request->all();
-        if(!empty($data['result_rank'])){
+        // dd($competition->result_scores, $data);
+        if(!empty($data['result_rank']) && !empty($competition->result_scores)){
             $score=$competition->score->toArray();
             $data['result_score']=$competition->result_scores[$data['result_rank']];
+            $competitionApplication->update($data);
         }
-        $competitionApplication->update($data);
         return redirect()->back();
     }
 

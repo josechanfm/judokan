@@ -13,10 +13,7 @@
       rowKey="id"
     >
       <template #headerCell="{ column }">
-        {{ column.i18n ? $t(column.i18n) : column.title }}
-        <template v-if="column.dataIndex=='accepted' || column.dataIndex=='competition_result'">
-          <a-switch v-model:checked="column.enabled"/>
-        </template>
+        {{ column.title }}
       </template>
       <template #bodyCell="{ column, text, record, index }">
         <template v-if="column.dataIndex == 'operation'">
@@ -47,22 +44,23 @@
             :cancel-text="$t('aband')"
             @confirm="acceptedConfirmed(record)"
           >
-          <a-checkbox v-model:checked="record.accepted" :disabled="!column.enabled"/>
+          <a-checkbox v-model:checked="record.accepted"/>
           </a-popconfirm>
         </template>
         <template v-else-if="column.dataIndex=='competition_result'">
-          <span v-if="column.enabled">
-            <a-select 
-              v-model:value="record.result_rank"
-              :options="competitionResults"
-              style="width:100px"
-              @change="onChangeResult(record)"
-            />
+          <a-select 
+            v-if="competition.result_scores"
+            v-model:value="record.result_rank"
+            :options="competitionResults"
+            style="width:100px"
+            @change="onChangeResult(record)"
+          />
+        <!-- <span v-if="column.enabled">
           </span>
           <span v-else-if="record.result_rank">
             {{ competitionResults.find(r=>r.value==record.result_rank).label }} /
             {{ competition.result_scores[record.result_rank] }}
-          </span>
+          </span> -->
         </template>
         <template v-else>
           {{ record[column.dataIndex] }}
@@ -218,73 +216,6 @@ export default {
         title: "Modal",
         mode: "",
       },
-      acceptDisabled:false,
-      columns: [
-        {
-          title: "Name (zh)",
-          i18n:"name_zh",
-          dataIndex: "name_zh",
-          key:'name_zh',
-        },{
-          title: "Name (fn)",
-          i18n:"name_fn",
-          dataIndex: "name_fn",
-          key: "name_fn",
-        },{
-          title: "Gender",
-          i18n:"gender",
-          dataIndex: "gender",
-          key: "gender",
-        },{
-          title: "Age",
-          i18n:"age",
-          dataIndex: "age",
-          key: "age",
-        },{
-          title: "Date of Birth",
-          i18n:"dob",
-          dataIndex: "dob",
-          key: "dob",
-        },{
-          title: "Role",
-          i18n:"role",
-          dataIndex: "role",
-          key: "role",
-        },{
-          title: "Category",
-          i18n:"category",
-          dataIndex: "category",
-          key: "category",
-        },{
-          title: "Weight",
-          i18n:"weight",
-          dataIndex: "weight",
-          key: "weight",
-        },{
-          title: "Avatar",
-          i18n:"avatar",
-          dataIndex: "avatar",
-          key: "avatar",
-        },{
-          title: "Accepted",
-          i18n:"competition_accepted",
-          dataIndex: "accepted",
-          key: "accepted",
-          enabled: false,
-          width: "150px"
-        },{
-          title: "Result",
-          i18n:"competition_result",
-          dataIndex: "competition_result",
-          key: "result",
-          width: "150px"
-        },{
-          title: "Operation",
-          i18n:"operation",
-          dataIndex: "operation",
-          key: "operation",
-        },
-      ],
       rules: {
         name_fn: { required: true },
         display_name: { required: true },
@@ -314,7 +245,78 @@ export default {
     };
   },
   created() {
-    this.competitionResults.unshift({value:null,label:'---'})
+    //this.competitionResults.unshift({value:null,label:'---'})
+  },
+  computed: {
+    columns() {
+      return [
+        {
+          title: this.$t('name_zh'),
+          i18n:"name_zh",
+          dataIndex: "name_zh",
+          key:'name_zh',
+        },{
+          title: this.$t('name_fn'),
+          i18n:"name_fn",
+          dataIndex: "name_fn",
+          key: "name_fn",
+        },{
+          title: this.$t('gender'),
+          i18n:"gender",
+          dataIndex: "gender",
+          key: "gender",
+        },{
+          title: this.$t('age'),
+          i18n:"age",
+          dataIndex: "age",
+          key: "age",
+        },{
+          title: this.$t('dob'),
+          i18n:"dob",
+          dataIndex: "dob",
+          key: "dob",
+        },{
+          title: this.$t('role'),
+          i18n:"role",
+          dataIndex: "role",
+          key: "role",
+        },{
+          title: this.$t('category'),
+          i18n:"category",
+          dataIndex: "category",
+          key: "category",
+        },{
+          title: this.$t('weight'),
+          i18n:"weight",
+          dataIndex: "weight",
+          key: "weight",
+        },{
+          title: this.$t('avatar'),
+          i18n:"avatar",
+          dataIndex: "avatar",
+          key: "avatar",
+        },{
+          title: this.$t('competition_accepted'),
+          i18n:"competition_accepted",
+          dataIndex: "accepted",
+          key: "accepted",
+          enabled: false,
+          width: "150px"
+        },{
+          title: this.$t('competition_result'),
+          i18n:"competition_result",
+          dataIndex: "competition_result",
+          key: "result",
+          enabled: false,
+          width: "150px"
+        },{
+          title: this.$t('operation'),
+          i18n:"operation",
+          dataIndex: "operation",
+          key: "operation",
+        },
+      ]
+    }
   },
   methods: {
     onChangeGender(gender) {

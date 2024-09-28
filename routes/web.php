@@ -161,3 +161,5 @@ Route::group([
     Route::resource('configs', App\Http\Controllers\Admin\ConfigController::class)->names('admin.configs');
     Route::resource('competition_scores', App\Http\Controllers\Admin\CompetitionScoreController::class)->names('admin.competitionScores');
 });
+
+Route::get('/admin/send-test-email', [App\Http\Controllers\Admin\EmailController::class, 'sendTestEmail'])->name('admin.send-test-email');
