@@ -15,7 +15,7 @@ class RegistrationController extends Controller
     //
     public function create(){
         return Inertia::render('Auth/Registration',[
-            'organizations'=>Organization::whereNotNull('registration_code')->get()
+            'organizations'=>Organization::get()
         ]);
     }
     public function store(Request $request){

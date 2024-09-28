@@ -17,11 +17,10 @@ const form = useForm({
   name: "",
   given_name: "",
   family_name: "",
-  registration_code: "",
   email: "",
+  organization_id: "",
   password: "",
   password_confirmation: "",
-  terms: false,
 });
 
 const submit = () => {
@@ -39,160 +38,71 @@ const submit = () => {
       <AuthenticationCardLogo />
     </template>
 
-    <form @submit.prevent="submit">
-      <div>
-        <InputLabel for="name" :value="$t('name')" />
-        <TextInput
-          id="name"
-          v-model="form.name"
-          type="text"
-          class="mt-1 block w-full"
-          required
-          autofocus
-          autocomplete="name"
+    <a-form
+      :model="form"
+      name="basic"
+      layout="vertical"
+      autocomplete="off"
+      @submit.prevent="submit"
+    >
+      <a-form-item
+        label="Given name"
+        name="given_name"
+        :rules="[{ required: true, message: 'Please input your given name!' }]"
+      >
+        <a-input v-model:value="form.given_name" />
+      </a-form-item>
+      <a-form-item label="Middle name" name="middle_name">
+        <a-input v-model:value="form.middle_name" />
+      </a-form-item>
+      <a-form-item
+        label="Family name"
+        name="family_name"
+        :rules="[{ required: true, message: 'Please input your family_name!' }]"
+      >
+        <a-input v-model:value="form.family_name" />
+      </a-form-item>
+      <a-form-item
+        label="Organization"
+        name="organization_id"
+        :rules="[
+          { required: true, message: 'Please input your organization belongs to!' },
+        ]"
+      >
+        <a-select
+          v-model:value="form.organization_id"
+          :options="organizations"
+          :fieldNames="{ value: 'id', label: 'full_name' }"
         />
-        <InputError class="mt-2" :message="form.errors.name" />
+      </a-form-item>
+      <!-- <a-form-item label="Registration Code" name="registration_code"
+                        :rules="[{ required: true, message: 'Please input the organization registration' }]">
+                        <a-input v-model:value="form.registration_code" />
+                    </a-form-item> -->
+      <a-form-item
+        label="Email (for login)"
+        name="email"
+        :rules="[{ required: true, message: 'Please input your email!' }]"
+      >
+        <a-input v-model:value="form.email" type="email" />
+      </a-form-item>
+      <a-form-item
+        label="Password"
+        name="password"
+        :rules="[{ required: true, message: 'Please input your password!' }]"
+      >
+        <a-input-password v-model:value="form.password" />
+      </a-form-item>
+      <a-form-item
+        label="Confirm Password"
+        name="password_confirmation"
+        :rules="[{ required: true, message: 'Please input your confirm password!' }]"
+      >
+        <a-input-password v-model:value="form.password_confirmation" />
+      </a-form-item>
+      <div class="flex flex-row item-center justify-center">
+        <a-button type="primary" html-type="submit">{{ $t("submit") }}</a-button>
       </div>
-      <div class="mt-4">
-        <InputLabel for="given_name" :value="$t('given_name')" />
-        <TextInput
-          id="given_name"
-          v-model="form.given_name"
-          type="text"
-          class="mt-1 block w-full"
-          required
-          autofocus
-          autocomplete="given_name"
-        />
-        <InputError class="mt-2" :message="form.errors.given_name" />
-      </div>
-      <div class="mt-4">
-        <InputLabel for="family_name" :value="$t('family_name')" />
-        <TextInput
-          id="family_name"
-          v-model="form.family_name"
-          type="text"
-          class="mt-1 block w-full"
-          required
-          autofocus
-          autocomplete="family_name"
-        />
-        <InputError class="mt-2" :message="form.errors.family_name" />
-      </div>
-      <div class="mt-4">
-        <InputLabel for="registration_code">
-          {{ $t("registration_code") }}
-          <a-tooltip placement="topRight">
-            <template #title>
-              <span>Acquired from your organization admin.</span>
-            </template>
-            <QuestionCircleOutlined />
-          </a-tooltip>
-        </InputLabel>
-
-        <TextInput
-          id="registration_code"
-          v-model="form.registration_code"
-          type="text"
-          class="mt-1 block w-full"
-          required
-          autofocus
-          autocomplete="registration_code"
-        />
-        <InputError class="mt-2" :message="form.errors.registration_code" />
-      </div>
-      <div class="mt-4">
-        <InputLabel for="email" :value="$t('email')" />
-        <TextInput
-          id="email"
-          v-model="form.email"
-          type="email"
-          class="mt-1 block w-full"
-          required
-        />
-        <InputError class="mt-2" :message="form.errors.email" />
-      </div>
-
-      <div class="mt-4">
-        <InputLabel for="password" :value="$t('password')" />
-        <TextInput
-          id="password"
-          v-model="form.password"
-          type="password"
-          class="mt-1 block w-full"
-          required
-          autocomplete="new-password"
-        />
-        <InputError class="mt-2" :message="form.errors.password" />
-      </div>
-
-      <div class="mt-4">
-        <InputLabel for="password_confirmation" :value="$t('confirm_password')" />
-        <TextInput
-          id="password_confirmation"
-          v-model="form.password_confirmation"
-          type="password"
-          class="mt-1 block w-full"
-          required
-          autocomplete="confirm-password"
-        />
-        <InputError class="mt-2" :message="form.errors.organization_id" />
-      </div>
-
-      <!-- <div class="mt-4">
-                <InputLabel for="organization" value="Organization" />
-                <TextInput
-                    id="organization"
-                    v-model="form.organization_id"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="organization"
-                />
-                <InputError class="mt-2" :message="form.errors.password_confirmation" />
-            </div> -->
-
-      <div v-if="$page.props.jetstream.hasTermsAndPrivacyPolicyFeature" class="mt-4">
-        <InputLabel for="terms">
-          <div class="flex items-center">
-            <Checkbox id="terms" v-model:checked="form.terms" name="terms" required />
-
-            <div class="ml-2">
-              {{ $t("I_agree_to_the") }}
-              <a
-                target="_blank"
-                :href="route('terms.show')"
-                class="underline text-sm text-gray-600 hover:text-gray-900"
-                >{{ $t("terms_of_service") }}</a
-              >
-              {{ $t("and") }}
-              <a
-                target="_blank"
-                :href="route('policy.show')"
-                class="underline text-sm text-gray-600 hover:text-gray-900"
-                >{{ $t("privacy_policy") }}</a
-              >
-            </div>
-          </div>
-          <InputError class="mt-2" :message="form.errors.terms" />
-        </InputLabel>
-      </div>
-
-      <div class="flex items-center justify-end mt-4">
-        <Link
-          :href="route('login')"
-          class="underline text-sm text-gray-600 hover:text-gray-900"
-        >
-          {{$t('already_registered')}}?
-        </Link>
-        <PrimaryButton
-          class="ml-4"
-          :class="{ 'opacity-25': form.processing }"
-          :disabled="form.processing"
-        >
-          {{$t('register')}}
-        </PrimaryButton>
-      </div>
-    </form>
+    </a-form>
   </AuthenticationCard>
 </template>

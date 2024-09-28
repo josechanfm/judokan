@@ -24,13 +24,15 @@ class DashboardController extends Controller
             ]);
         }
         //dd(Config::item('card_style'));
-        $member->organizations;
-        
+        $organization = $member->organizations[0];
+
+        $forms = $organization->forms;
         return Inertia::render('Member/Dashboard', [
             'member' => $member,
-            // 'organizations'=>$member->organizations,
+            'organization' => $organization,
             'articles' => Article::privates(),
-            'card_style' => Config::item('card_style')->{session('organization')->card_style},
+            'forms' => $forms,
+            'card_style' => Config::item('card_style')->{session('organization') ? session('organization')->card_style : $member->organizations[0]->card_style},
             //'current_organization'=>session('organization'),//set current_organization, coz the first access has not activate session variable yet.
             //'articles'=>Classify::whereBelongsTo(session('organization'))->first()->articles
         ]);

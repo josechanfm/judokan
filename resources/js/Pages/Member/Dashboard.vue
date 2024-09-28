@@ -10,7 +10,7 @@ export default {
     ArticleList,
     QRCodeVue3,
   },
-  props: ["member", "articles", "card_style"],
+  props: ["member", "articles", "card_style",'organization','forms'],
   data() {
     return {
       qrcode: "",
@@ -117,11 +117,11 @@ export default {
                         <div class="font-bold text-xl mb-2">{{ feature.title }}</div>
                         <p class="text-gray-700 text-base pl-3">
                           {{ feature.description }}
-                        <ol class="list-disc">
-                          <li v-for="form in $page.props.current_organization.forms">
+                        <!-- <ol class="list-disc">
+                          <li v-for="form in forms">
                             <inertia-link :href="route('forms.show', form.id)">{{ form.title }}</inertia-link>
                           </li>
-                        </ol>
+                        </ol> -->
                         </p>
                       </div>
                       <div class="px-6 py-4">
@@ -178,7 +178,7 @@ export default {
                   @click="onShowQrcode">
                   <div class="flex flex-col w-xl">
                     <div class="flex justify-center">
-                      <div class="text-lg font-bold">{{ $page.props.current_organization.full_name }}...</div>
+                      <div class="text-lg font-bold">{{ organization.full_name }}...</div>
                     </div>
                     <div class="flex">
                       <div class="flex flex-col flex-auto gap-1">
@@ -213,7 +213,7 @@ export default {
                 </h1>
                 <p class="text-center text-sm text-gray-400 font-medium">
 
-                  {{ $page.props.current_organization.full_name }}
+                  {{ organization.full_name }}
                 </p>
                 <p>
                   <span> </span>

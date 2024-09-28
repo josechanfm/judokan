@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Config;
 use App\Models\Competition;
 use App\Models\CompetitionApplication;
+use App\Models\Member;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,8 +23,15 @@ class CompetitionController extends Controller
      */
     public function index()
     {
+        $member = auth()->user()->member;
+        // dd($member);
+        $competitions = Competition::where('published', 1)->where(function ($query) use ($member) {
+            $query->where('scope', 'PUB')->orWhere('scope', 'MJA')->orWhere(function ($query) use ($member) {
+                $query->where('organization_id', session('organization') ? session('organization')->id : $member->organizations[0]->id);
+            });
+        })->get();
         return Inertia::render('Competition/Competitions', [
-            'competitions' => Competition::where('scope', '<>', 'ORG')->get()
+            'competitions' => $competitions
         ]);
     }
 
@@ -45,6 +53,7 @@ class CompetitionController extends Controller
      */
     public function store(Request $request)
     {
+
         $data = $request->all();
         // dd($data);
         $competition = Competition::find($data['competition_id']);
@@ -82,19 +91,16 @@ class CompetitionController extends Controller
                     return redirect()->back()->withErrors(['message' => 'Duplicate application']);
                 }
             }
-        }else{ // for non member
-            if(CompetitionApplication::unique($competition,$data)){
-                CompetitionApplication::create($data);
-            }else{
-                dd('sorry duplicated');
-            }
-        }
-       
+        } 
 
         if ($request->file('avatar')) {
             $file = $request->file('avatar');
             $path = Storage::putFile('public/images/competitions/avatar', $file);
             $data['avatar'] = $path;
+        }
+        if ($data['member_id']) {
+            $member = Member::where('id', $data['member_id'])->first();
+            $data['organization_id'] = session('organization') ? session('organization')->id : $member->organizations[0]->id;
         }
         $application = CompetitionApplication::create($data);
 
@@ -116,7 +122,7 @@ class CompetitionController extends Controller
             'organizations' => Organization::all(),
             'belt_ranks' => Config::item("belt_ranks"),
             'competition' => $competition,
-            'member' => auth()->user() ? auth()->user()->member : null
+            'member' => auth()->user()->member
         ]);
     }
 

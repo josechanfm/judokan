@@ -16,7 +16,7 @@ use Attribute;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Foundation\Concerns\ResolvesDumpSource;
 
-class User extends Authenticatable
+class User extends Authenticatable /*implements MustVerifyEmail  this is email verify key*/
 {
     use HasApiTokens;
     use HasFactory;

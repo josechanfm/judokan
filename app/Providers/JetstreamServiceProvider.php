@@ -9,7 +9,10 @@ use App\Actions\Jetstream\DeleteUser;
 use App\Actions\Jetstream\InviteTeamMember;
 use App\Actions\Jetstream\RemoveTeamMember;
 use App\Actions\Jetstream\UpdateTeamName;
+use App\Models\Organization;
 use Illuminate\Support\ServiceProvider;
+use Inertia\Inertia;
+use Laravel\Fortify\Fortify;
 use Laravel\Jetstream\Jetstream;
 
 class JetstreamServiceProvider extends ServiceProvider
@@ -31,6 +34,10 @@ class JetstreamServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+
+        Fortify::registerView(function () {
+            return Inertia::render('Auth/Register', ['organizations' => Organization::get()]);
+        });
         $this->configurePermissions();
 
         Jetstream::createTeamsUsing(CreateTeam::class);

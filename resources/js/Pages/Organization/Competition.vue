@@ -19,8 +19,9 @@
           >
             <a-select
               v-model:value="competitionData.competition_score_id"
-              :options="competitionScores"
-              :fieldNames="{ value: 'id', label: 'title' }"
+              :options="
+                competitionScores.map((x) => ({ value: x.id.toString(), label: x.title }))
+              "
             />
           </a-form-item>
           <a-form-item :label="$t('competition_title_zh')" name="title_zh">
@@ -118,6 +119,7 @@
                 >{{ option.label }}</a-checkbox
               >
             </a-checkbox-group>
+            {{ competitionData.refereeOptionsSelected }}
           </a-form-item>
           <a-form-item
             :label="$t('staff_options')"
@@ -398,10 +400,10 @@ export default {
       this.competitionData.roleSelected = this.competition.roles.map((cw) => cw.value);
       // console.log(this.competitionData.roleSelected);
       this.competitionData.staffOptionsSelected = this.competition.staff_options?.map(
-        (so) => so
+        (so) => so.value
       );
       this.competitionData.refereeOptionsSelected = this.competition.referee_options?.map(
-        (ro) => ro
+        (ro) => ro.value
       );
       this.getDaysArray(this.competitionData.period[0], this.competitionData.period[1]);
       // this.competition.period[1] = this.competitionSource.end_date
@@ -470,6 +472,18 @@ export default {
       );
       this.competitionData.end_date = this.competitionData.period[1].format("YYYY-MM-DD");
 
+      this.competitionData.referee_options = [];
+      (this.competitionData.refereeOptionsSelected ?? []).forEach((option) =>
+        this.competitionData.referee_options.push(
+          this.refereeOptions.find((r) => r.value == option)
+        )
+      );
+      this.competitionData.staff_options = [];
+      (this.competitionData.staffOptionsSelected ?? []).forEach((option) =>
+        this.competitionData.staff_options.push(
+          this.staffOptions.find((s) => s.value == option)
+        )
+      );
       if (this.mode == "CREATE") {
         this.$inertia.post(route("manage.competitions.store"), this.competitionData, {
           onSuccess: (page) => {
@@ -480,18 +494,6 @@ export default {
           },
         });
       } else {
-        this.competitionData.referee_options = [];
-        (this.competitionData.refereeOptionsSelected ?? []).forEach((option) =>
-          this.competitionData.referee_options.push(
-            this.refereeOptions.find((r) => r.value == option)
-          )
-        );
-        this.competitionData.staff_options = [];
-        (this.competitionData.staffOptionsSelected ?? []).forEach((option) =>
-          this.competitionData.staff_options.push(
-            this.staffOptions.find((s) => s.value == option)
-          )
-        );
         this.competitionData._method = "PATCH";
         this.$inertia.post(
           route("manage.competitions.update", this.competitionData.id),
