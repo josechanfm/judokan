@@ -48,16 +48,12 @@ export default {
             <div class="w-full max-w-lg mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg"><!--v-if-->
                 <a-form :model="formState" name="basic" layout="vertical" autocomplete="off" @finish="onFinish"
                     @finishFailed="onFinishFailed">
-                    <a-form-item label="Given name" name="given_name"
-                        :rules="[{ required: true, message: 'Please input your given name!' }]">
-                        <a-input v-model:value="formState.given_name" />
+                    <a-form-item label="Name Zh" name="name_zh"
+                        :rules="[{ required: true, message: 'Please input your name zh!' }]">
+                        <a-input v-model:value="formState.name_zh" />
                     </a-form-item>
-                    <a-form-item label="Middle name" name="middle_name">
-                        <a-input v-model:value="formState.middle_name" />
-                    </a-form-item>
-                    <a-form-item label="Family name" name="family_name"
-                        :rules="[{ required: true, message: 'Please input your family_name!' }]">
-                        <a-input v-model:value="formState.family_name" />
+                    <a-form-item label="Name Fn" name="name_fn">
+                        <a-input v-model:value="formState.name_fn" />
                     </a-form-item>
                     <a-form-item label="Organization" name="organization_id"
                         :rules="[{ required: true, message: 'Please input your organization belongs to!' }]">

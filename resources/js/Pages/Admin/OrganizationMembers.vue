@@ -105,14 +105,14 @@ export default {
       teacherStateLabels: {},
       columns: [
         {
-          title: "Given Name",
-          i18n: "given_name",
-          dataIndex: "given_name",
+          title: "Name Zh",
+          i18n: "name_zh",
+          dataIndex: "name_zh",
         },
         {
-          title: "Family Name",
-          i18n: "family_name",
-          dataIndex: "family_name",
+          title: "Name Fn",
+          i18n: "name_fn",
+          dataIndex: "name_fn",
         },
         {
           title: "Gender",

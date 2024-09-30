@@ -1,26 +1,53 @@
 <template>
   <OrganizationLayout title="報名列表" :breadcrumb="breadcrumb">
-    <a :href="route('manage.competition.applications.receipts',{competition:competition.id,applicationIds:selectedRowKeyIds.toString()})" target="_blank" class="ant-btn">打印收據</a>
-    <a :href="route('manage.competition.applications.export',competition.id)" class="ant-btn">滙出Excel</a>
-    <a-table 
-      :dataSource="competition.applications" 
+    <a
+      :href="
+        route('manage.competition.applications.receipts', {
+          competition: competition.id,
+          applicationIds: selectedRowKeyIds.toString(),
+        })
+      "
+      target="_blank"
+      class="ant-btn"
+      >打印收據</a
+    >
+    <a
+      :href="route('manage.competition.applications.export', competition.id)"
+      class="ant-btn"
+      >滙出Excel</a
+    >
+    <a-table
+      :dataSource="competition.applications"
       :columns="columns"
       :rowSelection="{
-        selectedRowKeys:selectedRowKeyIds,
-        onChange:onCheckChange,
-        onSelectAll:onCheckSelectAll,
-        onSelect:onCheckSelect}"
+        selectedRowKeys: selectedRowKeyIds,
+        onChange: onCheckChange,
+        onSelectAll: onCheckSelectAll,
+        onSelect: onCheckSelect,
+      }"
       rowKey="id"
     >
       <template #headerCell="{ column }">
-        {{ column.title }}
+        {{ column.i18n ? $t(column.i18n) : column.title }}
+        <template
+          v-if="
+            column.dataIndex == 'accepted' || column.dataIndex == 'competition_result'
+          "
+        >
+          <a-switch v-model:checked="column.enabled" />
+        </template>
       </template>
       <template #bodyCell="{ column, text, record, index }">
         <template v-if="column.dataIndex == 'operation'">
-          <a :href="route('manage.competition.application.success',record.id)" target="_blank" class="ant-btn">{{ $t('receipt') }}</a>
+          <a
+            :href="route('manage.competition.application.success', record.id)"
+            target="_blank"
+            class="ant-btn"
+            >{{ $t("receipt") }}</a
+          >
           <a-button @click="editRecord(record)">{{ $t("edit") }}</a-button>
           <a-popconfirm
-            :title="$t('confirm_delete_record') +record.name_zh+'/'+record.name_fn"
+            :title="$t('confirm_delete_record') + record.name_zh + '/' + record.name_fn"
             :ok-text="$t('confirm')"
             :cancel-text="$t('aband')"
             @confirm="deleteRecord(record)"
@@ -29,36 +56,52 @@
           </a-popconfirm>
         </template>
         <template v-else-if="column.dataIndex == 'full_name'">
-          {{ record.given_name }} {{ record.middle_name }} {{ record.family_name }}
+          {{ record.name_zh }}
         </template>
         <template v-else-if="column.dataIndex == 'age'">
-          {{calculateAge(record.dob)}}      
+          {{ calculateAge(record.dob) }}
         </template>
         <template v-else-if="column.dataIndex == 'avatar'">
-          <img :src="record.avatar_url" width="60"/>
+          <img :src="record.avatar_url" width="60" />
         </template>
         <template v-else-if="column.dataIndex == 'accepted'">
           <a-popconfirm
-            :title="$t('sure_confirmed')+(record.accepted?$t('competition_unaccepted')+'?':$t('competition_accepted')+'?')"
+            :title="
+              $t('sure_confirmed') +
+              (record.accepted
+                ? $t('competition_unaccepted') + '?'
+                : $t('competition_accepted') + '?')
+            "
             :ok-text="$t('confirm')"
             :cancel-text="$t('aband')"
             @confirm="acceptedConfirmed(record)"
           >
-          <a-checkbox v-model:checked="record.accepted"/>
+            <a-checkbox v-model:checked="record.accepted" />
           </a-popconfirm>
         </template>
-        <template v-else-if="column.dataIndex=='competition_result'">
-          <a-select 
+        <template v-else-if="column.dataIndex == 'competition_result'">
+          <a-select
             v-if="competition.result_scores"
             v-model:value="record.result_rank"
             :options="competitionResults"
-            style="width:100px"
+            style="width: 100px"
             @change="onChangeResult(record)"
           />
-        <!-- <span v-if="column.enabled">
+          <!-- <span v-if="column.enabled">
+            <a-checkbox v-model:checked="record.accepted" :disabled="!column.enabled" />
+          </a-popconfirm>
+        </template>
+        <template v-else-if="column.dataIndex == 'competition_result'">
+          <span v-if="column.enabled">
+            <a-select
+              v-model:value="record.result_rank"
+              :options="competitionResults"
+              style="width: 100px"
+              @change="onChangeResult(record)"
+            />
           </span>
           <span v-else-if="record.result_rank">
-            {{ competitionResults.find(r=>r.value==record.result_rank).label }} /
+            {{ competitionResults.find((r) => r.value == record.result_rank).label }} /
             {{ competition.result_scores[record.result_rank] }}
           </span> -->
         </template>
@@ -89,7 +132,11 @@
         </a-form-item>
         <a-row :span="24">
           <a-col :span="12">
-            <a-form-item :label="$t('display_name')" name="display_name" :label-col="{ span: 8 }">
+            <a-form-item
+              :label="$t('display_name')"
+              name="display_name"
+              :label-col="{ span: 8 }"
+            >
               <a-input v-model:value="modal.data.display_name" />
             </a-form-item>
             <a-form-item :label="$t('email')" name="email" :label-col="{ span: 8 }">
@@ -101,8 +148,8 @@
                 button-style="solid"
                 @change="onChangeGender"
               >
-                <a-radio-button value="M">{{$t('male')}}</a-radio-button>
-                <a-radio-button value="F">{{$t('female')}}</a-radio-button>
+                <a-radio-button value="M">{{ $t("male") }}</a-radio-button>
+                <a-radio-button value="F">{{ $t("female") }}</a-radio-button>
               </a-radio-group>
             </a-form-item>
           </a-col>
@@ -110,7 +157,11 @@
             <a-form-item :label="$t('id_num')" name="id_num" :label-col="{ span: 8 }">
               <a-input v-model:value="modal.data.id_num" />
             </a-form-item>
-            <a-form-item :label="$t('mobile_number')" name="mobile" :label-col="{span:8}">
+            <a-form-item
+              :label="$t('mobile_number')"
+              name="mobile"
+              :label-col="{ span: 8 }"
+            >
               <a-input v-model:value="modal.data.mobile" />
             </a-form-item>
             <a-form-item :label="$t('dob')" name="dob" :label-col="{ span: 8 }">
@@ -148,23 +199,32 @@
                 />
               </a-form-item>
             </template>
-            <a-form-item :label="$t('competition_accepted')" name="accepted" :label-col="{ span: 8 }">
-              <a-switch v-model:checked="modal.data.accepted" 
+            <a-form-item
+              :label="$t('competition_accepted')"
+              name="accepted"
+              :label-col="{ span: 8 }"
+            >
+              <a-switch
+                v-model:checked="modal.data.accepted"
                 :checked-children="$t('competition_accepted')"
                 :un-checked-children="$t('competition_unaccepted')"
               />
             </a-form-item>
-            <a-form-item :label="$t('competition_result')"  name="resule" :label-col="{span:8}">
-              <a-select 
+            <a-form-item
+              :label="$t('competition_result')"
+              name="resule"
+              :label-col="{ span: 8 }"
+            >
+              <a-select
                 v-model:value="modal.data.result_rank"
                 :options="competitionResults"
-                style="width:150px"
+                style="width: 150px"
                 @change="onChangeResult(record)"
               />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-              <img :src="modal.data.avatar_url" width="200"/>
+            <img :src="modal.data.avatar_url" width="200" />
           </a-col>
         </a-row>
       </a-form>
@@ -174,19 +234,18 @@
           key="Update"
           type="primary"
           @click="updateRecord()"
-          >{{$t('update')}}</a-button
+          >{{ $t("update") }}</a-button
         >
         <a-button
           v-if="modal.mode == 'CREATE'"
           key="Store"
           type="primary"
           @click="storeRecord()"
-          >{{$t('add')}}</a-button
+          >{{ $t("add") }}</a-button
         >
       </template>
     </a-modal>
     <!-- Modal End-->
-
   </OrganizationLayout>
 </template>
 
@@ -194,20 +253,23 @@
 import OrganizationLayout from "@/Layouts/OrganizationLayout.vue";
 import { defineComponent, reactive } from "vue";
 import dayjs from "dayjs";
-import { Modal } from 'ant-design-vue';
-import { ref, createVNode } from 'vue';
-import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
+import { Modal } from "ant-design-vue";
+import { ref, createVNode } from "vue";
+import { ExclamationCircleOutlined } from "@ant-design/icons-vue";
 
 export default {
   components: {
-    OrganizationLayout,Modal,createVNode,ExclamationCircleOutlined
+    OrganizationLayout,
+    Modal,
+    createVNode,
+    ExclamationCircleOutlined,
   },
-  props: ["competitionResults","competition"],
+  props: ["competitionResults", "competition"],
   data() {
     return {
       breadcrumb: [
-        { label: "賽事列表", url: route('manage.competitions.index') },
-        { label: "報名列表", url: null }
+        { label: "賽事列表", url: route("manage.competitions.index") },
+        { label: "報名列表", url: null },
       ],
       dateFormat: "YYYY-MM-DD",
       modal: {
@@ -216,6 +278,84 @@ export default {
         title: "Modal",
         mode: "",
       },
+      acceptDisabled: false,
+      columns: [
+        {
+          title: "Name (zh)",
+          i18n: "name_zh",
+          dataIndex: "name_zh",
+          key: "name_zh",
+        },
+        {
+          title: "Name (fn)",
+          i18n: "name_fn",
+          dataIndex: "name_fn",
+          key: "name_fn",
+        },
+        {
+          title: "Gender",
+          i18n: "gender",
+          dataIndex: "gender",
+          key: "gender",
+        },
+        {
+          title: "Age",
+          i18n: "age",
+          dataIndex: "age",
+          key: "age",
+        },
+        {
+          title: "Date of Birth",
+          i18n: "dob",
+          dataIndex: "dob",
+          key: "dob",
+        },
+        {
+          title: "Role",
+          i18n: "role",
+          dataIndex: "role",
+          key: "role",
+        },
+        {
+          title: "Category",
+          i18n: "category",
+          dataIndex: "category",
+          key: "category",
+        },
+        {
+          title: "Weight",
+          i18n: "weight",
+          dataIndex: "weight",
+          key: "weight",
+        },
+        {
+          title: "Avatar",
+          i18n: "avatar",
+          dataIndex: "avatar",
+          key: "avatar",
+        },
+        {
+          title: "Accepted",
+          i18n: "competition_accepted",
+          dataIndex: "accepted",
+          key: "accepted",
+          enabled: false,
+          width: "150px",
+        },
+        {
+          title: "Result",
+          i18n: "competition_result",
+          dataIndex: "competition_result",
+          key: "result",
+          width: "150px",
+        },
+        {
+          title: "Operation",
+          i18n: "operation",
+          dataIndex: "operation",
+          key: "operation",
+        },
+      ],
       rules: {
         name_fn: { required: true },
         display_name: { required: true },
@@ -241,82 +381,11 @@ export default {
           width: "150px",
         },
       },
-      selectedRowKeyIds:[],
+      selectedRowKeyIds: [],
     };
   },
   created() {
-    //this.competitionResults.unshift({value:null,label:'---'})
-  },
-  computed: {
-    columns() {
-      return [
-        {
-          title: this.$t('name_zh'),
-          i18n:"name_zh",
-          dataIndex: "name_zh",
-          key:'name_zh',
-        },{
-          title: this.$t('name_fn'),
-          i18n:"name_fn",
-          dataIndex: "name_fn",
-          key: "name_fn",
-        },{
-          title: this.$t('gender'),
-          i18n:"gender",
-          dataIndex: "gender",
-          key: "gender",
-        },{
-          title: this.$t('age'),
-          i18n:"age",
-          dataIndex: "age",
-          key: "age",
-        },{
-          title: this.$t('dob'),
-          i18n:"dob",
-          dataIndex: "dob",
-          key: "dob",
-        },{
-          title: this.$t('role'),
-          i18n:"role",
-          dataIndex: "role",
-          key: "role",
-        },{
-          title: this.$t('category'),
-          i18n:"category",
-          dataIndex: "category",
-          key: "category",
-        },{
-          title: this.$t('weight'),
-          i18n:"weight",
-          dataIndex: "weight",
-          key: "weight",
-        },{
-          title: this.$t('avatar'),
-          i18n:"avatar",
-          dataIndex: "avatar",
-          key: "avatar",
-        },{
-          title: this.$t('competition_accepted'),
-          i18n:"competition_accepted",
-          dataIndex: "accepted",
-          key: "accepted",
-          enabled: false,
-          width: "150px"
-        },{
-          title: this.$t('competition_result'),
-          i18n:"competition_result",
-          dataIndex: "competition_result",
-          key: "result",
-          enabled: false,
-          width: "150px"
-        },{
-          title: this.$t('operation'),
-          i18n:"operation",
-          dataIndex: "operation",
-          key: "operation",
-        },
-      ]
-    }
+    this.competitionResults.unshift({ value: null, label: "---" });
   },
   methods: {
     onChangeGender(gender) {
@@ -337,30 +406,31 @@ export default {
         this.genWeightList();
       }
     },
-    deleteRecord(record){
+    deleteRecord(record) {
       Modal.confirm({
-          title: '是否確定',
-          icon: createVNode(ExclamationCircleOutlined),
-          content: '刪除報名記錄?'+record.name_zh +' / ' + record.name_fn,
-          okText: '確定',
-          cancelText: '取消',
-          onOk: () => {
-            this.$inertia.delete(route('manage.competition.applications.destroy',
-              {
-                competition: this.competition.id,
-                application: record.id,
-              }),{
+        title: "是否確定",
+        icon: createVNode(ExclamationCircleOutlined),
+        content: "刪除報名記錄?" + record.name_zh + " / " + record.name_fn,
+        okText: "確定",
+        cancelText: "取消",
+        onOk: () => {
+          this.$inertia.delete(
+            route("manage.competition.applications.destroy", {
+              competition: this.competition.id,
+              application: record.id,
+            }),
+            {
               onSuccess: (page) => {
                 console.log(page);
               },
               onError: (error) => {
                 console.log(error);
               },
-            })
-          }
-      })
-
-    }, 
+            }
+          );
+        },
+      });
+    },
     genWeightList() {
       if (this.modal.data.gender == "M") {
         this.modal.data.weight_list = this.competition.categories_weights.find(
@@ -399,46 +469,44 @@ export default {
         });
     },
     calculateAge(birthDate) {
-        if (!birthDate) return;
-        const currentDate = new Date();
-        if (new Date(birthDate) > currentDate) {
-            var birthDate = null
-            var years = null;
-            var months = null;
-            var days = null;
-            return 'false';
-        }
+      if (!birthDate) return;
+      const currentDate = new Date();
+      if (new Date(birthDate) > currentDate) {
+        var birthDate = null;
+        var years = null;
+        var months = null;
+        var days = null;
+        return "false";
+      }
 
-        const diffTime = currentDate - new Date(birthDate);
-        const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        years = Math.floor(totalDays / 365.25);
-        months = Math.floor((totalDays % 365.25) / 30.4375);
-        days = Math.floor((totalDays % 365.25) % 30.4375);
-        return years
+      const diffTime = currentDate - new Date(birthDate);
+      const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      years = Math.floor(totalDays / 365.25);
+      months = Math.floor((totalDays % 365.25) / 30.4375);
+      days = Math.floor((totalDays % 365.25) % 30.4375);
+      return years;
     },
-    disabledDate(current){
-      return current>dayjs(new Date()).subtract(3,'year');
+    disabledDate(current) {
+      return current > dayjs(new Date()).subtract(3, "year");
     },
-    onCheckChange(selectedRowKeys, selectedRows){
-    },
-    onCheckSelect(record, selected, selectedRows){
-      if(selected){
-        this.selectedRowKeyIds.push(record.id)
-      }else{
-        console.log()
-        this.selectedRowKeyIds=this.selectedRowKeyIds.filter(x=>x!=record.id)
-        
+    onCheckChange(selectedRowKeys, selectedRows) {},
+    onCheckSelect(record, selected, selectedRows) {
+      if (selected) {
+        this.selectedRowKeyIds.push(record.id);
+      } else {
+        console.log();
+        this.selectedRowKeyIds = this.selectedRowKeyIds.filter((x) => x != record.id);
       }
       //console.log(record, selected, selectedRows);
     },
     onCheckSelectAll(selected, selectedRows, changeRows) {
-      selectedRows.forEach((r)=>{
-        this.selectedRowKeyIds.push(r.id)
-      })
+      selectedRows.forEach((r) => {
+        this.selectedRowKeyIds.push(r.id);
+      });
       //console.log(selected, selectedRows, changeRows);
-    },      
-    acceptedConfirmed(record){
-      record.accepted=!record.accepted
+    },
+    acceptedConfirmed(record) {
+      record.accepted = !record.accepted;
       console.log(record.accepted);
       this.$inertia.put(
         route("manage.competition.applications.update", {
@@ -456,7 +524,7 @@ export default {
         }
       );
     },
-    onChangeResult(record){
+    onChangeResult(record) {
       this.$inertia.put(
         route("manage.competition.applications.update", {
           competition: this.competition.id,
@@ -472,7 +540,7 @@ export default {
           },
         }
       );
-    }
+    },
   },
 };
 </script>

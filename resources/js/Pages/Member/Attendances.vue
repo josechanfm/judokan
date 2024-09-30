@@ -176,7 +176,7 @@ export default {
       if (val == "") {
         this.searchResult = this.members;
       } else {
-        this.searchResult = this.members.filter((m) => m.given_name.includes(val));
+        this.searchResult = this.members.filter((m) => m.name_zh.includes(val));
       }
     },
     addAttendance() {

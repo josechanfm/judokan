@@ -299,9 +299,8 @@ export default {
     this.application.competition_id = this.competition.id;
     if (this.member) {
       this.application.member_id = this.member.id;
-      this.application.given_name = this.member.given_name;
-      this.application.family_name = this.member.family_name;
-      this.application.middle_name = this.member.middle_name;
+      this.application.name_zh = this.member.name_zh;
+      this.application.name_fn = this.member.name_fn;
       this.application.display_name = this.member.display_name;
       this.application.gender = this.member.gender;
       this.application.dob = this.member.dob;

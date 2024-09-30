@@ -14,9 +14,8 @@ class Member extends Model
     use HasFactory;
     protected $fillable=[
         'user_id',
-        'given_name',
-        'family_name',
-        'middle_name',
+        'name_zh',
+        'name_fn',
         'display_name',
         'gender',
         'dob',
@@ -64,7 +63,7 @@ class Member extends Model
     {
         $user = new User();
         $user->email = $this->email;
-        $user->name = $this->given_name;
+        $user->name = $this->name_zh;
         $user->password = 'need-to-set';
         $user->save();
         $this->user_id=$user->id;

@@ -24,17 +24,14 @@
               <a-collapse-panel key="1" :header="$t('profile_title')">
                 <a-row :gutter="24" :span="24">
                   <a-col :span="12">
-                    <a-form-item :label="$t('family_name')" name="family_name">
-                      <a-input v-model:value="member.family_name" />
+                    <a-form-item :label="$t('name_zh')" name="name_zh">
+                      <a-input v-model:value="member.name_zh" />
                     </a-form-item>
-                    <a-form-item :label="$t('middle_name')" name="middle_name">
-                      <a-input v-model:value="member.middle_name" />
+                    <a-form-item :label="$t('name_fn')" name="name_fn">
+                      <a-input v-model:value="member.name_fn" />
                     </a-form-item>
                   </a-col>
                   <a-col :span="12">
-                    <a-form-item :label="$t('given_name')" name="given_name">
-                      <a-input v-model:value="member.given_name" />
-                    </a-form-item>
                     <a-form-item :label="$t('display_name')" name="display_name">
                       <a-input v-model:value="member.display_name" />
                     </a-form-item>
@@ -274,8 +271,8 @@ export default {
         mode: "",
       },
       rules: {
-        given_name: { required: true },
-        family_name: { required: true },
+        name_zh: { required: true },
+        name_fn: { required: true },
         display_name: { required: true },
         email: { required: true, type: "email" },
         field: { required: true },

@@ -209,7 +209,7 @@ export default {
 
               <div class="mt-16">
                 <h1 class="font-bold text-center text-3xl text-gray-900">
-                  {{ member.given_name }} {{ member.middle_name }} {{ member.family_name }}
+                  {{ member.name_zh }} {{ member.name_fn }}
                 </h1>
                 <p class="text-center text-sm text-gray-400 font-medium">
 

@@ -96,7 +96,7 @@
 					<td colspan="2" width="50%">身份証號碼：{{$application->id_num}}</td>
 				</tr>
 				<tr>
-					<td width="50%">是否已完成年度體檢：沒有 </td>
+					<td width="50%">是否已完成年度體檢： </td>
 					<td colspan="2" width="50%">手機號碼：{{ $application->mobile}}</td>
 				</tr>
 				<tr>
@@ -118,7 +118,7 @@
 						□ 參加者未滿十八歲
 						<hr style="border-top: 2px dotted gray; border-bottom:none">
 						本人 ________________(家長)，與參加者 _________________(運動員)為 _________________<br>
-						關係，謹此聲明參加者的健康及體能良好，同意其參加「2024全澳柔道計分賽」。<br>
+						關係，謹此聲明參加者的健康及體能良好，同意其參加「{{$application->competition->title_zh}}」。<br>
 						特此聲明。<br>
 						家長簽名：＿＿＿＿＿＿＿＿＿＿＿＿＿　　　　　日期：＿＿日/＿＿月/＿＿＿＿年<br>
 						*註：未滿十八歲之參加者須家長簽署同意方可參與是次比賽

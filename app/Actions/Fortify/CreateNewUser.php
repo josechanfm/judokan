@@ -25,8 +25,8 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input)
     {
         Validator::make($input, [
-            'given_name' => ['required', 'string', 'max:255'],
-            'family_name' => ['required', 'string', 'max:255'],
+            'name_zh' => ['required', 'string', 'max:255'],
+            'name_fn' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => $this->passwordRules(),
             // 'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
@@ -44,7 +44,7 @@ class CreateNewUser implements CreatesNewUsers
 
         return DB::transaction(function () use ($input, $organization) {
             return tap(User::create([
-                'name' => $input['family_name'],
+                'name' => $input['name_zh'],
                 'email' => $input['email'],
                 'password' => Hash::make($input['password']),
             ]), function (User $user) use ($organization, $input) {
@@ -73,9 +73,9 @@ class CreateNewUser implements CreatesNewUsers
     {
         $member = Member::forceCreate([
             'user_id' => $user->id,
-            'given_name' => $input['given_name'],
-            'family_name' => $input['family_name'],
-            'display_name' => $input['given_name'] . $input['family_name'],
+            'name_zh' => $input['name_zh'],
+            'name_fn' => $input['name_fn'],
+            'display_name' => $input['name_zh'] . $input['name_fn'],
             'email' => $user->email
         ]);
         // dd($member->organizations()->attach($organization->id));

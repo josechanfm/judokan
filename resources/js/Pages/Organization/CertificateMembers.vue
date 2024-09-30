@@ -36,21 +36,20 @@
         </template>
       </template>
       <template #expandedRowRender="{ record }">
-        <p>{{$t('given_name')}}: {{ record.given_name }}</p>
-        <p>{{$t('middle_name')}}: {{ record.middle_name }}</p>
-        <p>{{$t('family_name')}}: {{ record.family_name }}</p>
-        <p>{{$t('display_name')}}: {{ record.display_name }}</p>
-        <p>{{$t('gender')}}: {{ record.gender }}</p>
-        <p>{{$t('dob')}}: {{ record.dob }}</p>
-        <p>{{$t('email')}}: {{ record.email }}</p>
-        <p>{{$t('number')}}: {{ record.pivot.number }}</p>
+        <p>{{ $t("name_zh") }}: {{ record.name_zh }}</p>
+        <p>{{ $t("name_fn") }}: {{ record.name_fn }}</p>
+        <p>{{ $t("display_name") }}: {{ record.display_name }}</p>
+        <p>{{ $t("gender") }}: {{ record.gender }}</p>
+        <p>{{ $t("dob") }}: {{ record.dob }}</p>
+        <p>{{ $t("email") }}: {{ record.email }}</p>
+        <p>{{ $t("number") }}: {{ record.pivot.number }}</p>
         <!-- <p>Number Display: {{ record.pivot.number_display }}</p> -->
-        <p>{{$t('issue_date')}}: {{ record.pivot.issue_date }}</p>
-        <p>{{$t('valid_until')}}: {{ record.pivot.valid_until }}</p>
-        <p>{{$t('authorized_by')}}: {{ record.pivot.authorized_by }}</p>
+        <p>{{ $t("issue_date") }}: {{ record.pivot.issue_date }}</p>
+        <p>{{ $t("valid_until") }}: {{ record.pivot.valid_until }}</p>
+        <p>{{ $t("authorized_by") }}: {{ record.pivot.authorized_by }}</p>
         <!-- <p>Rank: {{ record.pivot.rank }}</p>
                 <p>Rank Caption: {{ record.pivot.rank_caption }}</p> -->
-        <p>{{$t('remark')}}: {{ record.pivot.remark }}</p>
+        <p>{{ $t("remark") }}: {{ record.pivot.remark }}</p>
         <!-- <p>Avata: {{ record.pivot.avata }}</p> -->
       </template>
       <template #expandColumnTitle> Details </template>
@@ -75,13 +74,12 @@
           <a-select
             v-model:value="modal.data.member_id"
             :options="members"
-            :fieldNames="{ value: 'id', label: 'given_name' }"
+            :fieldNames="{ value: 'id', label: 'name_zh' }"
             @change="onChangeMember"
           />
         </a-form-item>
         <a-form-item :label="$t('full_name')" name="full_name">
-          {{ modal.member.given_name }} {{ modal.member.middle_name }}
-          {{ modal.member.family_name }}
+          {{ modal.member.name_zh }}
         </a-form-item>
         <a-form-item :label="$t('display_name')" name="display_name">
           <a-input v-model:value="modal.data.display_name" />
@@ -155,9 +153,9 @@ export default {
   props: ["organization", "certificate", "members"],
   data() {
     return {
-      breadcrumb:[
-          {label:"證書列表" ,url:route('manage.certificates.index')},
-          {label:"會員證書" ,url:null},
+      breadcrumb: [
+        { label: "證書列表", url: route("manage.certificates.index") },
+        { label: "會員證書", url: null },
       ],
       dateFormat: "YYYY-MM-DD",
       modal: {
@@ -294,7 +292,7 @@ export default {
     onChangeMember(memberId) {
       const member = this.members.find((m) => m.id == memberId);
       this.modal.member = member;
-      this.modal.data.display_name = member.given_name + " " + member.family_name;
+      this.modal.data.display_name = member.name_zh + " " + member.name_fn;
     },
   },
 };

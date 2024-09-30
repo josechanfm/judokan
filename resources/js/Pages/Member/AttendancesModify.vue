@@ -8,7 +8,7 @@
     <a-select
       v-model:value="selected"
       :options="members"
-      :fieldNames="{ value: 'id', label: 'given_name' }"
+      :fieldNames="{ value: 'id', label: 'name_zh' }"
       style="width: 100px"
     />
     <a-button>{{ $t("scan") }}</a-button>
@@ -31,7 +31,7 @@
           >
         </template>
         <template v-else-if="column.dataIndex == 'member'">
-          {{ record.member.given_name }}
+          {{ record.member.name_zh }}
         </template>
         <template v-else-if="column.dataIndex == 'status'">
           <a-radio-group

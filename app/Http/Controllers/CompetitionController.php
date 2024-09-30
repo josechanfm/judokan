@@ -23,11 +23,11 @@ class CompetitionController extends Controller
      */
     public function index()
     {
-        $member = auth()->user()->member;
+        $member = auth()?->user()?->member;
         // dd($member);
         $competitions = Competition::where('published', 1)->where(function ($query) use ($member) {
             $query->where('scope', 'PUB')->orWhere('scope', 'MJA')->orWhere(function ($query) use ($member) {
-                $query->where('organization_id', session('organization') ? session('organization')->id : $member->organizations[0]->id);
+                $query->where('organization_id', session('organization') ? session('organization')->id : $member?->organizations[0]?->id);
             });
         })->get();
         return Inertia::render('Competition/Competitions', [
@@ -98,7 +98,7 @@ class CompetitionController extends Controller
             $path = Storage::putFile('public/images/competitions/avatar', $file);
             $data['avatar'] = $path;
         }
-        if ($data['member_id']) {
+        if (!empty($data['member_id'])) {
             $member = Member::where('id', $data['member_id'])->first();
             $data['organization_id'] = session('organization') ? session('organization')->id : $member->organizations[0]->id;
         }
@@ -122,7 +122,7 @@ class CompetitionController extends Controller
             'organizations' => Organization::all(),
             'belt_ranks' => Config::item("belt_ranks"),
             'competition' => $competition,
-            'member' => auth()->user()->member
+            'member' => auth()->user()?->member
         ]);
     }
 

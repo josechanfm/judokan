@@ -14,9 +14,8 @@ defineProps({
 });
 
 const form = useForm({
-  name: "",
-  given_name: "",
-  family_name: "",
+  name_zh: "",
+  name_fn: "",
   email: "",
   organization_id: "",
   password: "",
@@ -46,24 +45,17 @@ const submit = () => {
       @submit.prevent="submit"
     >
       <a-form-item
-        label="Given name"
-        name="given_name"
+        :label="$t('name_zh')"
+        name="name_zh"
         :rules="[{ required: true, message: 'Please input your given name!' }]"
       >
-        <a-input v-model:value="form.given_name" />
+        <a-input v-model:value="form.name_zh" />
       </a-form-item>
-      <a-form-item label="Middle name" name="middle_name">
-        <a-input v-model:value="form.middle_name" />
-      </a-form-item>
-      <a-form-item
-        label="Family name"
-        name="family_name"
-        :rules="[{ required: true, message: 'Please input your family_name!' }]"
-      >
-        <a-input v-model:value="form.family_name" />
+      <a-form-item :label="$t('name_fn')" name="name_fn">
+        <a-input v-model:value="form.name_fn" />
       </a-form-item>
       <a-form-item
-        label="Organization"
+        :label="$t('organization')"
         name="organization_id"
         :rules="[
           { required: true, message: 'Please input your organization belongs to!' },
@@ -80,21 +72,21 @@ const submit = () => {
                         <a-input v-model:value="form.registration_code" />
                     </a-form-item> -->
       <a-form-item
-        label="Email (for login)"
+        :label="$t('login_email')"
         name="email"
         :rules="[{ required: true, message: 'Please input your email!' }]"
       >
         <a-input v-model:value="form.email" type="email" />
       </a-form-item>
       <a-form-item
-        label="Password"
+        :label="$t('password')"
         name="password"
         :rules="[{ required: true, message: 'Please input your password!' }]"
       >
         <a-input-password v-model:value="form.password" />
       </a-form-item>
       <a-form-item
-        label="Confirm Password"
+        :label="$t('confirm_password')"
         name="password_confirmation"
         :rules="[{ required: true, message: 'Please input your confirm password!' }]"
       >

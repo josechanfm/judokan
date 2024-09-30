@@ -44,7 +44,7 @@
             </template>
             <template v-else-if="column.dataIndex == 'receiver'">
               <ol>
-                <li v-for="member in record.received_members">{{ member.given_name }}</li>
+                <li v-for="member in record.received_members">{{ member.name_zh }}</li>
               </ol>
             </template>
           </template>

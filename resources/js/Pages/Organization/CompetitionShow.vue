@@ -29,14 +29,11 @@
             :rules="rules" 
             @finish="onFinish"
           >
-            <a-form-item :label="$t('given_name')" name="given_name">
-              <a-input v-model:value="application.given_name"/>
+            <a-form-item :label="$t('name_zh')" name="name_zh">
+              <a-input v-model:value="application.name_zh"/>
             </a-form-item>
-            <a-form-item :label="$t('family_name')" name="family_name">
-              <a-input v-model:value="application.family_name"/>
-            </a-form-item>
-            <a-form-item :label="$t('middle_name')" name="middle_name">
-              <a-input v-model:value="application.middle_name"/>
+            <a-form-item :label="$t('name_fn')" name="name_fn">
+              <a-input v-model:value="application.name_fn"/>
             </a-form-item>
             <a-form-item :label="$t('display_name')" name="display_name">
               <a-input v-model:value="application.display_name"/>
@@ -120,8 +117,8 @@ export default {
       dateList: ["2023-01-02"],
       application: {},
       rules: {
-        given_name: { required: true },
-        family_name: { required: true },
+        name_zh: { required: true },
+        name_fn: { required: true },
         display_name: { required: true },
         dob: { required: true },
         gender: { required: true },
@@ -159,9 +156,8 @@ export default {
     this.application.competition_id = this.competition.id;
     if(this.member){
         this.application.member_id = this.member.id;
-        this.application.given_name = this.member.given_name;
-        this.application.family_name = this.member.family_name;
-        this.application.middle_name = this.member.middle_name;
+        this.application.name_zh = this.member.name_zh;
+        this.application.name_fn = this.member.name_fn;
         this.application.display_name = this.member.display_name;
         this.application.gender = this.member.gender;
         this.application.dob = this.member.dob;
