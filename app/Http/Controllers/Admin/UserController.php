@@ -20,11 +20,11 @@ class UserController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Admin/Users',[
-            'organizations'=>Organization::all(),
-            'users'=>User::with('organizations')->with('roles')->with('permissions')->get(),
-            'roles'=>\Spatie\Permission\Models\Role::all(),
-            'permissions'=>Permission::all()
+        return Inertia::render('Admin/Users', [
+            'organizations' => Organization::all(),
+            'users' => User::with('organizations')->with('roles')->with('permissions')->get(),
+            'roles' => \Spatie\Permission\Models\Role::all(),
+            'permissions' => Permission::all()
         ]);
     }
 
@@ -46,13 +46,13 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request,[
+        $this->validate($request, [
             'name' => 'required',
-            'email'=>'required|email',
-            'password'=>'required',
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        $user=User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make('password'),
@@ -60,10 +60,10 @@ class UserController extends Controller
         //$user->assignRole('organizer');
         $user->ownedTeams()->save(Team::forceCreate([
             'user_id' => $user->id,
-            'name' => explode(' ', $user->name, 2)[0]."'s Team",
+            'name' => explode(' ', $user->name, 2)[0] . "'s Team",
             'personal_team' => true,
         ]));
-        if($request->organization_ids){
+        if ($request->organization_ids) {
             $user->organizations()->sync($request->organization_ids);
         }
 
@@ -101,10 +101,10 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $data=$request->all();
-        if($request->password){
-            $data['password']=password_hash($request->password,PASSWORD_BCRYPT);
-        }else{
+        $data = $request->all();
+        if ($request->password) {
+            $data['password'] = password_hash($request->password, PASSWORD_BCRYPT);
+        } else {
             unset($data['password']);
         }
         $user->update($data);
@@ -124,6 +124,5 @@ class UserController extends Controller
     {
         $user->delete();
         return redirect()->back();
-
     }
 }

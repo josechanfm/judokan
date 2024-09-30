@@ -99,13 +99,11 @@
                 </template>
               </a-checkbox-group>
             </a-form-item>
-
           </a-col>
         </a-row>
         <a-form-item :label="$t('password')" name="password">
           <a-input v-model:value="modal.data.password" />
         </a-form-item>
-
       </a-form>
       <template #footer>
         <a-button
@@ -136,7 +134,7 @@ export default {
   components: {
     AdminLayout,
   },
-  props: ["organizations", "users", "roles","permissions"],
+  props: ["organizations", "users", "roles", "permissions"],
   data() {
     return {
       modal: {
@@ -259,7 +257,7 @@ export default {
       );
     },
     deleteRecord(record) {
-      this.$inertia.delete(route("admin.users.destroy"), record.id, {
+      this.$inertia.delete(route("admin.users.destroy", record.id), {
         onSuccess: (page) => {
           console.log(page);
         },

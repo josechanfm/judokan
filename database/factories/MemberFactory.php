@@ -24,12 +24,10 @@ class MemberFactory extends Factory
     public function definition()
     {
         return [
-            'given_name' => $this->faker->firstName(),
-            'family_name' => $this->faker->lastName(),
+            'name_zh' => $this->faker->firstName(),
+            'name_fn' => $this->faker->lastName(),
             'display_name' => $this->faker->name,
             'email' => $this->faker->unique()->safeEmail(),
         ];
     }
-
-
 }
