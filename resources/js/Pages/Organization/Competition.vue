@@ -119,7 +119,6 @@
                 >{{ option.label }}</a-checkbox
               >
             </a-checkbox-group>
-            {{ competitionData.refereeOptionsSelected }}
           </a-form-item>
           <a-form-item
             :label="$t('staff_options')"
