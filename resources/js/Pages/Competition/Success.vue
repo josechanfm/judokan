@@ -63,7 +63,7 @@
                     </tr>
                     <tr v-if="application.role == 'athlete'">
                       <td>{{ $t("category") }}</td>
-                      <td>{{ application.category }}</td>
+                      <td>{{ application.competition.categories_weights.find(x=>x.code ==application.category).name }}</td>
                       <td>{{ $t("weight") }}</td>
                       <td>{{ application.weight }}</td>
                     </tr>

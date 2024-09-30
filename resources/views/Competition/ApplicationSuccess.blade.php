@@ -100,7 +100,7 @@
 					<td colspan="2" width="50%">手機號碼：{{ $application->mobile}}</td>
 				</tr>
 				<tr>
-					<td colspan="2" width="70%">參加組別： {{$category}}</td>
+					<td colspan="2" width="70%">參加組別： {{ $category }}</td>
 					<td >參加級別：{{$weight}}</td>
 				</tr>
 				<tr>
