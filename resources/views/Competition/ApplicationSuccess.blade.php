@@ -1,33 +1,39 @@
 <!doctype html>
 <html lang="en">
+
 <head>
 </head>
 <style type="text/css">
-    @font-face {
-        font-family: SimHei;
-        src: url('{{base_path().'/storage/'}}fonts/simhei.ttf') format('truetype')
-    }
-    /*         
+	@font-face {
+		font-family: SimHei;
+		src: url('{{base_path().' /storage/'}}fonts/simhei.ttf') format('truetype')
+	}
+
+	/*         
     * {
         font-family: SimHei;
     }
     */
-    table{
-        border-spacing: 0px;
-        width:100%
-    }
+	table {
+		border-spacing: 0px;
+		width: 100%
+	}
 
-    table, td, th {
+	table,
+	td,
+	th {
 		border-collapse: collapse;
-        font-family: SimHei, sans-serif;
-    }
-	table tr{
+		font-family: SimHei, sans-serif;
+	}
+
+	table tr {
 		line-height: 40px;
 	}
-    table td{
-        border:1px solid;
-		padding-left:5px;
-    }
+
+	table td {
+		border: 1px solid;
+		padding-left: 5px;
+	}
 </style>
 
 <body>
@@ -37,45 +43,45 @@
 			{{-- <caption style="font-family: SimHei, sans-serif; font-size:30px; padding-top:50px"><center>發票</center></caption> --}}
 			@php
 			/*
-				$bannerImage=$application->competition->getFirstMedia('competitionBanner');
-				if($bannerImage){
-					echo '<img src="'.public_path('/media/competition/'.$bannerImage->id.'/'.$bannerImage->file_name).'" width="100%"/>';
-				}
-				if($bannerImage=$application->avatar_url){
-					echo '<div style="height:120px">';
-					echo '<img src="'.public_path($bannerImage=$application->avatar_url) .'" style="float:right" width="100px"/>';
-					echo '</div>';
-				}
+			$bannerImage=$application->competition->getFirstMedia('competitionBanner');
+			if($bannerImage){
+			echo '<img src="'.public_path('/media/competition/'.$bannerImage->id.'/'.$bannerImage->file_name).'" width="100%" />';
+			}
+			if($bannerImage=$application->avatar_url){
+			echo '<div style="height:120px">';
+				echo '<img src="'.public_path($bannerImage=$application->avatar_url) .'" style="float:right" width="100px" />';
+				echo '</div>';
+			}
 			*/
 			$age=DateTime::createFromFormat('Y-m-d', $application->dob )->diff(new DateTime('now'))->y;
 			$cw=$application->competition->categories_weights;
 			$category=$cw[array_search($application->category,array_column($cw,'code'))]['name'];
 			$male=$cw[array_search($application->category,array_column($cw,'code'))]['male'];
-			
+
 			if($application->gender=='M'){
-				$weights=$cw[array_search($application->category,array_column($cw,'code'))]['male'];
-				$weight='男子';
+			$weights=$cw[array_search($application->category,array_column($cw,'code'))]['male'];
+			$weight='男子';
 			}else{
-				$weights=$cw[array_search($application->category,array_column($cw,'code'))]['female'];
-				$weight='女子';
+			$weights=$cw[array_search($application->category,array_column($cw,'code'))]['female'];
+			$weight='女子';
 			};
 			$weight.=$weights[array_search($application->weight,array_column($weights,'code'))]['name'];
 			$organization=$organizations[array_search($application->organization_id,array_column($organizations,'id'))]['title'];
 
-		    @endphp
+			@endphp
 			<p></p>
 			<div style="background-color:lightgray; padding-top:10px;padding-bottom:10px">
 				<caption style="font-family: SimHei, sans-serif; font-size:30px;">{{$application->competition->title_zh}}</caption>
 			</div>
 			<hr style="border-top:5px dashed black;border-bottom:none; border-left:none; border-right:none;">
-            <table>
+			<table>
 				<tr>
 					<td width="250px">姓名(中文)：{{ $application->name_zh }}</td>
 					<td>姓名(外文):{{ $application->name_fn }}</td>
 					<td rowspan="3" width="120px" style="text-align:center">
 						@php
-							if($bannerImage=$application->avatar_url){
-								echo '<img src="'.public_path($bannerImage=$application->avatar_url) .'" width="100px/>"';
+						if($bannerImage=$application->avatar_url){
+						echo '<img src="'.public_path($bannerImage=$application->avatar_url) .'" width="100px/>"';
 							}
 						@endphp
 					</td>
