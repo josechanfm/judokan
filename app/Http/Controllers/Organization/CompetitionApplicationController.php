@@ -96,8 +96,8 @@ class CompetitionApplicationController extends Controller
         if (!empty($data['result_rank']) && !empty($competition->result_scores)) {
             $score = $competition->score->toArray();
             $data['result_score'] = $competition->result_scores[$data['result_rank']];
-            $competitionApplication->update($data);
         }
+        $competitionApplication->update($data);
         return redirect()->back();
     }
 
