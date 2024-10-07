@@ -65,10 +65,25 @@
               />
             </a-form-item>
             <a-form-item :label="$t('name_zh')" name="name_zh">
-              <a-input class="uppercase" v-model:value="application.name_zh" />
+              <a-input
+                @input="
+                  () => {
+                    this.application.name_zh = this.application.name_zh.toUpperCase();
+                  }
+                "
+                v-model:value="application.name_zh"
+              />
+              {{ this.application.name_zh.toUpperCase() }}
             </a-form-item>
             <a-form-item :label="$t('name_fn')" name="name_fn">
-              <a-input class="uppercase" v-model:value="application.name_fn" />
+              <a-input
+                @input="
+                  () => {
+                    this.application.name_fn = this.application.name_fn.toUpperCase();
+                  }
+                "
+                v-model:value="application.name_fn"
+              />
             </a-form-item>
             <a-form-item :label="$t('id_num')" name="id_num">
               <a-input v-model:value="application.id_num" />
