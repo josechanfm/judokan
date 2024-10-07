@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use PDF;
 use App\Exports\CompetitionApplicationExport;
+use App\Models\Organization;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CompetitionApplicationController extends Controller
@@ -29,7 +30,8 @@ class CompetitionApplicationController extends Controller
         $competition->applications;
         Session::put('competitionId', $competition->id);
         return Inertia::render('Organization/CompetitionApplications', [
-            'competitionResults'=>Config::item('competition_results'),
+            'competitionResults' => Config::item('competition_results'),
+            'organizations' => Organization::all(),
             'competition' => $competition
         ]);
     }
@@ -89,11 +91,11 @@ class CompetitionApplicationController extends Controller
         $competitionApplication = CompetitionApplication::find($id);
         // return response()->json($competitionApplication);
         // return response()->json($request->all());
-        $data=$request->all();
+        $data = $request->all();
         // dd($competition->result_scores, $data);
-        if(!empty($data['result_rank']) && !empty($competition->result_scores)){
-            $score=$competition->score->toArray();
-            $data['result_score']=$competition->result_scores[$data['result_rank']];
+        if (!empty($data['result_rank']) && !empty($competition->result_scores)) {
+            $score = $competition->score->toArray();
+            $data['result_score'] = $competition->result_scores[$data['result_rank']];
             $competitionApplication->update($data);
         }
         return redirect()->back();

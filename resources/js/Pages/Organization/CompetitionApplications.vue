@@ -43,7 +43,7 @@
             :href="route('manage.competition.application.success', record.id)"
             target="_blank"
             class="ant-btn"
-            >{{ $t("receipt") }}</a
+            >{{ $t("view") }}</a
           >
           <a-button @click="editRecord(record)">{{ $t("edit") }}</a-button>
           <a-popconfirm
@@ -60,6 +60,15 @@
         </template>
         <template v-else-if="column.dataIndex == 'age'">
           {{ calculateAge(record.dob) }}
+        </template>
+        <template v-else-if="column.dataIndex == 'organization'">
+          {{ organizations.find((x) => x.id == record.organization_id).title }}
+        </template>
+        <template v-else-if="column.dataIndex == 'role'">
+          {{ competition.roles.find((x) => x.value == record.role).label }}
+        </template>
+        <template v-else-if="column.dataIndex == 'category'">
+          {{ competition.categories_weights.find((x) => x.code == record.category).name }}
         </template>
         <template v-else-if="column.dataIndex == 'avatar'">
           <img :src="record.avatar_url" width="60" />
@@ -121,14 +130,17 @@
         :rules="rules"
         :validate-messages="validateMessages"
       >
-        <!-- <a-form-item label="Certificate name" name="name">
-                <a-input v-model:value="modal.data.name" />
-            </a-form-item> -->
+        <a-form-item :label="$t('organization')" name="organization">
+          <a-select
+            :options="organizations.map((x) => ({ value: x.id, label: x.title }))"
+            v-model:value="modal.data.organization_id"
+          />
+        </a-form-item>
         <a-form-item :label="$t('name_zh')" name="name_zh">
-          <a-input v-model:value="modal.data.name_zh" />
+          <a-input class="uppercase" v-model:value="modal.data.name_zh" />
         </a-form-item>
         <a-form-item :label="$t('name_fn')" name="name_fn">
-          <a-input v-model:value="modal.data.name_fn" />
+          <a-input class="uppercase" v-model:value="modal.data.name_fn" />
         </a-form-item>
         <a-row :span="24">
           <a-col :span="12">
@@ -264,7 +276,7 @@ export default {
     createVNode,
     ExclamationCircleOutlined,
   },
-  props: ["competitionResults", "competition"],
+  props: ["competitionResults", "competition", "organizations"],
   data() {
     return {
       breadcrumb: [
@@ -280,6 +292,12 @@ export default {
       },
       acceptDisabled: false,
       columns: [
+        {
+          title: "Organization",
+          i18n: "organization",
+          dataIndex: "organization",
+          key: "organization",
+        },
         {
           title: "Name (zh)",
           i18n: "name_zh",
@@ -357,6 +375,7 @@ export default {
         },
       ],
       rules: {
+        organization_id: { required: true },
         name_fn: { required: true },
         display_name: { required: true },
         id_num: { required: true },

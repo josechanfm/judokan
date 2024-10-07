@@ -65,10 +65,10 @@
               />
             </a-form-item>
             <a-form-item :label="$t('name_zh')" name="name_zh">
-              <a-input v-model:value="application.name_zh" />
+              <a-input class="uppercase" v-model:value="application.name_zh" />
             </a-form-item>
             <a-form-item :label="$t('name_fn')" name="name_fn">
-              <a-input v-model:value="application.name_fn" />
+              <a-input class="uppercase" v-model:value="application.name_fn" />
             </a-form-item>
             <a-form-item :label="$t('id_num')" name="id_num">
               <a-input v-model:value="application.id_num" />

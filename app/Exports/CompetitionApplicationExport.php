@@ -8,9 +8,9 @@ use App\Models\CompetitionApplication;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithDrawings;
+// use Maatwebsite\Excel\Concerns\WithDrawings;
 
-class CompetitionApplicationExport implements FromCollection, WithHeadings, WithDrawings
+class CompetitionApplicationExport implements FromCollection, WithHeadings
 {
     /**
      * @return \Illuminate\Support\Collection
@@ -36,7 +36,6 @@ class CompetitionApplicationExport implements FromCollection, WithHeadings, With
             'competition_applications.weight' => '重量',
             'competition_applications.referee_options' => '裁判',
             'competition_applications.staff_options' => '工作人員',
-            "competition_applications.avatar" => '相片',
         ];
     }
     public function headings(): array
@@ -48,37 +47,39 @@ class CompetitionApplicationExport implements FromCollection, WithHeadings, With
     public function collection()
     {
         // dd('aaa');
+        $roles = collect($this->competition->roles);
+        $categories = collect($this->competition->categories_weights);
+
         $applications = CompetitionApplication::join('organizations', 'organizations.id', '=', 'competition_applications.organization_id')
             ->select(array_keys($this->columns))
             ->where('competition_id', $this->competition->id)
             ->get()->collect();
-        foreach ($applications as $a) {
-            //$a['cod']='asd';
-            //$drawing = new Drawing();
-            // $drawing->setHeight(90);
-            // $drawing->setCoordinates('B3');
-            // $drawing->setPath( public_path( $a->avatar_url ));
-            // $a->avatar = base64_encode(Storage::get($a->avatar??''));
-        }
-        $applications->each->setAppends([]);
+
+        $data = $applications->map(function ($application) use ($roles, $categories) {
+            return [...$application->toArray(), 'role' => $roles->filter(function ($role) use ($application) {
+                return $role['value'] == $application->role;
+            })->first()['label'], 'category' => $categories->filter(function ($category) use ($application) {
+                return $category['code'] == $application->category;
+            })->first()['name']];
+        });
 
         // dd($applications);
-        return $applications;
+        return $data;
     }
-    public function drawings()
-    {
-        
-        $drawings = [];
-        $data = $this->collection();
-        foreach ($data as $key => $t) {
-            $idx = $key + 2;
-            $drawing = new Drawing();
-            $drawing->setName('Logo');
-            $drawing->setPath(public_path($t->avatar_url));
-            $drawing->setHeight(50);
-            $drawing->setCoordinates("O$idx");
-            $drawings[] = $drawing;
-        }
-        return $drawings;
-    }
+    // public function drawings()
+    // {
+
+    //     $drawings = [];
+    //     $data = $this->collection();
+    //     foreach ($data as $key => $t) {
+    //         $idx = $key + 2;
+    //         $drawing = new Drawing();
+    //         $drawing->setName('Logo');
+    //         // $drawing->setPath(public_path($t->avatar_url));
+    //         $drawing->setHeight(50);
+    //         $drawing->setCoordinates("O$idx");
+    //         $drawings[] = $drawing;
+    //     }
+    //     return $drawings;
+    // }
 }
