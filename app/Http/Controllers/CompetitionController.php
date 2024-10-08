@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TestMail;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Config;
@@ -9,6 +10,7 @@ use App\Models\Competition;
 use App\Models\CompetitionApplication;
 use App\Models\Member;
 use App\Models\Organization;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Session;
@@ -26,7 +28,11 @@ class CompetitionController extends Controller
         $member = auth()?->user()?->member;
         // dd($member);
         $competitions = Competition::where('published', 1)->where(function ($query) use ($member) {
-            $query->where('scope', 'PUB')->orWhere('scope', 'MJA')->orWhere(function ($query) use ($member) {
+            $query->where('scope', 'PUB')->orWhere(function ($query) use ($member) {
+                if ($member) {
+                    $query->where('scope', 'MJA');
+                }
+            })->orWhere(function ($query) use ($member) {
                 $query->where('organization_id', session('organization') ? session('organization')->id : $member?->organizations[0]?->id);
             });
         })->get();
@@ -91,7 +97,7 @@ class CompetitionController extends Controller
                     return redirect()->back()->withErrors(['message' => 'Duplicate application']);
                 }
             }
-        } 
+        }
 
         if ($request->file('avatar')) {
             $file = $request->file('avatar');
@@ -179,13 +185,31 @@ class CompetitionController extends Controller
                 'belt_ranks' => Config::item("belt_ranks"),
                 'application' => CompetitionApplication::with('competition')->find($id)
             ]);
+
             $pdf->render();
+
             return $pdf->stream('receipt.pdf', array('Attachment' => false));
         } else {
             if (!session('competitionApplication') || session('competitionApplication') != $id) {
                 return redirect()->route('/');
             }
             Session::flash('competitionApplicationPdf', $id);
+            $application = CompetitionApplication::with('competition')->find($id);
+            $pdf = PDF::loadView('Competition.ApplicationSuccess', [
+                'organizations' => Organization::all()->toArray(),
+                'belt_ranks' => Config::item("belt_ranks"),
+                'application' => $application,
+            ]);
+            $path = 'public/pdf/applications/' . $application->competition->title_zh . $application->name_fn . '.pdf';
+            Storage::put($path, $pdf->output());
+            $mailData = [
+                'title' => '恭喜你已成功報名',
+                'subject' => '比賽報名表',
+                'view_name' => 'mail.applicationMail',
+                'file_path' => $path,
+            ];
+
+            Mail::to(CompetitionApplication::with('competition')->find($id)->email)->send(new TestMail($mailData));
             return Inertia::render('Competition/Success', [
                 'organizations' => Organization::all(),
                 'belt_ranks' => Config::item("belt_ranks"),

@@ -17,6 +17,7 @@
       >滙出Excel</a
     >
     <a-table
+      class="overflow-x-auto"
       :dataSource="competition.applications"
       :columns="columns"
       :rowSelection="{
@@ -62,13 +63,15 @@
           {{ calculateAge(record.dob) }}
         </template>
         <template v-else-if="column.dataIndex == 'organization'">
-          {{ organizations.find((x) => x.id == record.organization_id).title }}
+          {{ organizations.find((x) => x.id == record.organization_id)?.title }}
         </template>
         <template v-else-if="column.dataIndex == 'role'">
-          {{ competition.roles.find((x) => x.value == record.role).label }}
+          {{ competition.roles.find((x) => x.value == record.role)?.label }}
         </template>
         <template v-else-if="column.dataIndex == 'category'">
-          {{ competition.categories_weights.find((x) => x.code == record.category).name }}
+          {{
+            competition.categories_weights.find((x) => x.code == record.category)?.name
+          }}
         </template>
         <template v-else-if="column.dataIndex == 'avatar'">
           <img :src="record.avatar_url" width="60" />

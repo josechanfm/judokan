@@ -73,7 +73,6 @@
                 "
                 v-model:value="application.name_zh"
               />
-              {{ this.application.name_zh.toUpperCase() }}
             </a-form-item>
             <a-form-item :label="$t('name_fn')" name="name_fn">
               <a-input
@@ -221,7 +220,9 @@
             </div>
 
             <div class="flex flex-row item-center justify-center">
-              <a-button type="primary" html-type="submit">{{ $t("submit") }}</a-button>
+              <a-button type="primary" html-type="submit" :loading="loading">{{
+                $t("submit")
+              }}</a-button>
             </div>
           </a-form>
         </div>
@@ -261,6 +262,7 @@ export default {
   props: ["organizations", "belt_ranks", "member", "competition"],
   data() {
     return {
+      loading: false,
       showCropModal: false,
       avatarPreview: null,
       modal: {
@@ -362,15 +364,19 @@ export default {
       }
     },
     onFinish() {
+      this.loading = true;
+      console.log(this.loading);
       if (this.avatarData) {
         this.application.avatar = this.avatarData.blob;
       }
       this.$inertia.post(route("competitions.store"), this.application, {
         onSuccess: (page) => {
           console.log(page);
+          this.loading = false;
         },
         onError: (error) => {
           console.log(error);
+          this.loading = false;
         },
       });
     },

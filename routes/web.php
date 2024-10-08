@@ -104,6 +104,8 @@ Route::group([
     Route::get('/', [App\Http\Controllers\Organization\DashboardController::class, 'index'])->name('manage');
     Route::get('/{organization}/medias', [App\Http\Controllers\Organization\MediaController::class, 'getMedias'])->name('manage.medias');
     Route::get('/select/{organization}', [App\Http\Controllers\Organization\DashboardController::class, 'select'])->name('manage.select');
+    Route::get('send/mail', [App\Http\Controllers\Organization\SendMailController::class, 'sendMailWithAttachment']);
+    Route::get('send/applicationMail', [App\Http\Controllers\Organization\SendMailController::class, 'sendApplicationMailWithAttachment']);
     Route::resource('members', App\Http\Controllers\Organization\MemberController::class)->names('manage.members');
     Route::post('member/create/login/{member}', [App\Http\Controllers\Organization\MemberController::class, 'createLogin'])->name('manage.member.createLogin');
     Route::resource('forms', App\Http\Controllers\Organization\FormController::class)->names('manage.forms');

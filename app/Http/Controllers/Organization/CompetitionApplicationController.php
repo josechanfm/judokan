@@ -124,6 +124,7 @@ class CompetitionApplicationController extends Controller
         if (!session('competitionId') || session('competitionId') != $competition->id) {
             return redirect()->route('/');
         }
+        dd('aa');
         $applications = CompetitionApplication::whereIn('id', explode(',', $request->applicationIds))->get();
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
