@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use PDF;
 use App\Exports\CompetitionApplicationExport;
+use App\Mail\TestMail;
 use App\Models\Organization;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
 class CompetitionApplicationController extends Controller
@@ -158,6 +160,31 @@ class CompetitionApplicationController extends Controller
     public function success(CompetitionApplication $competitionApplication)
     {
         Session::flash('competitionApplication', $competitionApplication->id);
-        return redirect()->route('competition.application.success', $competitionApplication->id);
+        return Inertia::render('Competition/Success', [
+            'organizations' => Organization::all(),
+            'belt_ranks' => Config::item("belt_ranks"),
+            'application' => CompetitionApplication::with('competition')->find($competitionApplication->id)
+        ]);
+    }
+
+    public function sendApplicationEmail(CompetitionApplication $competitionApplication){
+        $application = CompetitionApplication::with('competition')->find($competitionApplication->id);
+        $pdf = PDF::loadView('Competition.ApplicationSuccess', [
+            'organizations' => Organization::all()->toArray(),
+            'belt_ranks' => Config::item("belt_ranks"),
+            'application' => $application,
+        ]);
+        $path = 'public/pdf/applications/' . $application->competition->title_zh . $application->name_fn . '.pdf';
+        Storage::put($path, $pdf->output());
+        $mailData = [
+            'title' => '恭喜你已成功報名',
+            'subject' => '比賽報名表',
+            'view_name' => 'mail.applicationMail',
+            'file_path' => $path,
+        ];
+
+        Mail::to(CompetitionApplication::with('competition')->find($competitionApplication->id)->email)->send(new TestMail($mailData));
+        
+        return redirect()->back();
     }
 }

@@ -46,6 +46,7 @@
             class="ant-btn"
             >{{ $t("view") }}</a
           >
+          <a-button @click="sendMail(record)">{{ $t("send_email") }}</a-button>
           <a-button @click="editRecord(record)">{{ $t("edit") }}</a-button>
           <a-popconfirm
             :title="$t('confirm_delete_record') + record.name_zh + '/' + record.name_fn"
@@ -283,6 +284,7 @@ import OrganizationLayout from "@/Layouts/OrganizationLayout.vue";
 import { defineComponent, reactive } from "vue";
 import dayjs from "dayjs";
 import { Modal } from "ant-design-vue";
+import { message } from "ant-design-vue";
 import { ref, createVNode } from "vue";
 import { ExclamationCircleOutlined } from "@ant-design/icons-vue";
 
@@ -332,12 +334,6 @@ export default {
           i18n: "gender",
           dataIndex: "gender",
           key: "gender",
-        },
-        {
-          title: "Age",
-          i18n: "age",
-          dataIndex: "age",
-          key: "age",
         },
         {
           title: "Date of Birth",
@@ -442,6 +438,31 @@ export default {
         this.genWeightList();
       }
     },
+    sendMail(record) {
+      Modal.confirm({
+        title: "是否確定",
+        icon: createVNode(ExclamationCircleOutlined),
+        content: "是否發送報名表郵件?",
+        okText: "確定",
+        cancelText: "取消",
+        onOk: () => {
+          this.$inertia.post(
+            route("manage.competition.application.mail", record.id),
+            {},
+            {
+              onSuccess: (page) => {
+                message.success("發送成功");
+                console.log(page);
+              },
+              onError: (error) => {
+                message.error("發送失敗");
+                console.log(error);
+              },
+            }
+          );
+        },
+      });
+    },
     deleteRecord(record) {
       Modal.confirm({
         title: "是否確定",
@@ -457,9 +478,11 @@ export default {
             }),
             {
               onSuccess: (page) => {
+                message.success("刪除成功");
                 console.log(page);
               },
               onError: (error) => {
+                message.error("刪除失敗");
                 console.log(error);
               },
             }
