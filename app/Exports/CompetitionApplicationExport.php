@@ -5,6 +5,7 @@ namespace App\Exports;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use App\Models\Competition;
 use App\Models\CompetitionApplication;
+use App\Models\Config;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -49,18 +50,19 @@ class CompetitionApplicationExport implements FromCollection, WithHeadings
         // dd('aaa');
         $roles = collect($this->competition->roles);
         $categories = collect($this->competition->categories_weights);
+        $referee_options = collect(Config::item('referee_options'));
 
         $applications = CompetitionApplication::join('organizations', 'organizations.id', '=', 'competition_applications.organization_id')
             ->select(array_keys($this->columns))
             ->where('competition_id', $this->competition->id)
             ->get()->collect();
 
-        $data = $applications->map(function ($application) use ($roles, $categories) {
+        $data = $applications->map(function ($application) use ($roles, $categories, $referee_options) {
             return [...$application->toArray(), 'role' => $roles->filter(function ($role) use ($application) {
                 return $role['value'] == $application->role;
             })->first()['label'], 'category' => $categories->filter(function ($category) use ($application) {
                 return $category['code'] == $application->category;
-            })->first()['name']];
+            })->first()['name'] ?? ''];
         });
 
         // dd($applications);

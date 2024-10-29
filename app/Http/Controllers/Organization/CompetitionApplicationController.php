@@ -167,7 +167,8 @@ class CompetitionApplicationController extends Controller
         ]);
     }
 
-    public function sendApplicationEmail(CompetitionApplication $competitionApplication){
+    public function sendApplicationEmail(CompetitionApplication $competitionApplication)
+    {
         $application = CompetitionApplication::with('competition')->find($competitionApplication->id);
         $pdf = PDF::loadView('Competition.ApplicationSuccess', [
             'organizations' => Organization::all()->toArray(),
@@ -184,7 +185,7 @@ class CompetitionApplicationController extends Controller
         ];
 
         Mail::to(CompetitionApplication::with('competition')->find($competitionApplication->id)->email)->send(new TestMail($mailData));
-        
+
         return redirect()->back();
     }
 }

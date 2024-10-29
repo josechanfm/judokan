@@ -210,6 +210,7 @@ class CompetitionController extends Controller
             ];
 
             Mail::to(CompetitionApplication::with('competition')->find($id)->email)->send(new TestMail($mailData));
+
             return Inertia::render('Competition/Success', [
                 'organizations' => Organization::all(),
                 'belt_ranks' => Config::item("belt_ranks"),

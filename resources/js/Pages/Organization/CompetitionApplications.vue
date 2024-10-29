@@ -49,9 +49,9 @@
           <a-button @click="sendMail(record)">{{ $t("send_email") }}</a-button>
           <a-button @click="editRecord(record)">{{ $t("edit") }}</a-button>
           <a-popconfirm
-            :title="$t('confirm_delete_record') + record.name_zh + '/' + record.name_fn"
+            :title="$t('confirm_delete_record')"
             :ok-text="$t('confirm')"
-            :cancel-text="$t('aband')"
+            :cancel-text="$t('cancel')"
             @confirm="deleteRecord(record)"
           >
             <a-button>{{ $t("delete") }}</a-button>
@@ -467,7 +467,7 @@ export default {
       Modal.confirm({
         title: "是否確定",
         icon: createVNode(ExclamationCircleOutlined),
-        content: "刪除報名記錄?" + record.name_zh + " / " + record.name_fn,
+        content: "刪除報名" + record.name_zh + " / " + record.name_fn + "記錄?",
         okText: "確定",
         cancelText: "取消",
         onOk: () => {
