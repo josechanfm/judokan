@@ -65,7 +65,7 @@ class CompetitionApplicationExport implements FromCollection, WithHeadings
                 return $category['code'] == $application->category;
             })->first()['name'] ?? '', 'belt_rank' => $belt_ranks->filter(function ($belt_rank) use ($application) {
                 return $belt_rank->rankCode == $application->belt_rank;
-            })->first()->name_zh ?? ''];
+            })->first()->name_zh ?? '', 'gender' => $application->gender == 'M' ? '男' : '女'];
         });
 
         // dd($applications);
