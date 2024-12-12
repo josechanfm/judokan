@@ -85,12 +85,12 @@
 
         <a-row :span="24">
           <a-col :span="12">
-            <a-form-item :label="$t('name_zh')" name="name_zh">
-              <a-input v-model:value="modal.data.name_zh" /> </a-form-item
+            <a-form-item :label="$t('given_name')" name="given_name">
+              <a-input v-model:value="modal.data.given_name" /> </a-form-item
           ></a-col>
           <a-col :span="12">
-            <a-form-item :label="$t('name_fn')" name="name_fn" :label-col="{ span: 8 }">
-              <a-input v-model:value="modal.data.name_fn" />
+            <a-form-item :label="$t('family_name')" name="family_name" :label-col="{ span: 8 }">
+              <a-input v-model:value="modal.data.family_name" />
             </a-form-item>
           </a-col>
         </a-row>
@@ -168,7 +168,7 @@
                         name="tier_id"
                         v-model:value="tier.tier_code"
                         :options="memberTiers"
-                        :fieldNames="{ value: 'label', label: 'label' }"
+                        :fieldNames="{ value: 'value', label: 'label' }"
                         style="width: 200px"
                       />
                     </a-form-item>
@@ -276,40 +276,40 @@ export default {
       ],
       columns: [
         {
-          title: "Name Zh",
-          dataIndex: "name_zh",
+          title: "given_name",
+          dataIndex: "given_name",
           i18n: "name_zh",
           responsive: ["md"],
         },
         {
-          title: "Name Fn",
-          dataIndex: "name_fn",
+          title: "family_name",
+          dataIndex: "family_name",
           i18n: "name_fn",
         },
         {
-          title: "Gender",
+          title: "gender",
           dataIndex: "gender",
           i18n: "gender",
         },
         {
-          title: "Date of birth",
+          title: "dob",
           dataIndex: "dob",
           i18n: "dob",
         },
         {
-          title: "Tier",
+          title: "tier",
           dataIndex: "tier",
           i18n: "tier",
           filters: this.memberTiers.map((t) => ({ value: t.label, text: t.label })),
           onFilter: (value, record) => record.current_tier.tier_code === value,
         },
         {
-          title: "State",
+          title: "state",
           dataIndex: "state",
           i18n: "state",
         },
         {
-          title: "Avatar",
+          title: "avatar",
           dataIndex: "avatar",
           i18n: "avatar",
         },
