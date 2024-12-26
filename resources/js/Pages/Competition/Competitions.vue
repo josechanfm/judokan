@@ -10,7 +10,7 @@
             <template v-if="column.dataIndex == 'operation'">
               <div class="flex gap-3">
                 <a @click="toApply(record)">報名</a>
-                <a @click="toSearch(record)">查看報名</a>
+                <a @click="toSearch(record)">查詢報名</a>
               </div>
             </template>
             <template v-if="column.dataIndex == 'for_member'">
