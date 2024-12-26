@@ -16,6 +16,8 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id');
+            $table->foreignId('attendable_id');
+            $table->string('attendable_type');
             $table->string('title');
             $table->date('date')->nullable();
             $table->foreignId('user_id')->nullable();

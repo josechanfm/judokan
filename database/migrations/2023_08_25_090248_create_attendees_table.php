@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('attendees', function (Blueprint $table) {
             $table->id();
             $table->foreignId('event_id');
-            $table->foreignId('attendee_id');
-            $table->string('attendee_type');
+            $table->foreignId('attendeedable_id');
+            $table->string('attendeedable_type');
             $table->string('status')->nullable();
             $table->timestamps();
         });
