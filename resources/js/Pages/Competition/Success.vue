@@ -137,6 +137,7 @@ import WebLayout from "@/Layouts/WebLayout.vue";
 import dayjs from "dayjs";
 import { message } from "ant-design-vue";
 import { Modal } from "ant-design-vue";
+import { Inertia } from "@inertiajs/inertia";
 import CropperModal from "@/Components/Member/CropperModal.vue";
 
 export default {
@@ -151,7 +152,12 @@ export default {
   data() {
     return {};
   },
-  mounted() {},
+  mounted() {
+    window.onbeforeunload = function (e) {
+      Inertia.get(route("competitions.searchForm", this.competition.id));
+      return false;
+    };
+  },
   created() {},
   methods: {},
 };

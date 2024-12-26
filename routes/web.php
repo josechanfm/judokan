@@ -45,6 +45,9 @@ Route::get('/language/{language}', function ($language) {
 
 Route::resource('forms', \App\Http\Controllers\FormController::class)->names('forms');
 Route::get('competitions/{competition}/searchForm', [\App\Http\Controllers\CompetitionController::class, 'searchForm'])->name('competitions.searchForm');
+Route::get('competitions/{competition}/confirmSeacrhForm', function () {
+    return redirect('/');
+});
 Route::post('competitions/{competition}/confirmSeacrhForm', [\App\Http\Controllers\CompetitionController::class, 'confirmSearchForm'])->name('competitions.confirmSearchForm');
 Route::resource('competitions', \App\Http\Controllers\CompetitionController::class)->names('competitions');
 Route::get('competition/application/{competitionApplication}/success', [\App\Http\Controllers\CompetitionController::class, 'applicationSuccess'])->name('competition.application.success');
