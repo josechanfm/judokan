@@ -218,4 +218,29 @@ class CompetitionController extends Controller
             ]);
         }
     }
+    public function searchForm(Competition $competition)
+    {
+        // dd($competition);
+        return Inertia::render('Competition/SearchForm', [
+            'competition' => $competition,
+        ]);
+    }
+
+    public function confirmSearchForm(Request $request, Competition $competition)
+    {
+        $search = $request->all();
+        $competitionApplication = $competition->applications()->where('id_num', $search['id_num'])->where('email', $search['email'])->where('mobile', $search['mobile'])->first();
+        if (empty($competitionApplication)) {
+            return Inertia::render('Competition/ErrorSearch', [
+                'competition' => $competition
+            ]);
+        } else {
+            Session::flash('competitionApplication', $competitionApplication->id);
+            return Inertia::render('Competition/Success', [
+                'organizations' => Organization::all(),
+                'belt_ranks' => Config::item("belt_ranks"),
+                'application' => CompetitionApplication::with('competition')->find($competitionApplication->id)
+            ]);
+        }
+    }
 }
