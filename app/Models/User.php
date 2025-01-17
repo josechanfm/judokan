@@ -32,7 +32,12 @@ class User extends Authenticatable implements MustVerifyEmail  //this is email v
      * @var string[]
      */
     protected $fillable = [
-        'name', 'email', 'password'
+        'name',
+        'email',
+        'password',
+        'mobile_verified_code',
+        'mobile_number',
+        'mobile_verified_at'
     ];
 
     /**
@@ -74,22 +79,26 @@ class User extends Authenticatable implements MustVerifyEmail  //this is email v
         $this->notify(new ResetPasswordNotification($token));
     }
 
-    public function hasPasswordSet () {
+    public function hasPasswordSet()
+    {
         return $this->password !== 'need-to-set';
     }
 
-    public function member() {
+    public function member()
+    {
         return $this->hasOne(Member::class);
     }
 
-    public function membership() : Attribute {
-        return $this->name.'===';
+    public function membership(): Attribute
+    {
+        return $this->name . '===';
     }
-    public function organizations(){
+    public function organizations()
+    {
         return $this->belongsToMany(Organization::class);
     }
-    public function guardian(){
+    public function guardian()
+    {
         return $this->hasOne(Guardian::class);
     }
-
 }

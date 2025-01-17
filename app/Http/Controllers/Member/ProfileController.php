@@ -9,6 +9,7 @@ use App\Models\Approbate;
 use App\Models\Portfolio;
 use App\Models\Position;
 use App\Models\Member;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -29,9 +30,12 @@ class ProfileController extends Controller
         //     $portfolio->save();
         // }
         $member = auth()->user()->member;
-        if($member==null){ return redirect()->back();};
+        if ($member == null) {
+            return redirect()->back();
+        };
         $member->positions;
         $member->athlete;
+        $member->user;
         return Inertia::render('Member/Profile', [
             'member' => $member,
             // 'profile'=>$portfolio,
@@ -66,9 +70,7 @@ class ProfileController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
-    }
+    public function show($id) {}
 
     /**
      * Show the form for editing the specified resource.
@@ -95,9 +97,9 @@ class ProfileController extends Controller
         //$data['positions']=$request->positions;
         $member->update($data);
 
-        if($request->file('avatar')){
-            if($member->avatar!=null){
-                if(Storage::exists($member->avatar)){
+        if ($request->file('avatar')) {
+            if ($member->avatar != null) {
+                if (Storage::exists($member->avatar)) {
                     Storage::delete($member->avatar);
                 }
             }
@@ -105,7 +107,6 @@ class ProfileController extends Controller
             $path = Storage::putFile('public/images/members/avatar', $file);
             $member->avatar = $path;
             $member->save();
-
         }
 
         return redirect()->back();
@@ -121,6 +122,94 @@ class ProfileController extends Controller
     {
         //
     }
+    function sendSms(Member $member, Request $request)
+    {
+        $sms_company = env('SMS_COMPANY');
+        $sms_username = env('SMS_UID');
+        $sms_password = env('SMS_PWD');
+        $randomNumber = rand(100000, 999999);
+        // $data = $request->all();
+        $user = $member->user;
+        // dd($randomNumber, $user, $request->all());
+
+        $user->mobile_verified_code = $randomNumber;
+        $user->mobile = $request->confirm_mobile;
+        $user->save();
 
 
+        // dd($request->confirm_mobile);
+        $recipient_xml = '<recipient>' . $request->confirm_mobile . '</recipient>';
+        $content = '此信息為澳門柔道會員系統的電話驗證短信,你的驗證碼為:' . $randomNumber;
+        $xml = <<<DATA
+        <?xml version='1.0' encoding='UTF-8'?>
+        <!DOCTYPE jds SYSTEM '/home/httpd/html/dtd/jds2.dtd'>
+        <jds>
+        <account acid='{$sms_company}' loginid='{$sms_username}' passwd='{$sms_password}'>
+        <msg_send>
+        <ref>Reference ID</ref> 
+        {$recipient_xml}
+        <content>{$content}</content>
+        <language>C</language>
+        </msg_send>
+        </account>
+        </jds>
+        DATA;
+
+        $url = "https://mlpsmsapi.three.com.mo/v1/externalApi/message";
+        // $options = [
+        //     'headers' => [
+        //         'Content-Type' => 'application/xml',
+        //         'Accept' => 'application/xml',
+        //     ],
+        //     'body' => $xml
+        // ];
+
+        // $client = new Client();
+
+        // $response = $client->request('POST', $url, $options);
+        // dd($response);
+        // return $response->getBody();
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $headers = array(
+            "Content-Type: application/xml",
+            "Accept: application/xml",
+        );
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $xml);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+        $resp = curl_exec($curl);
+        curl_close($curl);
+        $xml = simplexml_load_string($resp);
+
+        return response()->json($xml);
+    }
+    public function confirmMobile(Member $member, Request $request)
+    {
+        $user = $member->user;
+
+
+        $response = [
+            'message' => 'Your custom message here',
+        ];
+
+        // 返回 JSON 格式的消息
+
+        if ($user->mobile == $request->confirm_mobile && $user->mobile_verified_code == $request->verification_code) {
+            $user->mobile_verified_at = now();
+            $user->save();
+
+            $response = [
+                'message' => 'verified mobile success',
+            ];
+        } else {
+            $response = [
+                'message' => 'verified mobile error',
+            ];
+        }
+        return redirect()->back()->with('message', 'verified mobile success');
+    }
 }

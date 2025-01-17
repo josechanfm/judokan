@@ -56,7 +56,6 @@ Route::resource('exam', \App\Http\Controllers\ExamController::class)->names('exa
 
 //Member
 Route::get('forgotPassword', [\App\Http\Controllers\RegistrationController::class, 'forgotPassword'])->name('registration.forgotPassword');
-Route::get('test/sms', [\App\Http\Controllers\Organization\EntryController::class, 'send'])->name('test.sms');
 Route::group([
     'prefix' => 'member',
     'middleware' => [
@@ -71,6 +70,8 @@ Route::group([
     Route::get('guardian', [\App\Http\Controllers\Member\GuardianController::class, 'index'])->name('member.guardian');
     Route::get('guardian/act_as/{member}', [\App\Http\Controllers\Member\GuardianController::class, 'actAs'])->name('member.guardian.actAs');
     Route::get('guardian/back', [\App\Http\Controllers\Member\GuardianController::class, 'back'])->name('member.guardian.back');
+    Route::post('phoneConfirm/sms/{member}', [\App\Http\Controllers\Member\ProfileController::class, 'sendSms'])->name('member.phoneConfirm.sms');
+    Route::post('confirmMobile/{member}', [\App\Http\Controllers\Member\ProfileController::class, 'confirmMobile'])->name('member.confirmMobile');
     Route::resource('portfolios', \App\Http\Controllers\Member\PortfolioController::class)->names('member.portfolios');
     Route::resource('profile', \App\Http\Controllers\Member\ProfileController::class)->names('member.profile');
     Route::resource('professionals', \App\Http\Controllers\Member\ProfessionalController::class)->names('member.professionals');

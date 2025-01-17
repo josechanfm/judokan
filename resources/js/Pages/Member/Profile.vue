@@ -67,8 +67,8 @@
                   <a-col :span="12">
                     <a-form-item :label="$t('gender')" name="gender">
                       <a-radio-group v-model:value="member.gender" button-style="solid">
-                        <a-radio-button value="M">{{$t('male')}}</a-radio-button>
-                        <a-radio-button value="F">{{$t('female')}}</a-radio-button>
+                        <a-radio-button value="M">{{ $t("male") }}</a-radio-button>
+                        <a-radio-button value="F">{{ $t("female") }}</a-radio-button>
                       </a-radio-group>
                     </a-form-item>
                     <a-form-item :label="$t('club')" name="club">
@@ -81,7 +81,18 @@
                       <a-input v-model:value="member.vat" />
                     </a-form-item>
                     <a-form-item :label="$t('mobile_number')" name="mobile">
-                      <a-input v-model:value="member.mobile" />
+                      <div v-if="member.user.mobile_verified_at" class="">
+                        {{ member.user.mobile }}
+                      </div>
+                      <a-button
+                        v-else
+                        @click="
+                          () => {
+                            mobileModal = true;
+                          }
+                        "
+                        >{{ $t("mobile_number_confirm") }}</a-button
+                      >
                     </a-form-item>
                   </a-col>
                 </a-row>
@@ -197,15 +208,17 @@
                       </a-checkbox-group>
                     </a-form-item>
                   </a-col>
-                </a-row> </a-collapse-panel
-              >
+                </a-row>
+              </a-collapse-panel>
               <!--
               <a-collapse-panel key="8" :header="$t('guest_title')" v-if="member.positions.includes('GUE')">
                       888
               </a-collapse-panel>
               -->
               <a-collapse-panel key="9" :header="$t('picture_title')">
-                <a-button @click="showCropModal = true">{{$t("upload_profile_image")}}</a-button>
+                <a-button @click="showCropModal = true">{{
+                  $t("upload_profile_image")
+                }}</a-button>
                 <CropperModal
                   v-if="showCropModal"
                   :minAspectRatioProp="{ width: 8, height: 8 }"
@@ -235,6 +248,32 @@
         </div>
       </div>
     </div>
+    <a-modal
+      v-model:visible="mobileModal"
+      :title="$t('mobile_number_confirm')"
+      :ok-text="$t('confirm')"
+      :cancel-text="$t('cancel')"
+      @ok="confirmMobile"
+    >
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-16">{{ $t("mobile_number") }}:</div>
+          <div class="w-1/2"><a-input v-model:value="confirm_mobile"></a-input></div>
+          <div class="">
+            <a-button disabled v-if="countdown > 0">{{
+              $t("count_down") + ":" + countdown + $t("second")
+            }}</a-button>
+            <a-button v-else @click="getVerificationCode()">{{
+              $t("get_verification_code")
+            }}</a-button>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="w-16">{{ $t("verification_code") }}:</div>
+          <div class="w-1/2"><a-input v-model:value="verification_code"></a-input></div>
+        </div>
+      </div>
+    </a-modal>
   </MemberLayout>
 </template>
 
@@ -259,8 +298,12 @@ export default {
   data() {
     return {
       dateFormat: "YYYY-MM-DD",
+      countdown: 0,
       showCropModal: false,
       avatarPreview: null,
+      confirm_mobile: null,
+      verification_code: null,
+      mobileModal: false,
       avatarData: null,
       activeKey: ["1", "3", "4", "5", "6", "7", "8", "9"],
       loading: false,
@@ -317,7 +360,7 @@ export default {
       // update user avatar attribute
     },
     onSubmit() {
-      if(this.avatarData){
+      if (this.avatarData) {
         this.member.avatar = this.avatarData.blob;
       }
       //this.member.avatar = this.avatarData.blob;
@@ -330,6 +373,48 @@ export default {
           console.log(err);
         },
       });
+    },
+    getVerificationCode() {
+      // this.startCountdown();
+      this.$inertia.post(
+        route("member.phoneConfirm.sms", this.member.id),
+        { confirm_mobile: this.confirm_mobile },
+        {
+          onSuccess: (page) => {
+            console.log(page);
+          },
+          onError: (err) => {
+            console.log(err);
+          },
+        }
+      );
+    },
+    startCountdown() {
+      this.countdown = 60;
+      let timer = setInterval(() => {
+        if (this.countdown > 0) {
+          this.countdown--;
+        } else {
+          clearInterval(timer);
+        }
+      }, 1000);
+    },
+    confirmMobile() {
+      this.$inertia.post(
+        route("member.confirmMobile", this.member.id),
+        {
+          confirm_mobile: this.confirm_mobile,
+          verification_code: this.verification_code,
+        },
+        {
+          onSuccess: (page) => {
+            console.log(page);
+          },
+          onError: (err) => {
+            console.log(err);
+          },
+        }
+      );
     },
   },
 };
