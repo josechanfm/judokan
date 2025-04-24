@@ -7,7 +7,7 @@
       theme="light"
       :inline-collapsed="collapsed"
     >
-      <a-menu-item key="1">
+      <a-menu-item key="">
         <template #icon>
           <PieChartOutlined />
         </template>
@@ -17,7 +17,7 @@
           </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="2">
+      <a-menu-item key="members.index">
         <template #icon>
           <TeamOutlined />
         </template>
@@ -27,49 +27,57 @@
           </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="3">
+      <a-menu-item key="certificates.index">
         <template #icon>
           <FileProtectOutlined />
         </template>
         <span>
           <inertia-link :href="route('manage.certificates.index')">
-            {{$t('certificates') }}
+            {{ $t("certificates") }}
           </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="4">
+      <a-menu-item key="forms.index">
         <template #icon>
           <FormOutlined />
         </template>
         <span>
-          <inertia-link :href="route('manage.forms.index')"> {{$t('forms')}} </inertia-link>
+          <inertia-link :href="route('manage.forms.index')">
+            {{ $t("forms") }}
+          </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="5">
+      <a-menu-item key="competitions.index">
         <template #icon>
-          <MergeCellsOutlined/>
+          <MergeCellsOutlined />
         </template>
         <span>
-          <inertia-link :href="route('manage.competitions.index')"> {{$t('competitions')}} </inertia-link>
+          <inertia-link :href="route('manage.competitions.index')">
+            {{ $t("competitions") }}
+          </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="6">
+      <a-menu-item key="events.index">
         <template #icon>
           <CalendarOutlined />
         </template>
         <span>
-          <inertia-link :href="route('manage.events.index')"> {{$t('events')}} </inertia-link>
+          <inertia-link :href="route('manage.events.index')">
+            {{ $t("events") }}
+          </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="7">
+      <a-menu-item key="articles.index">
         <template #icon>
           <CopyOutlined />
         </template>
         <span>
-          <inertia-link :href="route('manage.articles.index')"> {{$t('articles')}} </inertia-link>
+          <inertia-link :href="route('manage.articles.index')">
+            {{ $t("articles") }}
+          </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="8">
+      <a-menu-item key="messages.index">
         <template #icon>
           <MailOutlined />
         </template>
@@ -79,7 +87,7 @@
           </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="9">
+      <a-menu-item key="exams.index">
         <template #icon>
           <MailOutlined />
         </template>
@@ -89,28 +97,6 @@
           </inertia-link>
         </span>
       </a-menu-item>
-      <a-sub-menu key="sub1">
-        <template #icon>
-          <DesktopOutlined/>
-        </template>
-        <template #title>Navigation One</template>
-        <a-menu-item key="101">Option 5</a-menu-item>
-        <a-menu-item key="122">Option 6</a-menu-item>
-        <a-menu-item key="103">Option 7</a-menu-item>
-        <a-menu-item key="104">Option 8</a-menu-item>
-      </a-sub-menu>
-      <a-sub-menu key="sub2">
-        <template #icon>
-          <AppstoreOutlined />
-        </template>
-        <template #title>Navigation Two</template>
-        <a-menu-item key="111">Option 9</a-menu-item>
-        <a-menu-item key="112">Option 10</a-menu-item>
-        <a-sub-menu key="sub3" title="Submenu">
-          <a-menu-item key="1121">Option 11</a-menu-item>
-          <a-menu-item key="1122">Option 12</a-menu-item>
-        </a-sub-menu>
-      </a-sub-menu>
     </a-menu>
   </div>
 </template>
@@ -175,6 +161,17 @@ export default defineComponent({
       ...toRefs(state),
       toggleCollapsed,
     };
+  },
+  data() {
+    return {
+      openKeys: [],
+      selectedKeys: [],
+    };
+  },
+  mounted() {
+    console.log(route().current().split(".").slice(1).join("."));
+    this.openKeys.push(route().current().split(".").slice(1, 2).join("."));
+    this.selectedKeys.push(route().current().split(".").slice(1).join("."));
   },
 });
 </script>

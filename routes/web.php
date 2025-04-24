@@ -135,6 +135,7 @@ Route::group([
     Route::resource('certificate/{certificate}/members', \App\Http\Controllers\Organization\CertificateMemberController::class)->names('manage.certificate.members');
     Route::resource('organizations', \App\Http\Controllers\Organization\OrganizationController::class)->names('manage.organizations');
     Route::resource('competitions', \App\Http\Controllers\Organization\CompetitionController::class)->names('manage.competitions');
+    Route::post('competition/{competition}/applications/import',[\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'import'])->name('manage.competition.applications.import');
     Route::get('competition/{competition}/applications/export', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'export'])->name('manage.competition.applications.export');
     Route::get('competition/{competition}/applications/receipts', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'receipts'])->name('manage.competition.applications.receipts');
     Route::resource('competition/{competition}/applications', \App\Http\Controllers\Organization\CompetitionApplicationController::class)->names('manage.competition.applications');

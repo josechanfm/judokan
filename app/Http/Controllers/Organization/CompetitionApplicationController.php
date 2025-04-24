@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use PDF;
 use App\Exports\CompetitionApplicationExport;
+use App\Imports\CompetitionApplicationImport;
 use App\Mail\TestMail;
 use App\Models\Organization;
 use Illuminate\Support\Facades\Mail;
@@ -156,7 +157,12 @@ class CompetitionApplicationController extends Controller
         $data = new CompetitionApplicationExport($competition);
         return Excel::download($data, 'applications.xlsx');
     }
+    public function import(Request $request,Competition $competition) {
+        // dd($competition);
+        $import = new CompetitionApplicationImport($competition);
 
+        $import->import(request()->file('file'));
+    }
     public function success(CompetitionApplication $competitionApplication)
     {
         Session::flash('competitionApplication', $competitionApplication->id);

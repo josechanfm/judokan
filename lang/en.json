@@ -1,4 +1,6 @@
 {
+    "import_athletes": "Import athletes",
+    "import_member": "Import member",
     "dashboard": "Dashboard",
     "memberDashboard": "Member",
     "professional": "Professionals",
@@ -108,8 +110,9 @@
     "description": "Description",
     "require_login": "Require login",
     "published": "Published",
-    "banner_image": "Banner image",
-    "attachment": "attachment",
+    "banner_image": "Banner Image",
+    "attachment": "Attachment",
+    "athlete_card": "Athlete Card",
     "for_member": "For member",
     "require_login_note": "For public and required login",
     "for_member_note": "For member only",

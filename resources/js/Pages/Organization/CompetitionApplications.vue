@@ -16,6 +16,9 @@
       class="ant-btn"
       >滙出Excel</a
     >
+    <a-button type="primary" class="bg-blue-500" @click="visible = true">{{
+      $t("import_athletes")
+    }}</a-button>
     <a-table
       class="overflow-x-auto"
       :dataSource="competition.applications"
@@ -275,6 +278,56 @@
         >
       </template>
     </a-modal>
+    <a-modal title="Import Athletes List" v-model:visible="visible">
+      <a-upload-dragger
+        v-model:fileList="files"
+        name="file"
+        @change="handleFileChange"
+        :beforeUpload="() => false"
+        :multiple="false"
+      >
+        <p class="ant-upload-drag-icon">
+          <file-excel-outlined />
+        </p>
+        <p class="ant-upload-text">Click or drag files here to import athletes</p>
+        <p class="ant-upload-hint">
+          Supports xlsx file upload. Please confirm that the data format is consistent
+          with the template before uploading.
+        </p>
+      </a-upload-dragger>
+
+      <div class="mt-3" v-if="imported">
+        <div class="font-bold my-3 text-green-500" v-if="errors.length === 0">
+          Import Success!
+        </div>
+        <div class="font-bold my-3 text-yellow-500" v-else>
+          Some information are not import
+        </div>
+        <p v-for="(error, index) in errors" :key="index" class="font-mono m-0">
+          <warning-outlined class="!text-yellow-500" />
+          row {{ error.row }}, {{ error.errors[0] }}
+        </p>
+      </div>
+      <template #footer>
+        <div class="flex w-full justify-between">
+          <a href="/templates/athlete_list.xlsx">
+            <a-button type="link">
+              <template #icon>
+                <DownloadOutlined />
+              </template>
+              Download Athletes list template
+            </a-button>
+          </a>
+          <a-button
+            type="primary"
+            class="bg-blue-500"
+            @click="handleImport"
+            :disabled="files.length === 0"
+            >Import</a-button
+          >
+        </div>
+      </template>
+    </a-modal>
     <!-- Modal End-->
   </OrganizationLayout>
 </template>
@@ -286,13 +339,21 @@ import dayjs from "dayjs";
 import { Modal } from "ant-design-vue";
 import { message } from "ant-design-vue";
 import { ref, createVNode } from "vue";
-import { ExclamationCircleOutlined } from "@ant-design/icons-vue";
+import {
+  ExclamationCircleOutlined,
+  DownloadOutlined,
+  FileExcelOutlined,
+  WarningOutlined,
+} from "@ant-design/icons-vue";
 
 export default {
   components: {
     OrganizationLayout,
     Modal,
     createVNode,
+    DownloadOutlined,
+    FileExcelOutlined,
+    WarningOutlined,
     ExclamationCircleOutlined,
   },
   props: ["competitionResults", "competition", "organizations"],
@@ -414,6 +475,10 @@ export default {
         },
       },
       selectedRowKeyIds: [],
+      files: [],
+      visible: false,
+      errors: [],
+      imported: false,
     };
   },
   created() {
@@ -563,6 +628,33 @@ export default {
         this.selectedRowKeyIds.push(r.id);
       });
       //console.log(selected, selectedRows, changeRows);
+    },
+    handleImport() {
+      const formData = new FormData();
+      formData.append("file", this.files[0].originFileObj);
+
+      // TODO: handle import athlete list
+      window.axios
+        .post(
+          route("manage.competition.applications.import", this.competition.id),
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        )
+        .then(({ data }) => {
+          this.$message.success("匯入成功");
+          this.files = [];
+          this.errors = data.errors;
+          this.imported = true;
+
+          this.$emit("imported");
+        })
+        .catch(() => {
+          this.$message.error("匯入失敗");
+        });
     },
     acceptedConfirmed(record) {
       record.accepted = !record.accepted;

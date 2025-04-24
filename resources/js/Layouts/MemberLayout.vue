@@ -50,8 +50,7 @@ export default {
     };
   },
   mounted() {
-    
-    //this.loadLanguageAsync(this.$page.props.lang);
+    this.loadLanguageAsync(this.$page.props.lang);
   },
 };
 // defineProps({
@@ -95,10 +94,7 @@ export default {
 
               <!-- Navigation Links -->
               <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                <NavLink
-                  :href="route('/')"
-                  :active="route().current('/')"
-                >
+                <NavLink :href="route('/')" :active="route().current('/')">
                   {{ $t("dashboard") }}
                 </NavLink>
                 <!-- <NavLink :href="route('member.professionals.index')" > -->
@@ -282,10 +278,7 @@ export default {
           class="sm:hidden"
         >
           <div class="pt-2 pb-3 space-y-1">
-            <ResponsiveNavLink
-              :href="route('/')"
-              :active="route().current('dashboard')"
-            >
+            <ResponsiveNavLink :href="route('/')" :active="route().current('dashboard')">
               {{ $t("dashboard") }}
             </ResponsiveNavLink>
           </div>
@@ -339,25 +332,25 @@ export default {
                 :href="route('profile.show')"
                 :active="route().current('profile.show')"
               >
-                {{$t('account')}}
+                {{ $t("account") }}
               </ResponsiveNavLink>
               <ResponsiveNavLink
                 :href="route('manage')"
                 v-if="$page.props.user.roles.includes('organizer')"
               >
-                {{$t('manager')}}
+                {{ $t("manager") }}
               </ResponsiveNavLink>
               <ResponsiveNavLink
                 v-if="$page.props.jetstream.hasApiFeatures"
                 :href="route('api-tokens.index')"
                 :active="route().current('api-tokens.index')"
               >
-                {{$t('api_tokens')}}
+                {{ $t("api_tokens") }}
               </ResponsiveNavLink>
 
               <!-- Authentication -->
               <form method="POST" @submit.prevent="logout">
-                <ResponsiveNavLink as="button"> {{$t('log_out')}} </ResponsiveNavLink>
+                <ResponsiveNavLink as="button"> {{ $t("log_out") }} </ResponsiveNavLink>
               </form>
 
               <!-- Team Management -->

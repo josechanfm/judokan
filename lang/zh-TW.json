@@ -1,4 +1,6 @@
 {
+    "import_athletes": "導入運動員",
+    "import_member": "導入會員",
     "dashboard": "首頁",
     "memberDashboard": "會員專業",
     "professional": "專業資格",
@@ -115,6 +117,7 @@
     "published": "發佈",
     "banner_image": "橫幅圖片",
     "attachment": "附件",
+    "athlete_card": "運動員卡片",
     "for_member": "會員登入",
     "require_login_note": "公開並需要登入",
     "for_member_note": "供會員使用",

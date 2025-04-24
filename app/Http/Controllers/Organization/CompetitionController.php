@@ -63,6 +63,11 @@ class CompetitionController extends Controller
                 $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionAttachment');
             }
         };
+        if ($request->file('athlete_card')) {
+            foreach ($request->file('athleteCard') as $file) {
+                $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionAthleteCard');
+            }
+        }
         return redirect()->route('manage.competitions.index');
     }
 
@@ -119,6 +124,7 @@ class CompetitionController extends Controller
         $competition->update($request->all());
         $competition->result_scores = $competition->score ? $competition->score->toArray() : null;
         $competition->save();
+        // dd($request->file('athlete_card'));
         if ($request->file('banner')) {
             foreach ($request->file('banner') as $file) {
                 $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionBanner');
@@ -129,6 +135,11 @@ class CompetitionController extends Controller
                 $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionAttachment');
             }
         };
+        if ($request->file('athlete_card')) {
+            foreach ($request->file('athlete_card') as $file) {
+                $competition->addMedia($file['originFileObj'])->toMediaCollection('competitionAthleteCard');
+            }
+        }
         //dd(json_encode($competition->score));
         //$competition->update(['result_scores'=>json_encode($competition->score)]);
         //return redirect()->back();
@@ -151,6 +162,9 @@ class CompetitionController extends Controller
         if ($request->type == 'banner') {
             Competition::find($request->competition_id)->clearMediaCollection('competitionBanner');
         } elseif ($request->type == 'attachment') {
+            //dd(Competition::find($request->competition_id)->getMedia('competitionAttachment'));
+            Competition::find($request->competition_id)->deleteMedia($request->media_id);
+        } elseif ($request->type == 'athlete_card') {
             //dd(Competition::find($request->competition_id)->getMedia('competitionAttachment'));
             Competition::find($request->competition_id)->deleteMedia($request->media_id);
         }
