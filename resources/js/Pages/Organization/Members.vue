@@ -526,7 +526,7 @@ export default {
       // TODO: handle import athlete list
       window.axios
         .post(
-          route("manage.competition.applications.import", this.competition.id),
+          route("manage.organization.members.import", this.organization.id),
           formData,
           {
             headers: {

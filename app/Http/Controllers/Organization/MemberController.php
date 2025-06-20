@@ -162,4 +162,7 @@ class MemberController extends Controller
     public function export(){
         return Excel::download(new MemberExport, 'member.xlsx');
     }
+    public function import(Organization $organization, Request $request){
+        dd($organization, $request);
+    }
 }

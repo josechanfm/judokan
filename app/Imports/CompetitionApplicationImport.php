@@ -65,8 +65,7 @@ class CompetitionApplicationImport implements ToCollection, WithStartRow, SkipsO
                 return $item === $row['category'];
             })->first();
             $data['role'] = collect(Config::item("competition_roles"));
-            unset($data['organization']);
-            dd($data);
+
             $validator = Validator::make($row->toArray(), [
                 'competition_id' => 'required|in:M,F',
                 'organization_id' => 'required',

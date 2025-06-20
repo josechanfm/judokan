@@ -125,7 +125,8 @@ Route::group([
     Route::resource('form/{form}/entries', \App\Http\Controllers\Organization\EntryController::class)->names('manage.form.entries');
     Route::get('form/{form}/entry/{entry}/success', [\App\Http\Controllers\Organization\EntryController::class, 'success'])->name('manage.form.entry.success');
     Route::post('form/{form}/createEventAttendees', [\App\Http\Controllers\Organization\FormController::class, 'createEventAttendees'])->name('manage.form.createEventAttendees');
-    Route::get('member/export', [\App\Http\Controllers\Organization\MemberController::class, 'export'])->name('member.member.export');
+    Route::get('organization/{organization}/member/export', [\App\Http\Controllers\Organization\MemberController::class, 'export'])->name('organization.member.export');
+    Route::get('organization/{organization}/member/import', [\App\Http\Controllers\Organization\MemberController::class, 'import'])->name('organization.member.import');
     Route::get('entry/{form}/export', [\App\Http\Controllers\Organization\EntryController::class, 'export'])->name('manage.entry.export');
     Route::resource('approbates', \App\Http\Controllers\Organization\ApprobateController::class)->names('manage.approbates');
     Route::resource('bulletins', \App\Http\Controllers\Organization\BulletinController::class)->names('manage.bulletins');

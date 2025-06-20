@@ -140,7 +140,7 @@ class ConfigSeeder extends Seeder
                     }, {
                         "code": "70+",
                         "name": "+70Kg",
-                        "limit": [70, 80]
+                        "limit": [70, 90]
                     }
                 ]
             }',
@@ -179,7 +179,7 @@ class ConfigSeeder extends Seeder
                     }, {
                         "code": "66+",
                         "name": "+66Kg",
-                        "limit": [66, 76]
+                        "limit": [66, 86]
                     }
                 ],
                 "female": [{
@@ -187,29 +187,29 @@ class ConfigSeeder extends Seeder
                         "name": "-40Kg",
                         "limit": [30, 40]
                     }, {
-                        "code": "46-",
-                        "name": "-46Kg",
-                        "limit": [45, 46]
+                        "code": "44-",
+                        "name": "-44Kg",
+                        "limit": [41, 44]
                     }, {
-                        "code": "50-",
-                        "name": "-50Kg",
-                        "limit": [47, 50]
+                        "code": "48-",
+                        "name": "-48Kg",
+                        "limit": [45, 48]
                     }, {
-                        "code": "55-",
-                        "name": "-55Kg",
-                        "limit": [51, 55]
+                        "code": "52-",
+                        "name": "-52Kg",
+                        "limit": [49, 52]
                     }, {
-                        "code": "60-",
-                        "name": "-60Kg",
-                        "limit": [56, 60]
+                        "code": "57-",
+                        "name": "-57Kg",
+                        "limit": [53, 57]
                     }, {
-                        "code": "66-",
+                        "code": "63-",
                         "name": "-66Kg",
-                        "limit": [61, 66]
+                        "limit": [58, 63]
                     }, {
-                        "code": "66+",
-                        "name": "+66Kg",
-                        "limit": [66, 76]
+                        "code": "63+",
+                        "name": "+63Kg",
+                        "limit": [63, 83]
                     }
                 ]
             }',
@@ -224,7 +224,7 @@ class ConfigSeeder extends Seeder
                 "male": [{
                         "code": "27-",
                         "name": "-27Kg",
-                        "limit": [32, 27]
+                        "limit": [17, 27]
                     },{
                         "code": "30-",
                         "name": "-30Kg",
@@ -266,7 +266,7 @@ class ConfigSeeder extends Seeder
                 "female": [{
                         "code": "25-",
                         "name": "-25Kg",
-                        "limit": [30, 25]
+                        "limit": [15, 25]
                     }, {
                         "code": "28-",
                         "name": "-28Kg",
@@ -292,13 +292,13 @@ class ConfigSeeder extends Seeder
                         "name": "-48Kg",
                         "limit": [45, 48]
                     }, {
-                        "code": "50-",
-                        "name": "-50Kg",
-                        "limit": [49, 50]
+                        "code": "52-",
+                        "name": "-52Kg",
+                        "limit": [49, 52]
                     }, {
                         "code": "57-",
                         "name": "-57Kg",
-                        "limit": [51, 57]
+                        "limit": [53, 57]
                     }, {
                         "code": "57+",
                         "name": "+57Kg",
