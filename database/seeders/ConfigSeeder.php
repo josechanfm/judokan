@@ -309,6 +309,65 @@ class ConfigSeeder extends Seeder
         ]);
 
         DB::table('configs')->insert([
+            'organization_id' => 0,
+            'key' => 'categories_weights',
+            'value' => '{
+                "code": "child_d",
+                "name": "兒童D組",
+                "description": "參加者年齡必須於9歲至10歲者",
+                "male": [
+                    {"code": "24-", "name": "-24Kg", "limit": [15, 24]},
+                    {"code": "27-", "name": "-27Kg", "limit": [25, 27]},
+                    {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
+                    {"code": "34-", "name": "-34Kg", "limit": [31, 34]},
+                    {"code": "38-", "name": "-38Kg", "limit": [35, 38]},
+                    {"code": "42-", "name": "-42Kg", "limit": [39, 42]},
+                    {"code": "46-", "name": "-46Kg", "limit": [43, 46]},
+                    {"code": "46+", "name": "+46Kg", "limit": [47, 56]}
+                ],
+                "female": [
+                    {"code": "22-", "name": "-22Kg", "limit": [15, 22]},
+                    {"code": "25-", "name": "-25Kg", "limit": [23, 25]},
+                    {"code": "28-", "name": "-28Kg", "limit": [26, 28]},
+                    {"code": "32-", "name": "-32Kg", "limit": [29, 32]},
+                    {"code": "36-", "name": "-36Kg", "limit": [33, 36]},
+                    {"code": "40-", "name": "-40Kg", "limit": [37, 40]},
+                    {"code": "44-", "name": "-44Kg", "limit": [41, 44]},
+                    {"code": "44+", "name": "+44Kg", "limit": [44, 54]}
+                ]
+            }'
+        ]);
+
+        // 兒童E組
+        DB::table('configs')->insert([
+            'organization_id' => 0,
+            'key' => 'categories_weights',
+            'value' => '{
+                "code": "child_e",
+                "name": "兒童E組",
+                "description": "參加者年齡必須於7歲至8歲者",
+                "male": [
+                    {"code": "21-", "name": "-21Kg", "limit": [15, 21]},
+                    {"code": "23-", "name": "-23Kg", "limit": [22, 23]},
+                    {"code": "25-", "name": "-25Kg", "limit": [24, 25]},
+                    {"code": "27-", "name": "-27Kg", "limit": [26, 27]},
+                    {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
+                    {"code": "33-", "name": "-33Kg", "limit": [31, 33]},
+                    {"code": "33+", "name": "+33Kg", "limit": [34, 43]}
+                ],
+                "female": [
+                    {"code": "21-", "name": "-21Kg", "limit": [15, 21]},
+                    {"code": "23-", "name": "-23Kg", "limit": [22, 23]},
+                    {"code": "25-", "name": "-25Kg", "limit": [24, 25]},
+                    {"code": "27-", "name": "-27Kg", "limit": [26, 27]},
+                    {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
+                    {"code": "33-", "name": "-33Kg", "limit": [31, 33]},
+                    {"code": "33+", "name": "+33Kg", "limit": [33, 43]}
+                ]
+            }'
+        ]);
+
+        DB::table('configs')->insert([
             'organization_id'=>0,
             'key'=>'competition_roles',
             'value'=>'[
