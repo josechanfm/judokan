@@ -135,7 +135,7 @@
 					<td colspan="3" height="400px" style="vertical-align:top">
 						□　參加者已滿十八歲
 						<hr style="border-top: 2px dotted gray; border-bottom:none">
-						本人 ______________ (運動員)，謹此聲明本人的健康及體能良好，同意其參加「2024全澳柔道計分賽」。<br>
+						本人 ______________ (運動員)，謹此聲明本人的健康及體能良好，同意其參加「{{$application->competition->title_zh}}」。<br>
 						特此聲明。<br>
 					  　參加者簽名： ＿＿＿＿＿＿＿＿	　　　　　　　　日期：＿＿日/＿＿月/＿＿＿＿年
 					</td>
