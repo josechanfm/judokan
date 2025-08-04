@@ -54,7 +54,7 @@
             @finish="onFinish"
           >
             <a-form-item
-              :label="$t('organization')"
+              :label="$t('organization_or_school')"
               name="organization_id"
               v-if="member == null"
             >

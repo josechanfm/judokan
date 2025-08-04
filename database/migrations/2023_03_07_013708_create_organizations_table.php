@@ -15,12 +15,12 @@ return new class extends Migration
     {
         Schema::create('organizations', function (Blueprint $table) {
             $table->id();
-            $table->string('region');
-            $table->string('abbr');
+            $table->string('region')->nullable();
+            $table->string('abbr')->nullable();
             $table->string('territory')->nullable();
             $table->string('title')->nullable();
             $table->string('full_name');
-            $table->string('email');
+            $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
             $table->string('country')->nullable();
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->text('content')->nullable();
             $table->string('registration_code')->nullable();
             $table->string('president')->nullable();
+            $table->boolean('type')->nullable();
             $table->boolean('status')->nullable();
             $table->string('card_style')->nullable();
             $table->timestamps();

@@ -67,20 +67,31 @@ class OrganizationSeeder extends Seeder
         ];
 
         $data=[
-            ["region"=>"L","name"=>"澳門柔道館","abbr"=>"MJA","title"=>"Macao Judo Association","address"=>"澳門德勝體育館","phone"=>"Phone : 28523909","web"=>"macaojudo.org.mo","email"=>"info@macaujudo.org.mo","president"=>"--"],
-            ["region"=>"L","name"=>"宣道堂柔道館","abbr"=>"STT","title"=>"Centro Comunitario Sun Tou Tong","address"=>"高士德大馬路100號宣道堂三樓","phone"=>"Phone : ","web"=>"--","email"=>"--","president"=>"--"],
-            ["region"=>"L","name"=>"一本柔道部","abbr"=>"IPJ","title"=>"Ippon Judo",'address'=>"澳門培正中學","phone"=>"Phone : ","web"=>"--","email"=>"--","president"=>"--"]        ];
+            ["region"=>"L","name"=>"澳門柔道館","abbr"=>"MJA","title"=>"Macao Judo Association","address"=>"澳門德勝體育館","phone"=>"Phone : 28523909","web"=>"macaojudo.org.mo","email"=>"info@macaujudo.org.mo","president"=>"--","type"=>1],
+            ["region"=>"L","name"=>"宣道堂柔道館","abbr"=>"STT","title"=>"Centro Comunitario Sun Tou Tong","address"=>"高士德大馬路100號宣道堂三樓","phone"=>"Phone : ","web"=>"--","email"=>"--","president"=>"--","type"=>1],
+            ["region"=>"L","name"=>"一本柔道部","abbr"=>"IPJ","title"=>"Ippon Judo",'address'=>"澳門培正中學","phone"=>"Phone : ","web"=>"--","email"=>"--","president"=>"--","type"=>1] ,      
+            ["name" => "初道場",'type' => 1],
+            ["name" => "培正中學",'type' => 2],
+            ["name" => "化地瑪女子學校",'type' => 2],
+            ["name" => "新華學校",'type' => 2],
+            ["name" => "婦聯學校",'type' => 2],
+            ["name" => "聖德蘭學校",'type' => 2],
+            ["name" => "中葡職業技術學校",'type' => 2],
+            ["name" => "中德學校",'type' => 2],
+        
+        ];
         foreach($data as $org){
             DB::table('organizations')->insert([
-                'region'=>$org['region'],
-                'territory'=>$org['region'],
-                'abbr'=>$org['abbr'],
-                'full_name'=>$org['name'],
-                'title'=>$org['name'],
-                'address'=>$org['address'],
-                'href'=>$org['web'],
-                'email'=>$org['email'],
-                'president'=>$org['president'],
+                'region'=>$org['region']??'',
+                'territory'=>$org['region']??'',
+                'abbr'=>$org['abbr']??'',
+                'full_name'=>$org['name']??'',
+                'title'=>$org['name']??'',
+                'address'=>$org['address']??'',
+                'href'=>$org['web']??'',
+                'email'=>$org['email']??'',
+                'president'=>$org['president']??'',
+                'type'=>$org['type']??'',
                 'card_style'=>'card_01'
             ]);
         }
