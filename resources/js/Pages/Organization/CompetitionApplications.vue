@@ -1,6 +1,6 @@
 <template>
   <OrganizationLayout title="報名列表" :breadcrumb="breadcrumb">
-    <a
+    <a-button
       :href="
         route('manage.competition.applications.receipts', {
           competition: competition.id,
@@ -8,14 +8,15 @@
         })
       "
       target="_blank"
-      class="ant-btn"
-      >打印收據</a
-    >
-    <a
+      :disabled="selectedRowKeyIds.length==0"
+      >打印收據
+    </a-button>
+    <a-button
       :href="route('manage.competition.applications.export', competition.id)"
       class="ant-btn"
-      >滙出Excel</a
-    >
+      >
+      滙出Excel
+    </a-button>
     <a-button type="primary" class="bg-blue-500" @click="visible = true">{{
       $t("import_athletes")
     }}</a-button>
@@ -624,9 +625,14 @@ export default {
       //console.log(record, selected, selectedRows);
     },
     onCheckSelectAll(selected, selectedRows, changeRows) {
-      selectedRows.forEach((r) => {
-        this.selectedRowKeyIds.push(r.id);
-      });
+      console.log(selected, selectedRows, changeRows)
+      if(selected){
+        selectedRows.forEach((r) => {
+          this.selectedRowKeyIds.push(r.id);
+        });
+      }else{
+        this.selectedRowKeyIds=[];
+      }
       //console.log(selected, selectedRows, changeRows);
     },
     handleImport() {

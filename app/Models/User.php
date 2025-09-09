@@ -37,7 +37,8 @@ class User extends Authenticatable implements MustVerifyEmail  //this is email v
         'password',
         'mobile_verified_code',
         'mobile_number',
-        'mobile_verified_at'
+        'mobile_verified_at',
+        'language'
     ];
 
     /**
