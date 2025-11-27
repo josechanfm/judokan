@@ -159,7 +159,7 @@ class ConfigSeeder extends Seeder
             "age_range": [13, 14],
             "male": [{
                     "code": "42-",
-                    "name": "-50Kg",
+                    "name": "-42Kg",
                     "limit": [32, 42]
                 },{
                     "code": "46-",
