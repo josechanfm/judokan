@@ -110,6 +110,9 @@
             </a-form-item>
             <a-form-item :label="$t('age')" v-if="application.age">
               <span class="text-lg font-semibold">{{ application.age }} 歲</span>
+              <span class="ml-2 text-gray-500 text-sm">
+                (以比賽開始日期 {{ competitionStartYear }} 年計算)
+              </span>
               <span v-if="eligibleCategories.length > 0" class="ml-2 text-green-600">
                 (符合 {{ eligibleCategories.length }} 個組別)
               </span>
@@ -142,8 +145,16 @@
                 <a-alert
                   v-if="eligibleCategories.length === 0 && application.dob"
                   message="不符合年齡要求"
-                  description="根據您的出生日期，您不符合任何組別的年齡要求。"
+                  :description="`根據您的出生日期和比賽開始時間 ${competitionStartYear} 年，您不符合任何組別的年齡要求。`"
                   type="error"
+                  show-icon
+                  class="mb-4"
+                />
+                <a-alert
+                  v-else-if="eligibleCategories.length > 0"
+                  :message="`比賽開始年份: ${competitionStartYear} 年`"
+                  :description="`您的年齡將以 ${competitionStartYear} 年計算，請選擇符合的組別`"
+                  type="info"
                   show-icon
                   class="mb-4"
                 />
@@ -153,12 +164,9 @@
                     :value="cat.code"
                     :style="virticalStyle"
                     @change="onCategoryChange"
-                    :disabled="!isCategoryEligible(cat.code)"
                   >
                     {{ cat.name }} - [{{ cat.description }}]
-                    <span v-if="!isCategoryEligible(cat.code)" class="text-red-500 ml-2">
-                      (年齡不符合)
-                    </span>
+                    <span class="text-green-500 ml-2">✓</span>
                   </a-radio>
                 </a-radio-group>
               </a-form-item>
@@ -336,6 +344,14 @@ export default {
       },
     };
   },
+  computed: {
+    competitionStartYear() {
+      if (this.competition.start_date) {
+        return dayjs(this.competition.start_date).year();
+      }
+      return dayjs().year();
+    },
+  },
   mounted() {
     this.application.competition_id = this.competition.id;
     if (this.member) {
@@ -369,31 +385,41 @@ export default {
       }
     },
     calculateAge(dob) {
-      const birthDate = dayjs(dob);
-      const today = dayjs();
-      const age = today.diff(birthDate, "year");
+      // 只使用年份計算年齡，不考慮月份和日
+      const birthYear = dayjs(dob).year();
+      const age = this.competitionStartYear - birthYear;
+
       this.application.age = age;
       this.updateEligibleCategories(age);
     },
     updateEligibleCategories(age) {
+      console.log("計算年齡:", age, "比賽開始年份:", this.competitionStartYear);
+
       this.eligibleCategories = this.competition.categories_weights.filter((category) => {
         if (category.age_range && category.age_range.length === 2) {
-          return age >= category.age_range[0] && age <= category.age_range[1];
+          const isEligible = age >= category.age_range[0] && age <= category.age_range[1];
+          console.log(
+            `組別 ${category.code}: ${category.age_range[0]}-${category.age_range[1]}歲, 符合: ${isEligible}`
+          );
+          return isEligible;
         }
-        return true; // 如果没有age_range，默认显示所有组别
+        console.log(`組別 ${category.code}: 沒有age_range`);
+        return false;
       });
+
+      console.log(
+        "符合的組別:",
+        this.eligibleCategories.map((cat) => cat.code)
+      );
 
       // 如果当前选择的category不在符合条件的组别中，清空选择
       if (
         this.application.category &&
-        !this.isCategoryEligible(this.application.category)
+        !this.eligibleCategories.some((cat) => cat.code === this.application.category)
       ) {
         this.application.category = null;
         this.application.weight = null;
       }
-    },
-    isCategoryEligible(categoryCode) {
-      return this.eligibleCategories.some((cat) => cat.code === categoryCode);
     },
     onGenderChange(event) {
       if (this.application.category) {
@@ -431,7 +457,7 @@ export default {
           const [minAge, maxAge] = selectedCategory.age_range;
           if (this.application.age < minAge || this.application.age > maxAge) {
             message.error(
-              `您选择的${selectedCategory.name}组别要求年龄在${minAge}至${maxAge}岁之间，您当前${this.application.age}岁不符合要求。`
+              `您选择的${selectedCategory.name}组别要求年龄在${minAge}至${maxAge}岁之间，您在比赛开始时间(${this.competitionStartYear}年)时${this.application.age}岁不符合要求。`
             );
             return;
           }
