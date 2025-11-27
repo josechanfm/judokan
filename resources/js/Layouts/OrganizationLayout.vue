@@ -192,6 +192,7 @@ export default {
       );
     };
     const page = usePage();
+    console.log('page.porps',page.props.value)
     loadLanguageAsync(page.props.value.lang);
     const logout = () => {
       Inertia.post(route("logout"));

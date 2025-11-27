@@ -124,10 +124,11 @@ class CompetitionApplicationController extends Controller
 
     public function receipts(Competition $competition, Request $request)
     {
-        if (!session('competitionId') || session('competitionId') != $competition->id) {
+
+        if (!session('competitionId') || session('competitionId') != $competition->id || $request->applicationIds==null) {
             return redirect()->route('/');
         }
-        dd('aa');
+        
         $applications = CompetitionApplication::whereIn('id', explode(',', $request->applicationIds))->get();
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
@@ -136,8 +137,8 @@ class CompetitionApplicationController extends Controller
         //     'applications'=>$applications
         // ]);
         $pdf = PDF::loadView('Competition.ApplicationReceipt', [
-            // 'competition'=>$competition,
-            // 'applications'=>$applications
+            'competition'=>$competition,
+            'applications'=>$applications
         ]);
         $pdf->render();
         return $pdf->stream('receipts.pdf', array('Attachment' => false));
