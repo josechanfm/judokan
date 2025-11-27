@@ -22,6 +22,7 @@ class Language
         } else { // This is optional as Laravel will automatically set the fallback language if there is none specified
             App::setLocale(Config::get('app.fallback_locale'));
         }
+        // dd('aaa');
         return $next($request);
     }
 }

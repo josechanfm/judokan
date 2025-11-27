@@ -21,9 +21,6 @@
           <a-typography-title :level="3" class="text-center">{{
             competition.title_zh
           }}</a-typography-title>
-          <!-- <a-typography-title :level="4">賽事日:
-            <span v-for="date in competition.match_dates">{{ date }}</span>
-          </a-typography-title> -->
           <div id="pure-html">
             <div v-html="competition.description" />
           </div>
@@ -66,6 +63,7 @@
             </a-form-item>
             <a-form-item :label="$t('name_zh')" name="name_zh">
               <a-input
+                type="input"
                 @input="
                   () => {
                     this.application.name_zh = this.application.name_zh.toUpperCase();
@@ -76,6 +74,7 @@
             </a-form-item>
             <a-form-item :label="$t('name_fn')" name="name_fn">
               <a-input
+                type="input"
                 @input="
                   () => {
                     this.application.name_fn = this.application.name_fn.toUpperCase();
@@ -85,17 +84,8 @@
               />
             </a-form-item>
             <a-form-item :label="$t('id_num')" name="id_num">
-              <a-input v-model:value="application.id_num" />
+              <a-input type="input" v-model:value="application.id_num" />
             </a-form-item>
-
-            <!-- <a-form-item :label="$t('middle_name')" name="middle_name">
-              <a-input v-model:value="application.middle_name"/>
-            </a-form-item> -->
-            <!--
-            <a-form-item :label="$t('display_name')" name="display_name">
-              <a-input v-model:value="application.display_name" />
-            </a-form-item>
-            -->
             <a-form-item
               :label="$t('belt_rank')"
               name="belt_rank"
@@ -115,7 +105,15 @@
                 :format="dateFormat"
                 :valueFormat="dateFormat"
                 :disabledDate="disabledDate"
+                @change="onDobChange"
               />
+            </a-form-item>
+            <a-form-item :label="$t('age')" v-if="application.age">
+              <span class="text-lg font-semibold">{{ application.age }} 歲</span>
+              <span v-if="eligibleCategories.length > 0" class="ml-2 text-green-600">
+                (符合 {{ eligibleCategories.length }} 個組別)
+              </span>
+              <span v-else class="ml-2 text-red-600"> (不符合任何組別的年齡要求) </span>
             </a-form-item>
             <a-form-item :label="$t('gender')" name="gender">
               <a-radio-group v-model:value="application.gender" @change="onGenderChange">
@@ -124,10 +122,10 @@
               </a-radio-group>
             </a-form-item>
             <a-form-item :label="$t('email')" name="email">
-              <a-input v-model:value="application.email" />
+              <a-input type="input" v-model:value="application.email" />
             </a-form-item>
             <a-form-item :label="$t('mobile_number')" name="mobile">
-              <a-input v-model:value="application.mobile" />
+              <a-input type="input" v-model:value="application.mobile" />
             </a-form-item>
             <a-form-item :label="$t('role')" name="role" v-if="application.gender">
               <a-radio-group v-model:value="application.role">
@@ -141,18 +139,34 @@
             </a-form-item>
             <template v-if="application.role == 'athlete' && application.gender">
               <a-form-item :label="$t('category')" name="category">
+                <a-alert
+                  v-if="eligibleCategories.length === 0 && application.dob"
+                  message="不符合年齡要求"
+                  description="根據您的出生日期，您不符合任何組別的年齡要求。"
+                  type="error"
+                  show-icon
+                  class="mb-4"
+                />
                 <a-radio-group v-model:value="application.category">
                   <a-radio
-                    v-for="cat in competition.categories_weights"
+                    v-for="cat in eligibleCategories"
                     :value="cat.code"
                     :style="virticalStyle"
                     @change="onCategoryChange"
+                    :disabled="!isCategoryEligible(cat.code)"
                   >
                     {{ cat.name }} - [{{ cat.description }}]
+                    <span v-if="!isCategoryEligible(cat.code)" class="text-red-500 ml-2">
+                      (年齡不符合)
+                    </span>
                   </a-radio>
                 </a-radio-group>
               </a-form-item>
-              <a-form-item :label="$t('weight')" name="weight">
+              <a-form-item
+                :label="$t('weight')"
+                name="weight"
+                v-if="application.category"
+              >
                 <a-radio-group v-model:value="application.weight">
                   <a-radio
                     v-for="cat in competition.weights"
@@ -220,16 +234,23 @@
             </div>
 
             <div class="flex flex-row item-center justify-center">
-              <a-button type="primary" html-type="submit" :loading="loading">{{
-                $t("submit")
-              }}</a-button>
+              <a-button
+                type="primary"
+                html-type="submit"
+                :loading="loading"
+                :disabled="
+                  eligibleCategories.length === 0 && application.role === 'athlete'
+                "
+              >
+                {{ $t("submit") }}
+              </a-button>
             </div>
           </a-form>
         </div>
       </div>
     </div>
     <a-modal
-      v-model:visible="modal.isOpen"
+      v-model:open="modal.isOpen"
       :title="modal.title"
       :cancelButtonProps="{ style: 'display:none' }"
       okText="$t{'understand'}"
@@ -273,7 +294,10 @@ export default {
       mode: null,
       dateFormat: "YYYY-MM-DD",
       dateList: ["2023-01-02"],
-      application: {},
+      application: {
+        age: null,
+      },
+      eligibleCategories: [],
       rules: {
         organization_id: { required: true },
         name_fn: { required: true },
@@ -323,12 +347,11 @@ export default {
       this.application.dob = this.member.dob;
       this.application.email = this.member.email;
       this.application.mobile = this.member.mobile;
-    }
-    if (this.application.dob == null) {
-      console.log("preset dob");
-      this.application.dob = dayjs(new Date())
-        .subtract(10, "year")
-        .format(this.dateFormat);
+
+      // 计算会员年龄
+      if (this.member.dob) {
+        this.calculateAge(this.member.dob);
+      }
     }
   },
   created() {},
@@ -336,7 +359,41 @@ export default {
     setCroppedImageData(data) {
       this.avatarPreview = data.imageUrl;
       this.avatarData = data;
-      //console.log(data);
+    },
+    onDobChange(date) {
+      if (date) {
+        this.calculateAge(date);
+      } else {
+        this.application.age = null;
+        this.eligibleCategories = [];
+      }
+    },
+    calculateAge(dob) {
+      const birthDate = dayjs(dob);
+      const today = dayjs();
+      const age = today.diff(birthDate, "year");
+      this.application.age = age;
+      this.updateEligibleCategories(age);
+    },
+    updateEligibleCategories(age) {
+      this.eligibleCategories = this.competition.categories_weights.filter((category) => {
+        if (category.age_range && category.age_range.length === 2) {
+          return age >= category.age_range[0] && age <= category.age_range[1];
+        }
+        return true; // 如果没有age_range，默认显示所有组别
+      });
+
+      // 如果当前选择的category不在符合条件的组别中，清空选择
+      if (
+        this.application.category &&
+        !this.isCategoryEligible(this.application.category)
+      ) {
+        this.application.category = null;
+        this.application.weight = null;
+      }
+    },
+    isCategoryEligible(categoryCode) {
+      return this.eligibleCategories.some((cat) => cat.code === categoryCode);
     },
     onGenderChange(event) {
       if (this.application.category) {
@@ -364,8 +421,24 @@ export default {
       }
     },
     onFinish() {
+      // 如果是运动员角色，检查年龄是否符合所选组别
+      if (this.application.role === "athlete" && this.application.category) {
+        const selectedCategory = this.competition.categories_weights.find(
+          (cat) => cat.code === this.application.category
+        );
+
+        if (selectedCategory && selectedCategory.age_range) {
+          const [minAge, maxAge] = selectedCategory.age_range;
+          if (this.application.age < minAge || this.application.age > maxAge) {
+            message.error(
+              `您选择的${selectedCategory.name}组别要求年龄在${minAge}至${maxAge}岁之间，您当前${this.application.age}岁不符合要求。`
+            );
+            return;
+          }
+        }
+      }
+
       this.loading = true;
-      console.log(this.loading);
       if (this.avatarData) {
         this.application.avatar = this.avatarData.blob;
       }

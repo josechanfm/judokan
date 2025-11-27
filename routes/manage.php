@@ -5,35 +5,6 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use Inertia\Inertia;
 
-
-Route::group(['middleware' => config('fortify.middleware', ['admin_web'])], function () {
-    $limiter = config('fortify.limiters.login');
-    Route::get('/manage/login', function () {
-        return Inertia::render('Organization/Login');
-    })->middleware(['guest:' . config('fortify.guard')])->name('manage.login');
-
-    Route::post('/manage/login', [AuthenticatedSessionController::class, 'store'])
-        ->middleware(array_filter([
-            'guest:' . config('fortify.guard'),
-            $limiter ? 'throttle:' . $limiter : null,
-        ]));
-    Route::get('/manage/logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('manage.logout');
-});
-
-
-// Route::middleware([
-//     'auth:admin_web',
-// ])->group(function () {
-//     Route::get('/manage', function () {
-//         // 如果是 admin 或者 master 就跳到 amdin
-//         if (request()->user()->hasRole(['admin', 'master'])) return redirect()->to('/manage/admin');
-
-//         // 否則去teacher
-//         else return redirect()->to('/manage/teacher');
-//     });
-// });
-
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),

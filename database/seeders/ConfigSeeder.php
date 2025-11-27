@@ -15,357 +15,365 @@ class ConfigSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('configs')->insert([
-            'organization_id'=>0,
-            'key'=>'categories_weights',
-            'value'=>'{
-                "code": "public",
-                "name": "公開組",
-                "description": "參加者年齡必須於16歲或以上者",
-                "male": [{
-                        "code": "60-",
-                        "name": "-60Kg",
-                        "limit": [50, 60]
-                    },{
-                        "code": "66-",
-                        "name": "-66Kg",
-                        "limit": [61, 66]
-                    }, {
-                        "code": "73-",
-                        "name": "-73Kg",
-                        "limit": [67, 73]
-                    }, {
-                        "code": "81-",
-                        "name": "-81Kg",
-                        "limit": [74, 81]
-                    }, {
-                        "code": "90-",
-                        "name": "-90Kg",
-                        "limit": [82, 90]
-                    }, {
-                        "code": "OPEN",
-                        "name": "Open",
-                        "limit": [50, 120]
-                    }
-                ],
-                "female": [{
-                        "code": "48-",
-                        "name": "-48Kg",
-                        "limit": [38, 48]
-                    }, {
-                        "code": "52-",
-                        "name": "-52Kg",
-                        "limit": [49, 52]
-                    }, {
-                        "code": "57-",
-                        "name": "-57Kg",
-                        "limit": [53, 57]
-                    }, {
-                        "code": "63-",
-                        "name": "-63Kg",
-                        "limit": [58, 63]
-                    }, {
-                        "code": "70-",
-                        "name": "-70Kg",
-                        "limit": [64, 70]
-                    }, {
-                        "code": "OPEN",
-                        "name": "Open",
-                        "limit": [30, 120]
-                    }
-                ]
-            }',
-        ]);
-        DB::table('configs')->insert([
-            'organization_id'=>0,
-            'key'=>'categories_weights',
-            'value'=>'{
-                "code":"junior_a",
-                "name": "少年A組",
-                "description": "參加者年齡必須於15歲至17歲或以上者",
-                "male": [{
-                        "code": "45-",
-                        "name": "-45Kg",
-                        "limit": [35, 45]
-                    },{
-                        "code": "50-",
-                        "name": "-50Kg",
-                        "limit": [46, 50]
-                    }, {
-                        "code": "55-",
-                        "name": "-55Kg",
-                        "limit": [51, 55]
-                    }, {
-                        "code": "60-",
-                        "name": "-60Kg",
-                        "limit": [56, 60]
-                    }, {
-                        "code": "66-",
-                        "name": "-66Kg",
-                        "limit": [61, 66]
-                    }, {
-                        "code": "73-",
-                        "name": "-73Kg",
-                        "limit": [67, 73]
-                    }, {
-                        "code": "73+",
-                        "name": "+73Kg",
-                        "limit": [73, 83]
-                    }
-                ],
-                "female": [{
-                        "code": "44-",
-                        "name": "-44Kg",
-                        "limit": [34, 44]
-                    }, {
-                        "code": "48-",
-                        "name": "-48Kg",
-                        "limit": [45, 48]
-                    }, {
-                        "code": "52-",
-                        "name": "-52Kg",
-                        "limit": [49, 52]
-                    }, {
-                        "code": "57-",
-                        "name": "-57Kg",
-                        "limit": [53, 57]
-                    }, {
-                        "code": "63-",
-                        "name": "-63Kg",
-                        "limit": [58, 63]
-                    }, {
-                        "code": "70-",
-                        "name": "-70Kg",
-                        "limit": [64, 70]
-                    }, {
-                        "code": "70+",
-                        "name": "+70Kg",
-                        "limit": [70, 90]
-                    }
-                ]
-            }',
-        ]);
-        DB::table('configs')->insert([
-            'organization_id'=>0,
-            'key'=>'categories_weights',
-            'value'=>'{
-                "code": "junior_b",
-                "name": "少年B組",
-                "description": "參加者年齡必須於13歲至14歲或以上者",
-                "male": [{
-                        "code": "42-",
-                        "name": "-50Kg",
-                        "limit": [32, 42]
-                    },{
-                        "code": "46-",
-                        "name": "-46Kg",
-                        "limit": [43, 46]
-                    }, {
-                        "code": "50-",
-                        "name": "-50Kg",
-                        "limit": [47, 50]
-                    }, {
-                        "code": "55-",
-                        "name": "-55Kg",
-                        "limit": [51, 55]
-                    }, {
-                        "code": "60-",
-                        "name": "-60Kg",
-                        "limit": [56, 60]
-                    }, {
-                        "code": "66-",
-                        "name": "-66Kg",
-                        "limit": [61, 66]
-                    }, {
-                        "code": "66+",
-                        "name": "+66Kg",
-                        "limit": [66, 86]
-                    }
-                ],
-                "female": [{
-                        "code": "40-",
-                        "name": "-40Kg",
-                        "limit": [30, 40]
-                    }, {
-                        "code": "44-",
-                        "name": "-44Kg",
-                        "limit": [41, 44]
-                    }, {
-                        "code": "48-",
-                        "name": "-48Kg",
-                        "limit": [45, 48]
-                    }, {
-                        "code": "52-",
-                        "name": "-52Kg",
-                        "limit": [49, 52]
-                    }, {
-                        "code": "57-",
-                        "name": "-57Kg",
-                        "limit": [53, 57]
-                    }, {
-                        "code": "63-",
-                        "name": "-66Kg",
-                        "limit": [58, 63]
-                    }, {
-                        "code": "63+",
-                        "name": "+63Kg",
-                        "limit": [63, 83]
-                    }
-                ]
-            }',
-        ]);
-        DB::table('configs')->insert([
-            'organization_id'=>0,
-            'key'=>'categories_weights',
-            'value'=>'{
-                "code": "child_c",
-                "name": "兒童C組",
-                "description": "參加者年齡必須於11歲至12歲或以上者",
-                "male": [{
-                        "code": "27-",
-                        "name": "-27Kg",
-                        "limit": [17, 27]
-                    },{
-                        "code": "30-",
-                        "name": "-30Kg",
-                        "limit": [28, 30]
-                    }, {
-                        "code": "34-",
-                        "name": "-34Kg",
-                        "limit": [31, 34]
-                    }, {
-                        "code": "38-",
-                        "name": "-38Kg",
-                        "limit": [35, 38]
-                    }, {
-                        "code": "42-",
-                        "name": "-42Kg",
-                        "limit": [39, 42]
-                    }, {
-                        "code": "46-",
-                        "name": "-46Kg",
-                        "limit": [43, 46]
-                    }, {
-                        "code": "50-",
-                        "name": "-50Kg",
-                        "limit": [47, 50]
-                    }, {
-                        "code": "55-",
-                        "name": "-55Kg",
-                        "limit": [51, 55]
-                    }, {
-                        "code": "60-",
-                        "name": "-60Kg",
-                        "limit": [56, 60]
-                    }, {
-                        "code": "60+",
-                        "name": "+60Kg",
-                        "limit": [60, 70]
-                    }
-                ],
-                "female": [{
-                        "code": "25-",
-                        "name": "-25Kg",
-                        "limit": [15, 25]
-                    }, {
-                        "code": "28-",
-                        "name": "-28Kg",
-                        "limit": [26, 28]
-                    }, {
-                        "code": "32-",
-                        "name": "-32Kg",
-                        "limit": [29, 32]
-                    }, {
-                        "code": "36-",
-                        "name": "-36Kg",
-                        "limit": [33, 36]
-                    }, {
-                        "code": "40-",
-                        "name": "-40Kg",
-                        "limit": [37, 40]
-                    }, {
-                        "code": "44-",
-                        "name": "-44Kg",
-                        "limit": [41, 44]
-                    }, {
-                        "code": "48-",
-                        "name": "-48Kg",
-                        "limit": [45, 48]
-                    }, {
-                        "code": "52-",
-                        "name": "-52Kg",
-                        "limit": [49, 52]
-                    }, {
-                        "code": "57-",
-                        "name": "-57Kg",
-                        "limit": [53, 57]
-                    }, {
-                        "code": "57+",
-                        "name": "+57Kg",
-                        "limit": [57, 67]
-                    }
-                ]
-            }',
-        ]);
+       DB::table('configs')->insert([
+        'organization_id'=>0,
+        'key'=>'categories_weights',
+        'value'=>'{
+            "code": "public",
+            "name": "公開組",
+            "description": "參加者年齡必須於16歲或以上者",
+            "age_range": [16, 99],
+            "male": [{
+                    "code": "60-",
+                    "name": "-60Kg",
+                    "limit": [50, 60]
+                },{
+                    "code": "66-",
+                    "name": "-66Kg",
+                    "limit": [61, 66]
+                }, {
+                    "code": "73-",
+                    "name": "-73Kg",
+                    "limit": [67, 73]
+                }, {
+                    "code": "81-",
+                    "name": "-81Kg",
+                    "limit": [74, 81]
+                }, {
+                    "code": "90-",
+                    "name": "-90Kg",
+                    "limit": [82, 90]
+                }, {
+                    "code": "OPEN",
+                    "name": "Open",
+                    "limit": [50, 120]
+                }
+            ],
+            "female": [{
+                    "code": "48-",
+                    "name": "-48Kg",
+                    "limit": [38, 48]
+                }, {
+                    "code": "52-",
+                    "name": "-52Kg",
+                    "limit": [49, 52]
+                }, {
+                    "code": "57-",
+                    "name": "-57Kg",
+                    "limit": [53, 57]
+                }, {
+                    "code": "63-",
+                    "name": "-63Kg",
+                    "limit": [58, 63]
+                }, {
+                    "code": "70-",
+                    "name": "-70Kg",
+                    "limit": [64, 70]
+                }, {
+                    "code": "OPEN",
+                    "name": "Open",
+                    "limit": [30, 120]
+                }
+            ]
+        }',
+    ]);
 
-        DB::table('configs')->insert([
-            'organization_id' => 0,
-            'key' => 'categories_weights',
-            'value' => '{
-                "code": "child_d",
-                "name": "兒童D組",
-                "description": "參加者年齡必須於9歲至10歲者",
-                "male": [
-                    {"code": "24-", "name": "-24Kg", "limit": [15, 24]},
-                    {"code": "27-", "name": "-27Kg", "limit": [25, 27]},
-                    {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
-                    {"code": "34-", "name": "-34Kg", "limit": [31, 34]},
-                    {"code": "38-", "name": "-38Kg", "limit": [35, 38]},
-                    {"code": "42-", "name": "-42Kg", "limit": [39, 42]},
-                    {"code": "46-", "name": "-46Kg", "limit": [43, 46]},
-                    {"code": "46+", "name": "+46Kg", "limit": [47, 56]}
-                ],
-                "female": [
-                    {"code": "22-", "name": "-22Kg", "limit": [15, 22]},
-                    {"code": "25-", "name": "-25Kg", "limit": [23, 25]},
-                    {"code": "28-", "name": "-28Kg", "limit": [26, 28]},
-                    {"code": "32-", "name": "-32Kg", "limit": [29, 32]},
-                    {"code": "36-", "name": "-36Kg", "limit": [33, 36]},
-                    {"code": "40-", "name": "-40Kg", "limit": [37, 40]},
-                    {"code": "44-", "name": "-44Kg", "limit": [41, 44]},
-                    {"code": "44+", "name": "+44Kg", "limit": [44, 54]}
-                ]
-            }'
-        ]);
+    DB::table('configs')->insert([
+        'organization_id'=>0,
+        'key'=>'categories_weights',
+        'value'=>'{
+            "code":"junior_a",
+            "name": "少年A組",
+            "description": "參加者年齡必須於15歲至17歲或以上者",
+            "age_range": [15, 17],
+            "male": [{
+                    "code": "45-",
+                    "name": "-45Kg",
+                    "limit": [35, 45]
+                },{
+                    "code": "50-",
+                    "name": "-50Kg",
+                    "limit": [46, 50]
+                }, {
+                    "code": "55-",
+                    "name": "-55Kg",
+                    "limit": [51, 55]
+                }, {
+                    "code": "60-",
+                    "name": "-60Kg",
+                    "limit": [56, 60]
+                }, {
+                    "code": "66-",
+                    "name": "-66Kg",
+                    "limit": [61, 66]
+                }, {
+                    "code": "73-",
+                    "name": "-73Kg",
+                    "limit": [67, 73]
+                }, {
+                    "code": "73+",
+                    "name": "+73Kg",
+                    "limit": [73, 83]
+                }
+            ],
+            "female": [{
+                    "code": "44-",
+                    "name": "-44Kg",
+                    "limit": [34, 44]
+                }, {
+                    "code": "48-",
+                    "name": "-48Kg",
+                    "limit": [45, 48]
+                }, {
+                    "code": "52-",
+                    "name": "-52Kg",
+                    "limit": [49, 52]
+                }, {
+                    "code": "57-",
+                    "name": "-57Kg",
+                    "limit": [53, 57]
+                }, {
+                    "code": "63-",
+                    "name": "-63Kg",
+                    "limit": [58, 63]
+                }, {
+                    "code": "70-",
+                    "name": "-70Kg",
+                    "limit": [64, 70]
+                }, {
+                    "code": "70+",
+                    "name": "+70Kg",
+                    "limit": [70, 90]
+                }
+            ]
+        }',
+    ]);
 
-        // 兒童E組
-        DB::table('configs')->insert([
-            'organization_id' => 0,
-            'key' => 'categories_weights',
-            'value' => '{
-                "code": "child_e",
-                "name": "兒童E組",
-                "description": "參加者年齡必須於7歲至8歲者",
-                "male": [
-                    {"code": "21-", "name": "-21Kg", "limit": [15, 21]},
-                    {"code": "23-", "name": "-23Kg", "limit": [22, 23]},
-                    {"code": "25-", "name": "-25Kg", "limit": [24, 25]},
-                    {"code": "27-", "name": "-27Kg", "limit": [26, 27]},
-                    {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
-                    {"code": "33-", "name": "-33Kg", "limit": [31, 33]},
-                    {"code": "33+", "name": "+33Kg", "limit": [34, 43]}
-                ],
-                "female": [
-                    {"code": "21-", "name": "-21Kg", "limit": [15, 21]},
-                    {"code": "23-", "name": "-23Kg", "limit": [22, 23]},
-                    {"code": "25-", "name": "-25Kg", "limit": [24, 25]},
-                    {"code": "27-", "name": "-27Kg", "limit": [26, 27]},
-                    {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
-                    {"code": "33-", "name": "-33Kg", "limit": [31, 33]},
-                    {"code": "33+", "name": "+33Kg", "limit": [33, 43]}
-                ]
-            }'
-        ]);
+    DB::table('configs')->insert([
+        'organization_id'=>0,
+        'key'=>'categories_weights',
+        'value'=>'{
+            "code": "junior_b",
+            "name": "少年B組",
+            "description": "參加者年齡必須於13歲至14歲或以上者",
+            "age_range": [13, 14],
+            "male": [{
+                    "code": "42-",
+                    "name": "-50Kg",
+                    "limit": [32, 42]
+                },{
+                    "code": "46-",
+                    "name": "-46Kg",
+                    "limit": [43, 46]
+                }, {
+                    "code": "50-",
+                    "name": "-50Kg",
+                    "limit": [47, 50]
+                }, {
+                    "code": "55-",
+                    "name": "-55Kg",
+                    "limit": [51, 55]
+                }, {
+                    "code": "60-",
+                    "name": "-60Kg",
+                    "limit": [56, 60]
+                }, {
+                    "code": "66-",
+                    "name": "-66Kg",
+                    "limit": [61, 66]
+                }, {
+                    "code": "66+",
+                    "name": "+66Kg",
+                    "limit": [66, 86]
+                }
+            ],
+            "female": [{
+                    "code": "40-",
+                    "name": "-40Kg",
+                    "limit": [30, 40]
+                }, {
+                    "code": "44-",
+                    "name": "-44Kg",
+                    "limit": [41, 44]
+                }, {
+                    "code": "48-",
+                    "name": "-48Kg",
+                    "limit": [45, 48]
+                }, {
+                    "code": "52-",
+                    "name": "-52Kg",
+                    "limit": [49, 52]
+                }, {
+                    "code": "57-",
+                    "name": "-57Kg",
+                    "limit": [53, 57]
+                }, {
+                    "code": "63-",
+                    "name": "-66Kg",
+                    "limit": [58, 63]
+                }, {
+                    "code": "63+",
+                    "name": "+63Kg",
+                    "limit": [63, 83]
+                }
+            ]
+        }',
+    ]);
+
+    DB::table('configs')->insert([
+        'organization_id'=>0,
+        'key'=>'categories_weights',
+        'value'=>'{
+            "code": "child_c",
+            "name": "兒童C組",
+            "description": "參加者年齡必須於11歲至12歲或以上者",
+            "age_range": [11, 12],
+            "male": [{
+                    "code": "27-",
+                    "name": "-27Kg",
+                    "limit": [17, 27]
+                },{
+                    "code": "30-",
+                    "name": "-30Kg",
+                    "limit": [28, 30]
+                }, {
+                    "code": "34-",
+                    "name": "-34Kg",
+                    "limit": [31, 34]
+                }, {
+                    "code": "38-",
+                    "name": "-38Kg",
+                    "limit": [35, 38]
+                }, {
+                    "code": "42-",
+                    "name": "-42Kg",
+                    "limit": [39, 42]
+                }, {
+                    "code": "46-",
+                    "name": "-46Kg",
+                    "limit": [43, 46]
+                }, {
+                    "code": "50-",
+                    "name": "-50Kg",
+                    "limit": [47, 50]
+                }, {
+                    "code": "55-",
+                    "name": "-55Kg",
+                    "limit": [51, 55]
+                }, {
+                    "code": "60-",
+                    "name": "-60Kg",
+                    "limit": [56, 60]
+                }, {
+                    "code": "60+",
+                    "name": "+60Kg",
+                    "limit": [60, 70]
+                }
+            ],
+            "female": [{
+                    "code": "25-",
+                    "name": "-25Kg",
+                    "limit": [15, 25]
+                }, {
+                    "code": "28-",
+                    "name": "-28Kg",
+                    "limit": [26, 28]
+                }, {
+                    "code": "32-",
+                    "name": "-32Kg",
+                    "limit": [29, 32]
+                }, {
+                    "code": "36-",
+                    "name": "-36Kg",
+                    "limit": [33, 36]
+                }, {
+                    "code": "40-",
+                    "name": "-40Kg",
+                    "limit": [37, 40]
+                }, {
+                    "code": "44-",
+                    "name": "-44Kg",
+                    "limit": [41, 44]
+                }, {
+                    "code": "48-",
+                    "name": "-48Kg",
+                    "limit": [45, 48]
+                }, {
+                    "code": "52-",
+                    "name": "-52Kg",
+                    "limit": [49, 52]
+                }, {
+                    "code": "57-",
+                    "name": "-57Kg",
+                    "limit": [53, 57]
+                }, {
+                    "code": "57+",
+                    "name": "+57Kg",
+                    "limit": [57, 67]
+                }
+            ]
+        }',
+    ]);
+
+    DB::table('configs')->insert([
+        'organization_id' => 0,
+        'key' => 'categories_weights',
+        'value' => '{
+            "code": "child_d",
+            "name": "兒童D組",
+            "description": "參加者年齡必須於9歲至10歲者",
+            "age_range": [9, 10],
+            "male": [
+                {"code": "24-", "name": "-24Kg", "limit": [15, 24]},
+                {"code": "27-", "name": "-27Kg", "limit": [25, 27]},
+                {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
+                {"code": "34-", "name": "-34Kg", "limit": [31, 34]},
+                {"code": "38-", "name": "-38Kg", "limit": [35, 38]},
+                {"code": "42-", "name": "-42Kg", "limit": [39, 42]},
+                {"code": "46-", "name": "-46Kg", "limit": [43, 46]},
+                {"code": "46+", "name": "+46Kg", "limit": [47, 56]}
+            ],
+            "female": [
+                {"code": "22-", "name": "-22Kg", "limit": [15, 22]},
+                {"code": "25-", "name": "-25Kg", "limit": [23, 25]},
+                {"code": "28-", "name": "-28Kg", "limit": [26, 28]},
+                {"code": "32-", "name": "-32Kg", "limit": [29, 32]},
+                {"code": "36-", "name": "-36Kg", "limit": [33, 36]},
+                {"code": "40-", "name": "-40Kg", "limit": [37, 40]},
+                {"code": "44-", "name": "-44Kg", "limit": [41, 44]},
+                {"code": "44+", "name": "+44Kg", "limit": [44, 54]}
+            ]
+        }'
+    ]);
+
+    DB::table('configs')->insert([
+        'organization_id' => 0,
+        'key' => 'categories_weights',
+        'value' => '{
+            "code": "child_e",
+            "name": "兒童E組",
+            "description": "參加者年齡必須於7歲至8歲者",
+            "age_range": [7, 8],
+            "male": [
+                {"code": "21-", "name": "-21Kg", "limit": [15, 21]},
+                {"code": "23-", "name": "-23Kg", "limit": [22, 23]},
+                {"code": "25-", "name": "-25Kg", "limit": [24, 25]},
+                {"code": "27-", "name": "-27Kg", "limit": [26, 27]},
+                {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
+                {"code": "33-", "name": "-33Kg", "limit": [31, 33]},
+                {"code": "33+", "name": "+33Kg", "limit": [34, 43]}
+            ],
+            "female": [
+                {"code": "21-", "name": "-21Kg", "limit": [15, 21]},
+                {"code": "23-", "name": "-23Kg", "limit": [22, 23]},
+                {"code": "25-", "name": "-25Kg", "limit": [24, 25]},
+                {"code": "27-", "name": "-27Kg", "limit": [26, 27]},
+                {"code": "30-", "name": "-30Kg", "limit": [28, 30]},
+                {"code": "33-", "name": "-33Kg", "limit": [31, 33]},
+                {"code": "33+", "name": "+33Kg", "limit": [33, 43]}
+            ]
+        }'
+    ]);
 
         DB::table('configs')->insert([
             'organization_id'=>0,
