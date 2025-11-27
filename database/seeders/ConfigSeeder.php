@@ -24,9 +24,13 @@ class ConfigSeeder extends Seeder
             "description": "參加者年齡必須於16歲或以上者",
             "age_range": [16, 99],
             "male": [{
+                    "code": "55-",
+                    "name": "-55Kg",
+                    "limit": [45, 55]
+                },{
                     "code": "60-",
                     "name": "-60Kg",
-                    "limit": [50, 60]
+                    "limit": [55, 60]
                 },{
                     "code": "66-",
                     "name": "-66Kg",
@@ -50,9 +54,13 @@ class ConfigSeeder extends Seeder
                 }
             ],
             "female": [{
+                    "code": "44-",
+                    "name": "-44Kg",
+                    "limit": [34, 44]
+                },{
                     "code": "48-",
                     "name": "-48Kg",
-                    "limit": [38, 48]
+                    "limit": [44, 48]
                 }, {
                     "code": "52-",
                     "name": "-52Kg",
@@ -158,9 +166,13 @@ class ConfigSeeder extends Seeder
             "description": "參加者年齡必須於13歲至14歲或以上者",
             "age_range": [13, 14],
             "male": [{
+                    "code": "38-",
+                    "name": "-60Kg",
+                    "limit": [28, 38]
+                },{
                     "code": "42-",
                     "name": "-42Kg",
-                    "limit": [32, 42]
+                    "limit": [38, 42]
                 },{
                     "code": "46-",
                     "name": "-46Kg",
@@ -188,9 +200,13 @@ class ConfigSeeder extends Seeder
                 }
             ],
             "female": [{
+                    "code": "36-",
+                    "name": "-36Kg",
+                    "limit": [26, 36]
+                },{
                     "code": "40-",
                     "name": "-40Kg",
-                    "limit": [30, 40]
+                    "limit": [36, 40]
                 }, {
                     "code": "44-",
                     "name": "-44Kg",
@@ -209,7 +225,7 @@ class ConfigSeeder extends Seeder
                     "limit": [53, 57]
                 }, {
                     "code": "63-",
-                    "name": "-66Kg",
+                    "name": "-63Kg",
                     "limit": [58, 63]
                 }, {
                     "code": "63+",
