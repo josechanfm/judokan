@@ -230,6 +230,25 @@ class CompetitionController extends Controller
     {
         $search = $request->all();
         $competitionApplication = $competition->applications()->where('id_num', $search['id_num'])->where('email', $search['email'])->where('mobile', $search['mobile'])->first();
+        
+        $application = CompetitionApplication::with('competition')->find($competitionApplication->id);
+        
+        if ($application->competition->categories_weights) {
+            $application->competition->categories_weights = json_decode($application->competition->categories_weights, true);
+        }
+        
+        if ($application->competition->roles) {
+            $application->competition->roles = json_decode($application->competition->roles, true);
+        }
+        
+        if ($application->competition->referee_options) {
+            $application->competition->referee_options = json_decode($application->competition->referee_options, true);
+        }
+        
+        if ($application->competition->staff_options) {
+            $application->competition->staff_options = json_decode($application->competition->staff_options, true);
+        }
+
         if (empty($competitionApplication)) {
             return Inertia::render('Competition/ErrorSearch', [
                 'competition' => $competition
@@ -239,7 +258,7 @@ class CompetitionController extends Controller
             return Inertia::render('Competition/Success', [
                 'organizations' => Organization::all(),
                 'belt_ranks' => Config::item("belt_ranks"),
-                'application' => CompetitionApplication::with('competition')->find($competitionApplication->id)
+                'application' => $application
             ]);
         }
     }

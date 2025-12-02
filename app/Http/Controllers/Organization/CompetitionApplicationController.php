@@ -166,11 +166,29 @@ class CompetitionApplicationController extends Controller
     }
     public function success(CompetitionApplication $competitionApplication)
     {
+        $application = CompetitionApplication::with('competition')->find($competitionApplication->id);
+        
+        if ($application->competition->categories_weights) {
+            $application->competition->categories_weights = json_decode($application->competition->categories_weights, true);
+        }
+        
+        if ($application->competition->roles) {
+            $application->competition->roles = json_decode($application->competition->roles, true);
+        }
+        
+        if ($application->competition->referee_options) {
+            $application->competition->referee_options = json_decode($application->competition->referee_options, true);
+        }
+        
+        if ($application->competition->staff_options) {
+            $application->competition->staff_options = json_decode($application->competition->staff_options, true);
+        }
+
         Session::flash('competitionApplication', $competitionApplication->id);
         return Inertia::render('Competition/Success', [
             'organizations' => Organization::all(),
             'belt_ranks' => Config::item("belt_ranks"),
-            'application' => CompetitionApplication::with('competition')->find($competitionApplication->id)
+            'application' => $application
         ]);
     }
 

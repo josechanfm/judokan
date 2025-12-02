@@ -94,7 +94,7 @@
                       <td class="ant-table-cell">
                         {{
                           application.competition.roles.find(
-                            (r) => r.value == application.role
+                            (x) => x.value == application.role
                           ).label
                         }}
                       </td>
