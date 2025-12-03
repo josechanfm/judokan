@@ -171,7 +171,22 @@ class CompetitionController extends Controller
     {
         //$application=CompetitionApplication::with('competition')->find($id);
         //dd($application);
-
+        $application = CompetitionApplication::with('competition')->find($id);
+        if ($application->competition->categories_weights) {
+            $application->competition->categories_weights = json_decode($application->competition->categories_weights, true);
+        }
+        
+        if ($application->competition->roles) {
+            $application->competition->roles = json_decode($application->competition->roles, true);
+        }
+        
+        if ($application->competition->referee_options) {
+            $application->competition->referee_options = json_decode($application->competition->referee_options, true);
+        }
+        
+        if ($application->competition->staff_options) {
+            $application->competition->staff_options = json_decode($application->competition->staff_options, true);
+        }
         if (strtoupper($request->format) == 'PDF') {
             // if (!session('competitionApplicationPdf') || session('competitionApplicationPdf') != $id) {
             //     return redirect()->route('/');
@@ -183,7 +198,7 @@ class CompetitionController extends Controller
             $pdf = PDF::loadView('Competition.ApplicationSuccess', [
                 'organizations' => Organization::all()->toArray(),
                 'belt_ranks' => Config::item("belt_ranks"),
-                'application' => CompetitionApplication::with('competition')->find($id)
+                'application' => $application,
             ]);
 
             $pdf->render();
@@ -194,7 +209,7 @@ class CompetitionController extends Controller
                 return redirect()->route('/');
             }
             Session::flash('competitionApplicationPdf', $id);
-            $application = CompetitionApplication::with('competition')->find($id);
+
             $pdf = PDF::loadView('Competition.ApplicationSuccess', [
                 'organizations' => Organization::all()->toArray(),
                 'belt_ranks' => Config::item("belt_ranks"),
@@ -214,7 +229,7 @@ class CompetitionController extends Controller
             return Inertia::render('Competition/Success', [
                 'organizations' => Organization::all(),
                 'belt_ranks' => Config::item("belt_ranks"),
-                'application' => CompetitionApplication::with('competition')->find($id)
+                'application' => $application
             ]);
         }
     }
