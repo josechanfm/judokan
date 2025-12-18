@@ -47,28 +47,24 @@ class CompetitionApplicationExport implements FromCollection, WithHeadings
     }
     public function collection()
     {
-        // dd('aaa');
-        $roles = collect($this->competition->roles);
-        $categories = collect($this->competition->categories_weights);
+        $roles = collect(json_decode($this->competition->roles));
+        $categories = collect(json_decode($this->competition->categories_weights));
         $referee_options = collect(Config::item('referee_options'));
         $belt_ranks = collect(Config::item('belt_ranks'));
-        // dd($belt_ranks[0]->rankCode);
         $applications = CompetitionApplication::join('organizations', 'organizations.id', '=', 'competition_applications.organization_id')
             ->select(array_keys($this->columns))
             ->where('competition_id', $this->competition->id)
             ->get()->collect();
-
         $data = $applications->map(function ($application) use ($roles, $categories, $belt_ranks) {
             return [...$application->toArray(), 'role' => $roles->filter(function ($role) use ($application) {
-                return $role['value'] == $application->role;
-            })->first()['label'], 'category' => $categories->filter(function ($category) use ($application) {
-                return $category['code'] == $application->category;
-            })->first()['name'] ?? '', 'belt_rank' => $belt_ranks->filter(function ($belt_rank) use ($application) {
+                return $role->value== $application->role;
+            })->first()->label, 'category' => $categories->filter(function ($category) use ($application) {
+                return $category->code == $application->category;
+            })->first()->name ?? '', 'belt_rank' => $belt_ranks->filter(function ($belt_rank) use ($application) {
                 return $belt_rank->rankCode == $application->belt_rank;
             })->first()->name_zh ?? '', 'gender' => $application->gender == 'M' ? '男' : '女'];
         });
 
-        // dd($applications);
         return $data;
     }
     // public function drawings()
