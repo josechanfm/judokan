@@ -29,12 +29,11 @@ class MemberController extends Controller
      */
     public function index()
     {
-        // $org=Organization::find(session('organization')->id)->members;
-        // session('organization')->fresh;
-        // dd(session('organization')->members);
-        return Inertia::render('Organization/Members',[
+        $belt_ranks = collect(Config::item('belt_ranks'));
+        return Inertia::render('Organization/Member/Index',[
             //'members'=>session('organization')->members
             'memberTiers'=>Config::item('member_tiers'),
+            'belt_ranks' => $belt_ranks,
             'members'=>Organization::find(session('organization')->id)->members
         ]);
 
@@ -48,6 +47,10 @@ class MemberController extends Controller
     public function create()
     {
         //
+        return Inertia::render('Organization/MemberEdit',[
+            //'member'=>$member->belongsToOrganization($organization)->first(),
+
+        ]);
     }
 
     /**
@@ -85,10 +88,10 @@ class MemberController extends Controller
      */
     public function edit(Organization $organization, Member $member)
     {
-        // return Inertia::render('Organization/MemberEdit',[
-        //     //'member'=>$member->belongsToOrganization($organization)->first(),
-        //     'member'=>$member,
-        // ]);
+        return Inertia::render('Organization/MemberEdit',[
+            //'member'=>$member->belongsToOrganization($organization)->first(),
+            'member'=>$member,
+        ]);
     }
 
     /**
@@ -117,11 +120,6 @@ class MemberController extends Controller
                 ]);
             }
         }
-        // if($request->current_tier['tier_code'] == $request->update_tier['tier_code']){
-        //     $memberTier=$member->currentTier->update($request->update_tier);
-        // }else{
-        //     $member->tiers()->create($request->update_tier);
-        // }
         $member->update($request->all());
         return redirect()->back();
     }

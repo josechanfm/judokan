@@ -26,12 +26,22 @@ return new class extends Migration
             $table->string('country')->nullable();
             $table->string('nationality')->nullable();
             $table->string('address')->nullable();
-            $table->string('positions')->nullable()->default('[]');
-            $table->string('federation_officials')->nullable()->default('[]');
-            $table->string('organization_officials')->nullable()->default('[]');
+            $table->string('positions')->nullable();
             $table->string('avatar')->nullable();
+            
+            // 會員有效期管理（保留原字段）
             $table->date('valid_at')->nullable();
             $table->date('expired_at')->nullable();
+            
+            // 新增字段
+            $table->string('membership_number')->unique()->nullable(); // 會員編號
+            $table->string('id_card_number')->unique()->nullable(); // 身份證號碼/護照號碼
+            $table->string('occupation')->nullable(); // 職業
+            $table->year('exam_year')->nullable(); // 最近考試年份
+            $table->string('belt')->nullable(); // 帶別
+            $table->string('license_number')->nullable(); // 教練/裁判證號碼
+            $table->enum('membership_status', ['active', 'inactive', 'suspended', 'expired'])->default('active');
+            
             $table->timestamps();
         });
     }

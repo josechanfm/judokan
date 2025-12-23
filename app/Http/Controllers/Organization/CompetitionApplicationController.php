@@ -184,7 +184,6 @@ class CompetitionApplicationController extends Controller
             $application->competition->staff_options = json_decode($application->competition->staff_options, true);
         }
 
-        dd($application->competition->roles);
         Session::flash('competitionApplication', $competitionApplication->id);
         return Inertia::render('Competition/Success', [
             'organizations' => Organization::all(),
@@ -227,8 +226,25 @@ class CompetitionApplicationController extends Controller
             'file_path' => $path,
         ];
 
-        Mail::to(CompetitionApplication::with('competition')->find($competitionApplication->id)->email)->send(new TestMail($mailData));
-
+        try {
+            $email = CompetitionApplication::with('competition')->find($competitionApplication->id)->email;
+            
+            if ($email) {
+                Mail::to($email)->send(new TestMail($mailData));
+                \Log::info('郵件發送成功', ['email' => $email, 'application_id' => $competitionApplication->id]);
+            } else {
+                \Log::warning('郵件地址為空', ['application_id' => $competitionApplication->id]);
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('郵件發送失敗', [
+                'error' => $e->getMessage(),
+                'email' => $email ?? '未獲取到郵件地址',
+                'application_id' => $competitionApplication->id,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+        }
         return redirect()->back();
     }
 }

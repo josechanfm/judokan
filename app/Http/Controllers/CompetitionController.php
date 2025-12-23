@@ -167,11 +167,12 @@ class CompetitionController extends Controller
     {
         //
     }
+    
     public function applicationSuccess($id, Request $request)
     {
-        //$application=CompetitionApplication::with('competition')->find($id);
-        //dd($application);
         $application = CompetitionApplication::with('competition')->find($id);
+        
+        // 原有的 JSON 解碼處理
         if ($application->competition->categories_weights) {
             $application->competition->categories_weights = json_decode($application->competition->categories_weights, true);
         }
@@ -187,14 +188,8 @@ class CompetitionController extends Controller
         if ($application->competition->staff_options) {
             $application->competition->staff_options = json_decode($application->competition->staff_options, true);
         }
+        
         if (strtoupper($request->format) == 'PDF') {
-            // if (!session('competitionApplicationPdf') || session('competitionApplicationPdf') != $id) {
-            //     return redirect()->route('/');
-            // }
-            // return view('Competition/ApplicationSuccess',[
-            //     'belt_ranks'=>Config::item("belt_ranks"),
-            //     'application'=>CompetitionApplication::with('competition')->find($id)
-            // ]);
             $pdf = PDF::loadView('Competition.ApplicationSuccess', [
                 'organizations' => Organization::all()->toArray(),
                 'belt_ranks' => Config::item("belt_ranks"),
@@ -208,6 +203,7 @@ class CompetitionController extends Controller
             if (!session('competitionApplication') || session('competitionApplication') != $id) {
                 return redirect()->route('/');
             }
+            
             Session::flash('competitionApplicationPdf', $id);
 
             $pdf = PDF::loadView('Competition.ApplicationSuccess', [
@@ -215,8 +211,10 @@ class CompetitionController extends Controller
                 'belt_ranks' => Config::item("belt_ranks"),
                 'application' => $application,
             ]);
+            
             $path = 'public/pdf/applications/' . $application->competition->title_zh . $application->name_fn . '.pdf';
             Storage::put($path, $pdf->output());
+            
             $mailData = [
                 'title' => '恭喜你已成功報名',
                 'subject' => '比賽報名表',
@@ -224,7 +222,25 @@ class CompetitionController extends Controller
                 'file_path' => $path,
             ];
 
-            Mail::to(CompetitionApplication::with('competition')->find($id)->email)->send(new TestMail($mailData));
+            try {
+                $email = CompetitionApplication::with('competition')->find($id)->email;
+                
+                if ($email) {
+                    Mail::to($email)->send(new TestMail($mailData));
+                    \Log::info('郵件發送成功', ['email' => $email, 'application_id' => $id]);
+                } else {
+                    \Log::warning('郵件地址為空', ['application_id' => $id]);
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('郵件發送失敗', [
+                    'error' => $e->getMessage(),
+                    'email' => $email ?? '未獲取到郵件地址',
+                    'application_id' => $id,
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine()
+                ]);
+            }
 
             return Inertia::render('Competition/Success', [
                 'organizations' => Organization::all(),
