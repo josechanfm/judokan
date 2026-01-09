@@ -8,13 +8,13 @@
         })
       "
       target="_blank"
-      :disabled="selectedRowKeyIds.length==0"
+      :disabled="selectedRowKeyIds.length == 0"
       >打印收據
     </a-button>
     <a-button
       :href="route('manage.competition.applications.export', competition.id)"
       class="ant-btn"
-      >
+    >
       滙出Excel
     </a-button>
     <a-button type="primary" class="bg-blue-500" @click="visible = true">{{
@@ -44,12 +44,9 @@
       </template>
       <template #bodyCell="{ column, text, record, index }">
         <template v-if="column.dataIndex == 'operation'">
-          <a
-            :href="route('manage.competition.application.success', record.id)"
-            target="_blank"
-            class="ant-btn"
-            >{{ $t("view") }}</a
-          >
+          <a-button :href="route('manage.competition.application.success', record.id)">{{
+            $t("view")
+          }}</a-button>
           <a-button @click="sendMail(record)">{{ $t("send_email") }}</a-button>
           <a-button @click="editRecord(record)">{{ $t("edit") }}</a-button>
           <a-popconfirm
@@ -128,7 +125,7 @@
       </template>
     </a-table>
     <!-- Modal Start-->
-    <a-modal v-model:visible="modal.isOpen" :title="modal.title" width="60%">
+    <a-modal v-model:open="modal.isOpen" :title="modal.title" width="60%">
       <a-form
         ref="modalRef"
         :model="modal.data"
@@ -279,7 +276,7 @@
         >
       </template>
     </a-modal>
-    <a-modal title="Import Athletes List" v-model:visible="visible">
+    <a-modal title="Import Athletes List" v-model:open="visible">
       <a-upload-dragger
         v-model:fileList="files"
         name="file"
@@ -625,13 +622,13 @@ export default {
       //console.log(record, selected, selectedRows);
     },
     onCheckSelectAll(selected, selectedRows, changeRows) {
-      console.log(selected, selectedRows, changeRows)
-      if(selected){
+      console.log(selected, selectedRows, changeRows);
+      if (selected) {
         selectedRows.forEach((r) => {
           this.selectedRowKeyIds.push(r.id);
         });
-      }else{
-        this.selectedRowKeyIds=[];
+      } else {
+        this.selectedRowKeyIds = [];
       }
       //console.log(selected, selectedRows, changeRows);
     },

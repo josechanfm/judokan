@@ -31,6 +31,8 @@ class CompetitionApplicationController extends Controller
     public function index(Competition $competition)
     {
         $competition->applications;
+        $competition->roles = json_decode($competition->roles);
+        $competition->categories_weights = json_decode($competition->categories_weights);
         Session::put('competitionId', $competition->id);
         return Inertia::render('Organization/CompetitionApplications', [
             'competitionResults' => Config::item('competition_results'),
