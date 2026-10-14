@@ -101,7 +101,7 @@
     </div>
   </WebLayout>
   <a-modal
-    v-model:visible="modal.isOpen"
+    v-model:open="modal.isOpen"
     :title="modal.title"
     :okButtonProps="{ style: 'display:none' }"
     cancelText="Ok"

@@ -26,12 +26,15 @@ createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
     setup({ el, app, props, plugin }) {
+        // 前端語系跟隨伺服器（HandleInertiaRequests 分享的 lang，預設 zh-TW）
+        const initialLang = props?.initialPage?.props?.lang || 'zh-TW';
+
         createApp({ render: () => h(app, props) })
             .use(plugin)
             .use(ZiggyVue, Ziggy)
             .use(Antd)
             .use(i18nVue, {
-                lang:'zh-TW',
+                lang: initialLang,
                 resolve: async lang => {
                     const langs = import.meta.glob('../../lang/*.json');
                     return await langs[`../../lang/${lang}.json`]();

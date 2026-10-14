@@ -20,7 +20,8 @@ class CompetitionApplicationController extends Controller
     {
         return Inertia::render('Member/CompetitionApplicationForm', [
             'competition' => $competition,
-            'categories_weights' => Config::categories_weights(),
+            // Config 沒有 categories_weights() 這個方法，改用 competition 自己的欄位
+            'categories_weights' => $competition->categories_weights,
             'roles' => Config::item('competition_roles'),
             'member' => auth()->user()->member
         ]);

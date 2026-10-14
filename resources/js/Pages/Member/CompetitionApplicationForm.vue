@@ -119,7 +119,7 @@
     </div>
   </MemberLayout>
   <a-modal
-    v-model:visible="modal.isOpen"
+    v-model:open="modal.isOpen"
     :title="modal.title"
     :cancelButtonProps="{ style: 'display:none' }"
     okText="$t{'understand'}"
@@ -194,14 +194,24 @@ export default {
   },
   mounted() {
     this.application.competition_id = this.competition.id;
-    this.application.member_id = this.member.id;
-    this.application.name_zh = this.member.name_zh;
-    this.application.name_fn = this.member.name_fn;
-    this.application.display_name = this.member.display_name;
-    this.application.gender = this.member.gender;
-    this.application.dob = this.member.dob;
-    this.application.email = this.member.email;
-    this.application.mobile = this.member.mobile;
+    // roles / categories_weights 由後端送過來時是 JSON 字串（公開版 Competition/ApplicationForm.vue 也是這樣處理）
+    if (typeof this.competition.roles === "string") {
+      this.competition.roles = JSON.parse(this.competition.roles);
+    }
+    if (typeof this.competition.categories_weights === "string") {
+      this.competition.categories_weights = JSON.parse(this.competition.categories_weights);
+    }
+    // member 可能是 null（登入者沒有會員記錄），要和 Competition/ApplicationForm.vue 一樣先判斷
+    if (this.member) {
+      this.application.member_id = this.member.id;
+      this.application.name_zh = this.member.name_zh;
+      this.application.name_fn = this.member.name_fn;
+      this.application.display_name = this.member.display_name;
+      this.application.gender = this.member.gender;
+      this.application.dob = this.member.dob;
+      this.application.email = this.member.email;
+      this.application.mobile = this.member.mobile;
+    }
   },
   created() {},
   methods: {

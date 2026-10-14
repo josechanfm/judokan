@@ -160,11 +160,20 @@ class CompetitionApplicationController extends Controller
         $data = new CompetitionApplicationExport($competition);
         return Excel::download($data, 'applications.xlsx');
     }
-    public function import(Request $request,Competition $competition) {
-        // dd($competition);
+    public function import(Request $request, Competition $competition)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
         $import = new CompetitionApplicationImport($competition);
 
-        $import->import(request()->file('file'));
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'imported' => $import->importedCount(),
+            'errors' => $import->failures()->values(),
+        ]);
     }
     public function success(CompetitionApplication $competitionApplication)
     {

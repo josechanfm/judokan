@@ -209,7 +209,7 @@
 
     <!-- Modal -->
     <a-modal
-      v-model:visible="modal.isOpen"
+      v-model:open="modal.isOpen"
       :title="modal.title"
       width="800px"
       :confirm-loading="submitting"

@@ -15,14 +15,14 @@ class Language
 {
     public function handle($request, Closure $next)
     {
-        if (Session::has('applocale')) {
-            App::setLocale(Session::get('applocale'));
-        } else if (Auth::user()?->language) {
-            App::setLocale(Auth::user()->language);
-        } else { // This is optional as Laravel will automatically set the fallback language if there is none specified
-            App::setLocale(Config::get('app.fallback_locale'));
-        }
-        // dd('aaa');
+        // 依序取用：session（使用者手動切換）→ 使用者偏好 → 應用預設（config/app.php: zh-TW）
+        $locale = Session::get('applocale')
+            ?? Auth::user()?->language
+            ?? Config::get('app.locale');
+
+        // 前端翻譯檔是 lang/zh-TW.json，PHP 端翻譯資料夾是 lang/zh_TW，這裡做對應
+        App::setLocale($locale === 'zh-TW' ? 'zh_TW' : $locale);
+
         return $next($request);
     }
 }

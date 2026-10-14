@@ -1,13 +1,19 @@
 <template>
   <WebLayout title="比賽報名">
-    <template #header>
-      <div class="flex items-center justify-between">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">比賽報名表</h2>
-      </div>
-    </template>
-
     <div class="py-6">
       <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <!-- 頁面標題 -->
+        <div class="mb-4 flex items-center gap-3">
+          <span class="h-6 w-1.5 rounded-full bg-[#0081C8]"></span>
+          <h2 class="text-xl font-bold tracking-wide text-gray-800">比賽報名表</h2>
+          <inertia-link
+            :href="route('competitions.index')"
+            class="ml-auto inline-flex items-center text-sm text-gray-500 transition hover:text-[#0081C8]"
+          >
+            返回賽事列表
+          </inertia-link>
+        </div>
+
         <!-- 賽事橫幅 -->
         <div
           v-if="competition.media.find((m) => m.collection_name == 'competitionBanner')"
@@ -24,16 +30,19 @@
         </div>
 
         <!-- 主要內容卡片 -->
-        <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
+        <div class="overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-gray-200/70">
+          <!-- 腰帶色條 -->
+          <span class="block h-1 bg-gradient-to-r from-[#0081C8] to-[#0b3d78]"></span>
+
           <!-- 賽事標題和費用 -->
           <div class="p-6 border-b border-gray-200">
-            <a-typography-title :level="2" class="text-center text-primary-600 mb-2">
+            <h2 class="mb-4 text-center text-2xl font-bold tracking-wide text-[#0b3d78]">
               {{ competition.title_zh }}
-            </a-typography-title>
+            </h2>
 
-            <div class="flex flex-wrap items-center justify-center gap-4 mb-4">
+            <div class="flex flex-wrap items-center justify-center gap-3 mb-4">
               <div
-                class="flex items-center bg-blue-50 text-blue-700 px-4 py-2 rounded-lg"
+                class="flex items-center rounded-lg bg-sky-50 px-4 py-2 text-[#0b6ea8] ring-1 ring-sky-100"
               >
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -64,9 +73,10 @@
 
           <!-- 賽事簡介 -->
           <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <h3 class="mb-3 flex items-center gap-2 text-lg font-bold tracking-wide text-gray-800">
+              <span class="h-5 w-1 rounded-full bg-[#0081C8]"></span>
               <svg
-                class="w-5 h-5 mr-2 text-primary-500"
+                class="w-5 h-5 text-[#0081C8]"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -115,7 +125,7 @@
                     :href="file.original_url"
                     target="_blank"
                     download
-                    class="text-blue-600 hover:text-blue-800 hover:underline"
+                    class="text-[#0081C8] hover:text-[#0b6ea8] hover:underline"
                   >
                     {{ file.file_name }}
                   </a>
@@ -126,9 +136,10 @@
 
           <!-- 報名表格 -->
           <div class="p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+            <h3 class="mb-6 flex items-center gap-2 text-lg font-bold tracking-wide text-gray-800">
+              <span class="h-5 w-1 rounded-full bg-[#0081C8]"></span>
               <svg
-                class="w-5 h-5 mr-2 text-primary-500"
+                class="w-5 h-5 text-[#0081C8]"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -286,11 +297,11 @@
                   <!-- 年齡顯示 -->
                   <div v-if="application.age" class="md:col-span-2">
                     <div
-                      class="flex flex-wrap items-center gap-4 p-4 bg-blue-50 rounded-lg"
+                      class="flex flex-wrap items-center gap-4 rounded-lg bg-sky-50 p-4 ring-1 ring-sky-100"
                     >
                       <div class="flex items-center">
                         <span class="font-medium text-gray-700">年齡：</span>
-                        <span class="ml-2 text-lg font-bold text-blue-600"
+                        <span class="ml-2 text-lg font-bold text-[#0b6ea8]"
                           >{{ application.age }} 歲</span
                         >
                       </div>
@@ -464,7 +475,7 @@
 
                 <!-- 運動員選項 -->
                 <template v-if="application.role == 'athlete'">
-                  <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <div class="mt-6 rounded-lg bg-sky-50 p-4 ring-1 ring-sky-100">
                     <a-form-item
                       :label="$t('category')"
                       name="category"
@@ -500,7 +511,7 @@
                             class="category-radio"
                           >
                             <div
-                              class="category-card p-4 border rounded-lg hover:border-blue-300"
+                              class="category-card p-4 border rounded-lg hover:border-[#0081C8]"
                             >
                               <div class="flex items-center justify-between">
                                 <div>
@@ -510,7 +521,7 @@
                                   <div class="text-sm text-gray-600 mt-1">
                                     {{ cat.description }}
                                   </div>
-                                  <div class="text-xs text-blue-600 mt-2">
+                                  <div class="text-xs text-[#0b6ea8] mt-2">
                                     年齡: {{ cat.age_range[0] }} -
                                     {{ cat.age_range[1] }}歲
                                   </div>
@@ -557,7 +568,7 @@
                             class="weight-radio"
                           >
                             <div
-                              class="text-center p-3 border rounded-lg hover:border-blue-300"
+                              class="text-center p-3 border rounded-lg hover:border-[#0081C8]"
                             >
                               <div class="font-medium">{{ weight.name }}</div>
                             </div>
@@ -1326,19 +1337,19 @@ export default {
 
 /* 角色卡片樣式 */
 .role-card {
-  @apply w-full p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer;
+  @apply w-full p-4 border border-gray-200 rounded-lg hover:border-[#0081C8] hover:bg-sky-50 transition-all cursor-pointer;
 }
 
 .role-card:hover .role-icon {
-  @apply text-blue-500;
+  @apply text-[#0081C8];
 }
 
 .ant-radio-wrapper-checked .role-card {
-  @apply border-blue-500 bg-blue-50;
+  @apply border-[#0081C8] bg-sky-50;
 }
 
 .ant-radio-wrapper-checked .role-icon {
-  @apply text-blue-500;
+  @apply text-[#0081C8];
 }
 
 /* 組別卡片樣式 */
@@ -1347,7 +1358,7 @@ export default {
 }
 
 .ant-radio-wrapper-checked .category-card {
-  @apply border-blue-500 bg-blue-50;
+  @apply border-[#0081C8] bg-sky-50;
 }
 
 /* 體重級別卡片樣式 */
@@ -1360,7 +1371,49 @@ export default {
 }
 
 .ant-radio-wrapper-checked .weight-radio > div {
-  @apply border-blue-500 bg-blue-50 text-blue-600;
+  @apply border-[#0081C8] bg-sky-50 text-[#0b6ea8];
+}
+
+/* 區塊標題圖示統一套用柔道藍 */
+h4 svg {
+  color: #0081c8;
+}
+
+/* === AntD 元件改用柔道藍 === */
+:deep(.ant-btn-primary) {
+  background-color: #0081c8;
+  box-shadow: none;
+}
+
+:deep(.ant-btn-primary:not(:disabled):hover) {
+  background-color: #0b6ea8;
+}
+
+:deep(.ant-btn-primary:not(:disabled):active) {
+  background-color: #0a5f91;
+}
+
+:deep(.ant-radio-checked .ant-radio-inner) {
+  border-color: #0081c8;
+  background-color: #0081c8;
+}
+
+:deep(.ant-checkbox-checked .ant-checkbox-inner) {
+  border-color: #0081c8;
+  background-color: #0081c8;
+}
+
+:deep(.ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)) {
+  background: #0081c8;
+  border-color: #0081c8;
+}
+
+:deep(.ant-input:focus),
+:deep(.ant-input-focused),
+:deep(.ant-picker-focused),
+:deep(.ant-select-focused:not(.ant-select-disabled) .ant-select-selector) {
+  border-color: #0081c8 !important;
+  box-shadow: 0 0 0 2px rgba(0, 129, 200, 0.12) !important;
 }
 
 /* 選項卡片樣式 */

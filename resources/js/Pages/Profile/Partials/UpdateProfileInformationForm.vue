@@ -189,7 +189,7 @@ const clearPhotoFileInput = () => {
         <InputLabel for="language" :value="$t('prefer_language')" />
         <select
           v-model="form.language"
-          class="border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm mt-1 block w-full"
+          class="form-select border-gray-300 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 rounded-md shadow-sm mt-1 block w-full"
         >
           <option value="zh-TW" class="h-2">{{ $t("chinese") }}</option>
           <option value="en">{{ $t("english") }}</option>

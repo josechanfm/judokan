@@ -249,7 +249,7 @@
       </div>
     </div>
     <a-modal
-      v-model:visible="mobileModal"
+      v-model:open="mobileModal"
       :title="$t('mobile_number_confirm')"
       :ok-text="$t('confirm')"
       :cancel-text="$t('cancel')"

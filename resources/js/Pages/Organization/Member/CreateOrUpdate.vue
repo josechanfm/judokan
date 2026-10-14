@@ -1,12 +1,12 @@
 <template>
   <OrganizationLayout :title="$t(title)" :breadcrumb="breadcrumb">
     <div class="container mx-auto pt-5">
-      <div class="bg-white relative shadow rounded-lg overflow-x-auto p-6">
+      <div class="card-judo p-6">
         <a-form
           ref="formRef"
           :model="form"
           name="memberForm"
-          :label-col="{ span: 4 }"
+          :label-col="{ flex: '150px' }"
           autocomplete="off"
           :rules="rules"
           :validate-messages="validateMessages"
@@ -42,18 +42,18 @@
           </div>
 
           <!-- 基本資料 -->
-          <a-form-item :label="$t('given_name')" name="given_name">
+          <a-form-item :label="$t('name_zh')" name="name_zh">
             <a-input
-              v-model:value="form.given_name"
-              :placeholder="$t('enter_given_name')"
+              v-model:value="form.name_zh"
+              :placeholder="$t('enter_chinese_name')"
               size="large"
             />
           </a-form-item>
 
-          <a-form-item :label="$t('family_name')" name="family_name">
+          <a-form-item :label="$t('name_fn')" name="name_fn">
             <a-input
-              v-model:value="form.family_name"
-              :placeholder="$t('enter_family_name')"
+              v-model:value="form.name_fn"
+              :placeholder="$t('enter_foreign_name')"
               size="large"
             />
           </a-form-item>
@@ -102,11 +102,11 @@
 
           <!-- 會員等級管理 -->
           <div class="border-t pt-6 mt-6">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-lg font-semibold">{{ $t("member_tiers") }}</h3>
-              <a-button @click="addTier" type="primary" size="large">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+              <h3 class="m-0 text-lg font-semibold">{{ $t("member_tiers") }}</h3>
+              <a-button class="btn-judo-outline" @click="addTier">
                 <PlusOutlined />
-                {{ $t("add") }}{{ $t("tier") }}
+                {{ $t("add_tier") }}
               </a-button>
             </div>
 
@@ -126,7 +126,7 @@
                     <tr v-for="(tier, idx) in form.tiers" :key="idx">
                       <td class="p-3">
                         <a-form-item
-                          :name="'tier_code_' + (tier.id || idx)"
+                          :name="['tiers', idx, 'tier_code']"
                           :rules="[
                             {
                               required: true,
@@ -146,7 +146,7 @@
                       </td>
                       <td class="p-3">
                         <a-form-item
-                          :name="'valid_at_' + (tier.id || idx)"
+                          :name="['tiers', idx, 'valid_at']"
                           :rules="[
                             {
                               required: true,
@@ -166,7 +166,7 @@
                       </td>
                       <td class="p-3">
                         <a-form-item
-                          :name="'expired_at_' + (tier.id || idx)"
+                          :name="['tiers', idx, 'expired_at']"
                           class="mb-0"
                         >
                           <a-date-picker
@@ -185,7 +185,7 @@
                           :cancel-text="$t('no')"
                           @confirm="deleteMemberTier(idx, tier)"
                         >
-                          <a-button danger>
+                          <a-button danger size="small">
                             <DeleteOutlined />
                           </a-button>
                         </a-popconfirm>
@@ -201,20 +201,20 @@
           </div>
 
           <!-- 表單操作按鈕 -->
-          <div class="flex justify-end gap-3 pt-8 border-t">
+          <div class="mt-8 flex flex-wrap justify-end gap-3 border-t pt-6">
             <inertia-link
               :href="route('manage.members.index')"
-              class="ant-btn ant-btn-default"
+              class="btn-judo-outline"
               as="button"
-              size="large"
             >
               {{ $t("cancel") }}
             </inertia-link>
             <a-button
               type="primary"
-              size="large"
+              class="btn-judo-primary"
               @click="handleSubmit"
               :loading="loading"
+              :disabled="loading"
             >
               {{ isEditMode ? $t("update") : $t("add") }}
             </a-button>
@@ -260,8 +260,8 @@ export default {
       dateFormat: "YYYY-MM-DD",
       form: this.getInitialForm(),
       rules: {
-        given_name: { required: true, message: this.$t("given_name_required") },
-        family_name: { required: true, message: this.$t("family_name_required") },
+        name_zh: { required: true, message: this.$t("name_zh_required") },
+        name_fn: { required: true, message: this.$t("name_fn_required") },
         gender: { required: true, message: this.$t("gender_required") },
         dob: { required: true, message: this.$t("dob_required") },
         email: {
@@ -291,7 +291,7 @@ export default {
       const breadcrumb = [
         {
           label: this.$t("home"),
-          url: route("manage.organization.show", this.organization.id),
+          url: route("manage.organizations.show", this.organization.id),
         },
         {
           label: this.$t("members"),
@@ -314,8 +314,8 @@ export default {
         };
       }
       return {
-        given_name: "",
-        family_name: "",
+        name_zh: "",
+        name_fn: "",
         display_name: "",
         gender: "M",
         dob: "",

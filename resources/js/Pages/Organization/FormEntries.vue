@@ -46,7 +46,7 @@
     </a-table>
 
     <!-- Modal Start-->
-    <a-modal v-model:visible="modal.isOpen" title="View Only" width="60%">
+    <a-modal v-model:open="modal.isOpen" title="View Only" width="60%">
       <a-form
         :model="modal.data"
         ref="formRef"

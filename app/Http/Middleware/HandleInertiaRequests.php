@@ -49,7 +49,8 @@ class HandleInertiaRequests extends Middleware
             'user.permissions' => $permissions,
             'current_organization' => session('organization'),
             'by_guardian' => session('guardian'),
-            'lang' => session('applocale')??$request->user()?->language,
+            // 前端（laravel-vue-i18n）用這個值載入 lang/*.json；不能是 null，否則會退回 en
+            'lang' => session('applocale') ?? $request->user()?->language ?? config('app.locale'),
             'lt'=>$request->session()->get('lt')
         ]);
     }

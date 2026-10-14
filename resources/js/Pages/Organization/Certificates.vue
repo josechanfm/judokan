@@ -37,7 +37,7 @@
     </div>
     <!-- Modal Start-->
     <a-modal
-      v-model:visible="modal.isOpen"
+      v-model:open="modal.isOpen"
       :title="$t(modal.title)"
       width="60%"
       :afterClose="modalClose"

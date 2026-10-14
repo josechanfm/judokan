@@ -85,7 +85,7 @@
       <p>Article CAN NOT be delete if published.</p>
     </div>
     <a-drawer
-      v-model:visible="isDrawerVisible"
+      v-model:open="isDrawerVisible"
       class="custom-class"
       title="Basic Drawer"
       placement="right"

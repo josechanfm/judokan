@@ -11,6 +11,7 @@ use App\Models\Member;
 use App\Models\MemberTier;
 use App\Models\User;
 use App\Exports\MemberExport;
+use App\Imports\MemberImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Password;
 
@@ -34,6 +35,8 @@ class MemberController extends Controller
             //'members'=>session('organization')->members
             'memberTiers'=>Config::item('member_tiers'),
             'belt_ranks' => $belt_ranks,
+            // 前端 Index.vue 的 breadcrumb / 導入會用 this.organization.id
+            'organization' => session('organization'),
             'members'=>Organization::find(session('organization')->id)->members
         ]);
 
@@ -46,10 +49,9 @@ class MemberController extends Controller
      */
     public function create()
     {
-        //
-        return Inertia::render('Organization/MemberEdit',[
-            //'member'=>$member->belongsToOrganization($organization)->first(),
-
+        return Inertia::render('Organization/Member/CreateOrUpdate', [
+            'memberTiers' => Config::item('member_tiers'),
+            'organization' => session('organization'),
         ]);
     }
 
@@ -61,10 +63,11 @@ class MemberController extends Controller
      */
     public function store(Request $request)
     {
-        $member= Member::create($request->all());
-        $member->tiers()->create($request->update_tier);
+        $member = Member::create($request->all());
         $member->organizations()->attach(session('organization')->id);
-        return redirect()->back();
+        $this->syncTiers($member, $request->input('tiers', []));
+
+        return redirect()->route('manage.members.index');
     }
 
     /**
@@ -76,7 +79,8 @@ class MemberController extends Controller
     public function show(Member $member)
     {
         return Inertia::render('Organization/Member',[
-            'member'=>$member,
+            'memberTiers' => Config::item('member_tiers'),
+            'member'=>$member->load('tiers'),
         ]);
     }
 
@@ -86,11 +90,12 @@ class MemberController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Organization $organization, Member $member)
+    public function edit(Member $member)
     {
-        return Inertia::render('Organization/MemberEdit',[
-            //'member'=>$member->belongsToOrganization($organization)->first(),
-            'member'=>$member,
+        return Inertia::render('Organization/Member/CreateOrUpdate', [
+            'memberTiers' => Config::item('member_tiers'),
+            'organization' => session('organization'),
+            'member' => $member->load('tiers'),
         ]);
     }
 
@@ -103,25 +108,43 @@ class MemberController extends Controller
      */
     public function update(Request $request, Member $member)
     {
-       // dd($request->all());
-        foreach($request->tiers as $tier){
-            if(isset($tier['id'])){
-                MemberTier::find($tier['id'])->update([
-                    'tier_code'=>$tier['tier_code'],
-                    'valid_at'=>$tier['valid_at'],
-                    'expired_at'=>$tier['expired_at']
-                ]);
-            }else{
-                MemberTier::create([
-                    'member_id'=>$member->id,
-                    'tier_code'=>$tier['tier_code'],
-                    'valid_at'=>$tier['valid_at'],
-                    'expired_at'=>$tier['expired_at']
-                ]);
+        $member->update($request->all());
+        $this->syncTiers($member, $request->input('tiers', []));
+
+        return redirect()->route('manage.members.index');
+    }
+
+    /**
+     * 依表單傳來的 tiers 陣列新增/更新會員級別（只處理屬於這位會員的資料）。
+     */
+    private function syncTiers(Member $member, array $tiers): void
+    {
+        foreach ($tiers as $tier) {
+            $data = [
+                'tier_code' => $tier['tier_code'] ?? null,
+                'valid_at' => $tier['valid_at'] ?? null,
+                'expired_at' => $tier['expired_at'] ?? null,
+            ];
+
+            if (! empty($tier['id'])) {
+                MemberTier::where('id', $tier['id'])->where('member_id', $member->id)->update($data);
+            } else {
+                $member->tiers()->create($data);
             }
         }
-        $member->update($request->all());
-        return redirect()->back();
+    }
+
+    /**
+     * 刪除單一會員級別（CreateOrUpdate.vue 的級別列表使用）。
+     */
+    public function destroyTier(MemberTier $tier)
+    {
+        $member = Member::find($tier->member_id);
+        abort_unless($member && $member->ownedBy(session('organization')), 403);
+
+        $tier->delete();
+
+        return response()->json(['result' => true]);
     }
 
     /**
@@ -142,7 +165,7 @@ class MemberController extends Controller
     public function createLogin(Member $member){
         $this->authorize('update',$member);
         if (empty($member->user)) {
-            $user=User::where('email',$member->email);
+            $user=User::where('email',$member->email)->first();
             if($user){
                 return response()->json(['result'=>false,'message'=>'Email already in used!']);
             }else{
@@ -157,10 +180,27 @@ class MemberController extends Controller
         );
         return response()->json(['result'=>true,'message'=>'Login account created, please check you email.']);
     }
-    public function export(){
-        return Excel::download(new MemberExport, 'member.xlsx');
+    public function export(Organization $organization){
+        return Excel::download(new MemberExport($organization), 'members.xlsx');
     }
-    public function import(Organization $organization, Request $request){
-        dd($organization, $request);
+
+    /**
+     * 從 Excel 匯入會員（前端 Organization/Member/Index.vue 的「導入」）。
+     * 回傳 { imported, errors }：errors 的每一筆都是 { row, attribute, errors }。
+     */
+    public function import(Organization $organization, Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new MemberImport($organization);
+
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'imported' => $import->importedCount(),
+            'errors' => $import->failures()->values(),
+        ]);
     }
 }

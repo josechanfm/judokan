@@ -8,6 +8,8 @@ use Inertia\Inertia;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 
 use App\Models\Article;
+use App\Models\Competition;
+use App\Models\Form;
 
 use Illuminate\Support\Facades\App;
 
@@ -23,6 +25,29 @@ use Illuminate\Support\Facades\App;
 */
 
 Route::get('/', function () {
+    $member = auth()->user()?->member;
+
+    // 最新賽事報名：只露出公開賽事，已登入會員額外看到 MJA 與所屬屬會的賽事
+    $competitions = Competition::where('published', true)
+        ->where(function ($query) use ($member) {
+            $query->where('scope', 'PUB');
+            if ($member) {
+                $query->orWhere('scope', 'MJA')
+                    ->orWhereIn('organization_id', $member->organizations->pluck('id'));
+            }
+        })
+        ->latest('id')
+        ->limit(5)
+        ->get();
+
+    // 活動表格報名
+    $forms = Form::where('published', true)
+        ->where('for_member', false)
+        ->with('organization')
+        ->latest('id')
+        ->limit(5)
+        ->get();
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
@@ -30,7 +55,9 @@ Route::get('/', function () {
         'phpVersion' => PHP_VERSION,
         'isMember' => Auth()->user() ? Auth()->user()->member : false,
         'isOrganizer' => Auth()->user() ? Auth()->user()->hasRole('organizer') : false,
-        'articles' => Article::publics()
+        'articles' => Article::publics(),
+        'competitions' => $competitions,
+        'forms' => $forms,
     ]);
 })->name('/');;
 Route::get('article', [\App\Http\Controllers\ArticleController::class, 'item'])->name('article.item');
@@ -39,6 +66,11 @@ Route::post('registration', [\App\Http\Controllers\RegistrationController::class
 Route::get('/language/{language}', function ($language) {
 
     Session::put('applocale', $language);
+
+    // 已登入者一併記住偏好（users.language）
+    if (Auth::check()) {
+        Auth::user()->forceFill(['language' => $language])->save();
+    }
 
     return Redirect::back();
 })->name('language');
@@ -117,6 +149,7 @@ Route::group([
     Route::get('send/applicationMail', [\App\Http\Controllers\Organization\SendMailController::class, 'sendApplicationMailWithAttachment']);
     Route::resource('members', \App\Http\Controllers\Organization\MemberController::class)->names('manage.members');
     Route::post('member/create/login/{member}', [\App\Http\Controllers\Organization\MemberController::class, 'createLogin'])->name('manage.member.createLogin');
+    Route::delete('member/tier/{tier}', [\App\Http\Controllers\Organization\MemberController::class, 'destroyTier'])->name('manage.member.tier.destroy');
     Route::resource('forms', \App\Http\Controllers\Organization\FormController::class)->names('manage.forms');
     Route::get('form/delete_media/{media}', [\App\Http\Controllers\Organization\FormController::class, 'deleteMedia'])->name('manage.form.deleteMedia');
     Route::post('form/{form}/backup', [\App\Http\Controllers\Organization\FormController::class, 'backup'])->name('manage.form.backup');
@@ -126,7 +159,7 @@ Route::group([
     Route::get('form/{form}/entry/{entry}/success', [\App\Http\Controllers\Organization\EntryController::class, 'success'])->name('manage.form.entry.success');
     Route::post('form/{form}/createEventAttendees', [\App\Http\Controllers\Organization\FormController::class, 'createEventAttendees'])->name('manage.form.createEventAttendees');
     Route::get('organization/{organization}/member/export', [\App\Http\Controllers\Organization\MemberController::class, 'export'])->name('organization.member.export');
-    Route::get('organization/{organization}/member/import', [\App\Http\Controllers\Organization\MemberController::class, 'import'])->name('organization.member.import');
+    Route::post('organization/{organization}/member/import', [\App\Http\Controllers\Organization\MemberController::class, 'import'])->name('organization.member.import');
     Route::get('entry/{form}/export', [\App\Http\Controllers\Organization\EntryController::class, 'export'])->name('manage.entry.export');
     Route::resource('approbates', \App\Http\Controllers\Organization\ApprobateController::class)->names('manage.approbates');
     Route::resource('bulletins', \App\Http\Controllers\Organization\BulletinController::class)->names('manage.bulletins');

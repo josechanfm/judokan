@@ -44,7 +44,7 @@
 
     <!-- Modal Start-->
     <a-modal
-      v-model:visible="modal.isOpen"
+      v-model:open="modal.isOpen"
       :title="modal.mode == 'CREATE' ? 'Create' : 'Update'"
       width="60%"
     >

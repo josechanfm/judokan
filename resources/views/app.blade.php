@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{session('applocale')}}">
+<html lang="{{ session('applocale') ?? config('app.locale') }}">
 
 
 <head>

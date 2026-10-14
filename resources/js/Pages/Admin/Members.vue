@@ -106,7 +106,7 @@
                 </span>
               </template>
 
-              <template #bodyCell="{ column, text, record, index }">
+              <template #bodyCell="{ column, record }">
                 <template v-if="column.dataIndex == 'operation'">
                   <div class="flex flex-wrap gap-2" style="min-width: 200px">
                     <a-tooltip :title="$t('edit_member')">
@@ -243,7 +243,7 @@
 
     <!-- Modal -->
     <a-modal
-      v-model:visible="modal.isOpen"
+      v-model:open="modal.isOpen"
       :title="modal.title"
       width="800px"
       :confirm-loading="submitting"

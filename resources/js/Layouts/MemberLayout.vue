@@ -50,7 +50,7 @@ export default {
     };
   },
   mounted() {
-    this.loadLanguageAsync(this.$page.props.lang);
+      this.loadLanguageAsync(this.$page.props.lang || 'zh-TW');
   },
 };
 // defineProps({
@@ -153,15 +153,29 @@ export default {
                     </span>
                   </template>
                   <template #content>
-                    <div class="w-20">
-                      <template v-if="$page.props.jetstream.hasTeamFeatures">
-                        <DropdownLink :href="route('language', 'zh-TW')">
+                    <div class="w-24">
+                      <DropdownLink :href="route('language', 'zh-TW')">
+                        <span
+                          :class="
+                            $page.props.lang === 'zh-TW'
+                              ? 'font-semibold text-[#0081C8]'
+                              : ''
+                          "
+                        >
                           {{ $t("chinese") }}
-                        </DropdownLink>
-                        <DropdownLink :href="route('language', 'en')">
+                        </span>
+                      </DropdownLink>
+                      <DropdownLink :href="route('language', 'en')">
+                        <span
+                          :class="
+                            $page.props.lang === 'en'
+                              ? 'font-semibold text-[#0081C8]'
+                              : ''
+                          "
+                        >
                           {{ $t("english") }}
-                        </DropdownLink>
-                      </template>
+                        </span>
+                      </DropdownLink>
                     </div>
                   </template>
                 </Dropdown>

@@ -35,7 +35,7 @@
         </div>
 
     
-        <a-modal v-model:visible="modal.isOpen" :title="modal.mode == 'CREATE' ? '新增' : '修改'" width="60%">
+        <a-modal v-model:open="modal.isOpen" :title="modal.mode == 'CREATE' ? '新增' : '修改'" width="60%">
             <a-form ref="modalRef" :model="modal.data" name="From"  :label-col="{ span: 6 }"
                 :wrapper-col="{ span: 18 }" autocomplete="off" :rules="rules" :validate-messages="validateMessages">
                 <a-form-item label="Name" name="name">

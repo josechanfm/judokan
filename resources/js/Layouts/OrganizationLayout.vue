@@ -60,15 +60,29 @@
           </template>
 
           <template #content>
-            <div class="w-20">
-              <template v-if="$page.props.jetstream.hasTeamFeatures">
-                <DropdownLink :href="route('language', 'zh-TW')">
+            <div class="w-24">
+              <DropdownLink :href="route('language', 'zh-TW')">
+                <span
+                  :class="
+                    $page.props.lang === 'zh-TW'
+                      ? 'font-semibold text-[#0081C8]'
+                      : ''
+                  "
+                >
                   {{ $t("chinese") }}
-                </DropdownLink>
-                <DropdownLink :href="route('language', 'en')">
+                </span>
+              </DropdownLink>
+              <DropdownLink :href="route('language', 'en')">
+                <span
+                  :class="
+                    $page.props.lang === 'en'
+                      ? 'font-semibold text-[#0081C8]'
+                      : ''
+                  "
+                >
                   {{ $t("english") }}
-                </DropdownLink>
-              </template>
+                </span>
+              </DropdownLink>
             </div>
           </template>
         </Dropdown>
@@ -192,8 +206,8 @@ export default {
       );
     };
     const page = usePage();
-    console.log('page.porps',page.props.value)
-    loadLanguageAsync(page.props.value.lang);
+    // 語系跟著伺服器（HandleInertiaRequests 分享的 lang，預設 zh-TW）
+    loadLanguageAsync(page.props.value.lang || 'zh-TW');
     const logout = () => {
       Inertia.post(route("logout"));
     };

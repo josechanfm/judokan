@@ -20,7 +20,7 @@
             </a-table>
 
         <!-- Modal Start-->
-    <a-modal v-model:visible="modal.isOpen" :title="modal.mode=='CREATE'?'新增':'修改'" width="60%" >
+    <a-modal v-model:open="modal.isOpen" :title="modal.mode=='CREATE'?'新增':'修改'" width="60%" >
         <a-form
             ref="modalRef"
             :model="modal.data"

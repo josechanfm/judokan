@@ -36,7 +36,7 @@
         </div>
       </div>
       <!-- Modal Start-->
-      <a-modal v-model:visible="modal.isOpen" :title="modal.mode == 'CREATE' ? 'Create' : 'Edit'" width="60%">
+      <a-modal v-model:open="modal.isOpen" :title="modal.mode == 'CREATE' ? 'Create' : 'Edit'" width="60%">
         <a-form ref="modalRef" :model="modal.data" :label-col="{ span: 4 }" :wrapper-col="{ span: 20 }" :rules="rules"
           :validate-messages="validateMessages">
           <a-form-item :label="$t('category')" name="category">

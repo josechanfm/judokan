@@ -42,7 +42,7 @@
           <a-switch v-model:checked="column.enabled" />
         </template>
       </template>
-      <template #bodyCell="{ column, text, record, index }">
+      <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex == 'operation'">
           <a-button :href="route('manage.competition.application.success', record.id)">{{
             $t("view")
@@ -276,53 +276,59 @@
         >
       </template>
     </a-modal>
-    <a-modal title="Import Athletes List" v-model:open="visible">
+    <a-modal
+      :title="$t('import_application')"
+      v-model:open="visible"
+      :width="640"
+    >
       <a-upload-dragger
         v-model:fileList="files"
         name="file"
-        @change="handleFileChange"
         :beforeUpload="() => false"
         :multiple="false"
+        :maxCount="1"
+        accept=".xlsx,.xls"
       >
         <p class="ant-upload-drag-icon">
           <file-excel-outlined />
         </p>
-        <p class="ant-upload-text">Click or drag files here to import athletes</p>
+        <p class="ant-upload-text">點擊或拖曳檔案到這裡導入報名資料</p>
         <p class="ant-upload-hint">
-          Supports xlsx file upload. Please confirm that the data format is consistent
-          with the template before uploading.
+          支援 .xlsx / .xls 檔案，一次一個。請先下載下方的選手名單模板填寫；
+          屬會名稱需與系統一致，組別、重量與角色必須是這場比賽有開放的項目。
         </p>
       </a-upload-dragger>
 
       <div class="mt-3" v-if="imported">
-        <div class="font-bold my-3 text-green-500" v-if="errors.length === 0">
-          Import Success!
+        <div class="font-bold my-3 text-green-600" v-if="errors.length === 0">
+          成功導入 {{ importedCount }} 筆報名資料
         </div>
-        <div class="font-bold my-3 text-yellow-500" v-else>
-          Some information are not import
+        <div class="font-bold my-3 text-yellow-600" v-else>
+          成功導入 {{ importedCount }} 筆，以下 {{ errors.length }} 筆未導入
         </div>
         <p v-for="(error, index) in errors" :key="index" class="font-mono m-0">
           <warning-outlined class="!text-yellow-500" />
-          row {{ error.row }}, {{ error.errors[0] }}
+          第 {{ error.row }} 行（{{ error.attribute }}）: {{ error.errors[0] }}
         </p>
       </div>
       <template #footer>
         <div class="flex w-full justify-between">
-          <a href="/templates/athlete_list.xlsx">
+          <a href="/templates/athlete_list.xlsx" download>
             <a-button type="link">
               <template #icon>
                 <DownloadOutlined />
               </template>
-              Download Athletes list template
+              下載選手名單模板（athlete_list.xlsx）
             </a-button>
           </a>
           <a-button
             type="primary"
-            class="bg-blue-500"
             @click="handleImport"
             :disabled="files.length === 0"
-            >Import</a-button
+            :loading="importLoading"
           >
+            導入
+          </a-button>
         </div>
       </template>
     </a-modal>
@@ -477,6 +483,8 @@ export default {
       visible: false,
       errors: [],
       imported: false,
+      importedCount: 0,
+      importLoading: false,
     };
   },
   created() {
@@ -633,10 +641,15 @@ export default {
       //console.log(selected, selectedRows, changeRows);
     },
     handleImport() {
+      if (this.files.length === 0) {
+        this.$message.warning("請先選擇檔案");
+        return;
+      }
+
+      this.importLoading = true;
       const formData = new FormData();
       formData.append("file", this.files[0].originFileObj);
 
-      // TODO: handle import athlete list
       window.axios
         .post(
           route("manage.competition.applications.import", this.competition.id),
@@ -648,15 +661,19 @@ export default {
           }
         )
         .then(({ data }) => {
-          this.$message.success("匯入成功");
+          this.importLoading = false;
           this.files = [];
-          this.errors = data.errors;
+          this.importedCount = data.imported || 0;
+          this.errors = data.errors || [];
+          this.$message.success(`成功導入 ${this.importedCount} 筆報名資料`);
           this.imported = true;
 
           this.$emit("imported");
         })
-        .catch(() => {
-          this.$message.error("匯入失敗");
+        .catch((error) => {
+          this.importLoading = false;
+          console.error(error);
+          this.$message.error("導入失敗");
         });
     },
     acceptedConfirmed(record) {

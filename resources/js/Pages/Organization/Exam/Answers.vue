@@ -36,7 +36,7 @@
       
     </div>
     <!-- Modal Start-->
-    <a-modal v-model:visible="modal.isOpen" :title="modal.title" >
+    <a-modal v-model:open="modal.isOpen" :title="modal.title" >
       <a-form
         ref="modalRef"
         :model="modal.data"

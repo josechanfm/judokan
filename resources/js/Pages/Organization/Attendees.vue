@@ -57,7 +57,7 @@
     </a-table>
 
     <!-- Modal Start-->
-    <a-modal v-model:visible="modal.isOpen" :title="modal.title" width="60%">
+    <a-modal v-model:open="modal.isOpen" :title="modal.title" width="60%">
       <a-collapse v-model:activeKey="activeKey" accordion>
         <a-collapse-panel key="1" :header="$t('select_members_to_attendees_list')">
           <a-transfer

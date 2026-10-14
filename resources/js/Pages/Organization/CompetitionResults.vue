@@ -14,7 +14,7 @@
               <td width="100px">
                 <ol>
                   <li v-for="w in cw.female">
-                    <input type="radio" v-model="selectedCategoryWeight" @change="onChangeCW"
+                    <input type="radio" class="form-radio" v-model="selectedCategoryWeight" @change="onChangeCW"
                       :value="cw.code + '|F|' + w.code" />&nbsp;{{ w.name }}
                   </li>
                 </ol>
@@ -22,7 +22,7 @@
               <td width="100px">
                 <ol>
                   <li v-for="w in cw.male">
-                    <input type="radio" v-model="selectedCategoryWeight" @change="onChangeCW"
+                    <input type="radio" class="form-radio" v-model="selectedCategoryWeight" @change="onChangeCW"
                       :value="cw.code + '|M|' + w.code" />&nbsp;{{ w.name }}
                   </li>
                 </ol>

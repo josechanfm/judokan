@@ -93,7 +93,11 @@ const showingNavigationDropdown = ref(false);
                   >
                 </li>
                 <li>
-                  <a @click="logout">{{ $t("log_out") }}</a>
+                  <a
+                    class="text-bold text-white hover:text-yellow-300 text-md cursor-pointer select-none"
+                    @click="logout"
+                    >{{ $t("log_out") }}</a
+                  >
                 </li>
               </template>
               <template v-else>
@@ -181,7 +185,7 @@ const showingNavigationDropdown = ref(false);
             <input
               type="text"
               :placeholder="$t('search')"
-              class="bg-gray-100 rounded-md outline-none pl-2 ring-indigo-700 w-full mr-2 p-2"
+              class="form-input bg-gray-100 rounded-md outline-none pl-2 ring-indigo-700 w-full mr-2 p-2"
             />
             <span
               ><svg
@@ -210,7 +214,7 @@ const showingNavigationDropdown = ref(false);
                 <inertia-link :href="route('competitions.index')">賽事報名</inertia-link>
               </li>
               <li class="py-3 border-b-2">
-                <inertia-link :href="route('forms.index')">表格填寫</inertia-link>
+                <inertia-link :href="route('forms.index')">活動報名</inertia-link>
               </li>
               <li class="py-3 border-b-2">
                 <a
