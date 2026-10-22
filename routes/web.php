@@ -150,6 +150,9 @@ Route::group([
     Route::resource('members', \App\Http\Controllers\Organization\MemberController::class)->names('manage.members');
     Route::post('member/create/login/{member}', [\App\Http\Controllers\Organization\MemberController::class, 'createLogin'])->name('manage.member.createLogin');
     Route::delete('member/tier/{tier}', [\App\Http\Controllers\Organization\MemberController::class, 'destroyTier'])->name('manage.member.tier.destroy');
+    Route::get('member/points', [\App\Http\Controllers\Organization\MemberPointController::class, 'index'])->name('manage.member.points');
+    Route::get('member/points/export', [\App\Http\Controllers\Organization\MemberPointController::class, 'export'])->name('manage.member.points.export');
+    Route::post('member/points/import', [\App\Http\Controllers\Organization\MemberPointController::class, 'import'])->name('manage.member.points.import');
     Route::resource('forms', \App\Http\Controllers\Organization\FormController::class)->names('manage.forms');
     Route::get('form/delete_media/{media}', [\App\Http\Controllers\Organization\FormController::class, 'deleteMedia'])->name('manage.form.deleteMedia');
     Route::post('form/{form}/backup', [\App\Http\Controllers\Organization\FormController::class, 'backup'])->name('manage.form.backup');
@@ -169,10 +172,16 @@ Route::group([
     Route::resource('certificate/{certificate}/members', \App\Http\Controllers\Organization\CertificateMemberController::class)->names('manage.certificate.members');
     Route::resource('organizations', \App\Http\Controllers\Organization\OrganizationController::class)->names('manage.organizations');
     Route::resource('competitions', \App\Http\Controllers\Organization\CompetitionController::class)->names('manage.competitions');
+    Route::get('competition_scores', [\App\Http\Controllers\Organization\CompetitionScoreController::class, 'index'])->name('manage.competitionScores.index');
+    Route::post('competition_scores', [\App\Http\Controllers\Organization\CompetitionScoreController::class, 'store'])->name('manage.competitionScores.store');
+    Route::put('competition_scores/{competitionScore}', [\App\Http\Controllers\Organization\CompetitionScoreController::class, 'update'])->name('manage.competitionScores.update');
+    Route::delete('competition_scores/{competitionScore}', [\App\Http\Controllers\Organization\CompetitionScoreController::class, 'destroy'])->name('manage.competitionScores.destroy');
     Route::post('competition/{competition}/applications/import',[\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'import'])->name('manage.competition.applications.import');
     Route::get('competition/{competition}/applications/export', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'export'])->name('manage.competition.applications.export');
     Route::get('competition/{competition}/applications/receipts', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'receipts'])->name('manage.competition.applications.receipts');
     Route::resource('competition/{competition}/applications', \App\Http\Controllers\Organization\CompetitionApplicationController::class)->names('manage.competition.applications');
+    Route::post('competition/{competition}/results/import', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'import'])->name('manage.competition.results.import');
+    Route::get('competition/{competition}/results/export', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'export'])->name('manage.competition.results.export');
     Route::resource('competition/{competition}/results', \App\Http\Controllers\Organization\CompetitionResultController::class)->names('manage.competition.results');
     Route::post('competition/delete_media', [\App\Http\Controllers\Organization\CompetitionController::class, 'deleteMedia'])->name('manage.competition.deleteMedia');
     Route::get('competition/application/{competition_application}/success', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'success'])->name('manage.competition.application.success');

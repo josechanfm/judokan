@@ -17,13 +17,46 @@ class CompetitionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
+        $organizationId = session('organization')->id;
+        $keyword = trim((string) $request->input('keyword', ''));
+        $status = $request->input('status'); // published | draft | null
+
+        $draftScope = fn ($query) => $query->where('published', false)->orWhereNull('published');
+
+        $perPage = (int) $request->input('per_page', 20);
+        if (! in_array($perPage, [10, 20, 50, 100], true)) {
+            $perPage = 20;
+        }
+
+        $competitions = Competition::where('organization_id', $organizationId)
+            ->with('score')
+            ->when($keyword !== '', function ($query) use ($keyword) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('title_zh', 'like', "%{$keyword}%")
+                        ->orWhere('title_fn', 'like', "%{$keyword}%");
+                });
+            })
+            ->when($status === 'published', fn ($query) => $query->where('published', true))
+            ->when($status === 'draft', fn ($query) => $query->where($draftScope))
+            ->orderByDesc('start_date')
+            ->orderByDesc('id')
+            ->paginate($perPage)
+            ->withQueryString();
+
         return Inertia::render('Organization/Competitions', [
-            'competitions' => Competition::where('organization_id', session('organization')->id)
-                ->with('score')
-                ->latest()
-                ->paginate(10)
+            'competitions' => $competitions,
+            'filters' => [
+                'keyword' => $keyword,
+                'status' => $status ?: null,
+                'per_page' => $perPage,
+            ],
+            'stats' => [
+                'total' => Competition::where('organization_id', $organizationId)->count(),
+                'published' => Competition::where('organization_id', $organizationId)->where('published', true)->count(),
+                'draft' => Competition::where('organization_id', $organizationId)->where($draftScope)->count(),
+            ],
         ]);
     }
 
@@ -37,6 +70,7 @@ class CompetitionController extends Controller
         return Inertia::render('Organization/Competition', [
             'categories_weights' => Config::items('categories_weights', null),
             'competitionScores' => CompetitionScore::where('organization_id', 0)->get(),
+            'scoreCategories' => Config::item('competition_score_categories'),
             'staffOptions' => Config::item('staff_options'),
             'refereeOptions' => Config::item('referee_options'),
             'roles' => Config::item('competition_roles')
@@ -71,6 +105,11 @@ class CompetitionController extends Controller
         // 準備資料
         $data = $request->except(['banner', 'attachment', 'athlete_card']);
         $data['organization_id'] = session('organization')->id;
+
+        // 0 = 不計分，資料庫存 null
+        if (array_key_exists('competition_score_id', $data) && ! $data['competition_score_id']) {
+            $data['competition_score_id'] = null;
+        }
         
         // 處理 JSON 資料
         if ($request->has('match_dates')) {
@@ -105,6 +144,12 @@ class CompetitionController extends Controller
 
         // 創建賽事
         $competition = Competition::create($data);
+
+        // 積分快照：把 competition_scores 複製一份到 result_scores
+        if ($competition->score) {
+            $competition->result_scores = $competition->score->toArray();
+            $competition->save();
+        }
 
         // 處理檔案上傳
         $this->handleFileUploads($request, $competition);
@@ -216,6 +261,11 @@ class CompetitionController extends Controller
 
         // 準備更新資料
         $updateData = $request->except(['banner', 'attachment', 'athlete_card']);
+
+        // 0 = 不計分，資料庫存 null
+        if (array_key_exists('competition_score_id', $updateData) && ! $updateData['competition_score_id']) {
+            $updateData['competition_score_id'] = null;
+        }
         
         // 處理 JSON 資料
         if ($request->has('match_dates')) {
@@ -254,6 +304,9 @@ class CompetitionController extends Controller
         // 更新積分資料
         if ($competition->score) {
             $competition->result_scores = $competition->score->toArray();
+            $competition->save();
+        } else {
+            $competition->result_scores = null;
             $competition->save();
         }
 

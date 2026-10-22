@@ -27,6 +27,16 @@
           </inertia-link>
         </span>
       </a-menu-item>
+      <a-menu-item key="member.points">
+        <template #icon>
+          <TrophyOutlined />
+        </template>
+        <span>
+          <inertia-link :href="route('manage.member.points')">
+            {{ $t("points_statistics") }}
+          </inertia-link>
+        </span>
+      </a-menu-item>
       <a-menu-item key="certificates.index">
         <template #icon>
           <FileProtectOutlined />
@@ -54,6 +64,16 @@
         <span>
           <inertia-link :href="route('manage.competitions.index')">
             {{ $t("competitions") }}
+          </inertia-link>
+        </span>
+      </a-menu-item>
+      <a-menu-item key="competitionScores.index">
+        <template #icon>
+          <CalculatorOutlined />
+        </template>
+        <span>
+          <inertia-link :href="route('manage.competitionScores.index')">
+            {{ $t("competition_score_categories") }}
           </inertia-link>
         </span>
       </a-menu-item>
@@ -118,6 +138,8 @@ import {
   DesktopOutlined,
   InboxOutlined,
   AppstoreOutlined,
+  TrophyOutlined,
+  CalculatorOutlined,
 } from "@ant-design/icons-vue";
 
 export default defineComponent({
@@ -137,6 +159,8 @@ export default defineComponent({
     DesktopOutlined,
     InboxOutlined,
     AppstoreOutlined,
+    TrophyOutlined,
+    CalculatorOutlined,
   },
   props: ["organization"],
   setup() {
