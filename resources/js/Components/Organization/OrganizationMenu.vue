@@ -13,7 +13,7 @@
         </template>
         <span>
           <inertia-link :href="route('manage')">
-            {{ $t("affiliate") }}
+            {{ $t("main_page") }}
           </inertia-link>
         </span>
       </a-menu-item>

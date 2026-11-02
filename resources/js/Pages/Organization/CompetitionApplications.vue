@@ -179,7 +179,7 @@
             :columns="columns"
             :pagination="pagination"
             :rowSelection="rowSelection"
-            :scroll="{ x: 1210 }"
+            :scroll="{ x: 1342 }"
             rowKey="id"
           >
             <template #headerCell="{ column }">
@@ -1329,7 +1329,7 @@ export default {
       this.saveRecord(
         record,
         { accepted: checked },
-        checked ? "已設為錄取" : "已設為不錄取"
+        checked ? "已設為錄取" : "已設為未錄取"
       );
     },
     onChangeResult(record, value) {
@@ -1405,11 +1405,19 @@ export default {
   font-weight: 600;
 }
 .ja-actions :deep(.ant-btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 26px;
   padding: 0 8px;
   font-size: 13px;
   font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
   box-shadow: none;
+}
+.ja-actions :deep(a.ant-btn) {
+  text-decoration: none;
 }
 .ja-tab {
   display: inline-flex;

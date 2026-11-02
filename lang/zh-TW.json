@@ -205,7 +205,7 @@
     "competition_period": "時間段",
     "competition_dates": "比賽日",
     "competition_accepted": "錄取",
-    "competition_unaccepted": "不錄取",
+    "competition_unaccepted": "未錄取",
     "competition_score_categories": "賽事積分表",
     "competition_score_category": "賽事積分",
     "competition_score_first": "第一名",
@@ -409,5 +409,13 @@
     "keyword": "關鍵字",
     "score": "積分",
     "other": "其他",
-    "no_application_records": "目前沒有符合條件的報名資料"
+    "no_application_records": "目前沒有符合條件的報名資料",
+    "main_page": "主頁",
+    "member_area": "會員專區",
+    "switch_organization": "切換屬會",
+    "recent_competitions": "最近賽事",
+    "recent_applications": "最新報名",
+    "recent_members": "最新會員",
+    "no_records": "暫無資料",
+    "exams": "考核"
 }

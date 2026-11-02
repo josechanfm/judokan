@@ -401,5 +401,13 @@
     "keyword": "Keyword",
     "score": "Points",
     "other": "Other",
-    "no_application_records": "No matching applications"
+    "no_application_records": "No matching applications",
+    "main_page": "Home",
+    "member_area": "Member Area",
+    "switch_organization": "Switch Organization",
+    "recent_competitions": "Recent Competitions",
+    "recent_applications": "Recent Applications",
+    "recent_members": "Recent Members",
+    "no_records": "No records",
+    "exams": "Exams"
 }
