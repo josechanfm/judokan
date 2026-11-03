@@ -153,6 +153,11 @@ Route::group([
     Route::get('member/points', [\App\Http\Controllers\Organization\MemberPointController::class, 'index'])->name('manage.member.points');
     Route::get('member/points/export', [\App\Http\Controllers\Organization\MemberPointController::class, 'export'])->name('manage.member.points.export');
     Route::post('member/points/import', [\App\Http\Controllers\Organization\MemberPointController::class, 'import'])->name('manage.member.points.import');
+    Route::post('training_camps/import', [\App\Http\Controllers\Organization\TrainingCampController::class, 'import'])->name('manage.trainingCamps.import');
+    Route::get('training_camps', [\App\Http\Controllers\Organization\TrainingCampController::class, 'index'])->name('manage.trainingCamps.index');
+    Route::post('training_camps', [\App\Http\Controllers\Organization\TrainingCampController::class, 'store'])->name('manage.trainingCamps.store');
+    Route::put('training_camps/{trainingCamp}', [\App\Http\Controllers\Organization\TrainingCampController::class, 'update'])->name('manage.trainingCamps.update');
+    Route::delete('training_camps/{trainingCamp}', [\App\Http\Controllers\Organization\TrainingCampController::class, 'destroy'])->name('manage.trainingCamps.destroy');
     Route::resource('forms', \App\Http\Controllers\Organization\FormController::class)->names('manage.forms');
     Route::get('form/delete_media/{media}', [\App\Http\Controllers\Organization\FormController::class, 'deleteMedia'])->name('manage.form.deleteMedia');
     Route::post('form/{form}/backup', [\App\Http\Controllers\Organization\FormController::class, 'backup'])->name('manage.form.backup');
@@ -215,6 +220,7 @@ Route::group([
     Route::resource('members', \App\Http\Controllers\Admin\MemberController::class)->names('admin.members');
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class)->names('admin.users');
     Route::resource('configs', \App\Http\Controllers\Admin\ConfigController::class)->names('admin.configs');
+    Route::post('competition_scores/import', [\App\Http\Controllers\Admin\CompetitionScoreController::class, 'import'])->name('admin.competitionScores.import');
     Route::resource('competition_scores', \App\Http\Controllers\Admin\CompetitionScoreController::class)->names('admin.competitionScores');
 });
 

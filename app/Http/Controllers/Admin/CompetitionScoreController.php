@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Imports\CompetitionScoreImport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\CompetitionScore;
 use App\Models\Config;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CompetitionScoreController extends Controller
 {
@@ -79,6 +81,30 @@ class CompetitionScoreController extends Controller
     {
         $competitionScore->update($request->all());
         return redirect()->back();
+    }
+
+    /**
+     * 從 Excel 導入積分表，回傳成功筆數與每列的錯誤。
+     *
+     * 範本：public/templates/competition_score_list.xlsx
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new CompetitionScoreImport();
+
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'imported' => $import->importedCount(),
+            'errors' => $import->failures()->values(),
+        ]);
     }
 
     /**

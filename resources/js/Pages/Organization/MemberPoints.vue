@@ -105,7 +105,7 @@
             :dataSource="ranking"
             :columns="columns"
             :pagination="pagination"
-            :scroll="{ x: 860 }"
+            :scroll="{ x: 1180 }"
             row-key="key"
           >
             <template #headerCell="{ column }">
@@ -199,6 +199,37 @@
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <!-- 該會員的集訓記錄 -->
+              <div v-if="record.training && record.training.length" class="mt-3">
+                <p class="m-0 mb-1 text-xs font-semibold text-gray-500">
+                  {{ $t("training_camps") }}
+                </p>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="text-left text-gray-500">
+                        <th class="py-2 pr-3 font-semibold">{{ $t("training_camp") }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ $t("date") }}</th>
+                        <th class="py-2 text-right font-semibold">{{ $t("score") }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="(training, idx) in record.training"
+                        :key="idx"
+                        class="border-t border-slate-100"
+                      >
+                        <td class="py-2 pr-3 text-gray-800">{{ training.title }}</td>
+                        <td class="py-2 pr-3 text-gray-600">{{ training.date }}</td>
+                        <td class="py-2 text-right font-semibold text-gray-800">
+                          {{ training.points }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </template>
           </a-table>
@@ -315,6 +346,27 @@ export default {
           i18n: "competition_count",
           width: 120,
           sorter: (a, b) => a.competition_count - b.competition_count,
+        },
+        {
+          title: "competition_points",
+          dataIndex: "competition_score",
+          i18n: "competition_points",
+          width: 120,
+          sorter: (a, b) => a.competition_score - b.competition_score,
+        },
+        {
+          title: "training_count",
+          dataIndex: "training_count",
+          i18n: "training_count",
+          width: 110,
+          sorter: (a, b) => a.training_count - b.training_count,
+        },
+        {
+          title: "training_points",
+          dataIndex: "training_score",
+          i18n: "training_points",
+          width: 120,
+          sorter: (a, b) => a.training_score - b.training_score,
         },
         {
           title: "total_score",

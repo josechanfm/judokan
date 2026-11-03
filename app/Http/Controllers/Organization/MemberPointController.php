@@ -8,6 +8,7 @@ use App\Imports\ResultImport;
 use App\Models\CompetitionApplication;
 use App\Models\Config;
 use App\Models\Member;
+use App\Models\TrainingCampAttendance;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -158,6 +159,9 @@ class MemberPointController extends Controller
                     'total_score' => 0,
                     'competition_ids' => [],
                     'results' => [],
+                    'training' => [],
+                    'training_count' => 0,
+                    'training_score' => 0,
                 ];
             }
 
@@ -175,6 +179,64 @@ class MemberPointController extends Controller
             ];
         }
 
+        // 集訓出席記錄：出席一次得該場集訓設定的分數
+        $attendances = TrainingCampAttendance::query()
+            ->join('training_camps', 'training_camps.id', '=', 'training_camp_attendances.training_camp_id')
+            ->join('members', 'members.id', '=', 'training_camp_attendances.member_id')
+            ->where('training_camps.organization_id', $organization->id)
+            ->whereDate('training_camps.camp_date', '>=', $start)
+            ->whereDate('training_camps.camp_date', '<=', $end)
+            ->when($keyword !== '', function ($query) use ($keyword) {
+                $query->where(function ($sub) use ($keyword) {
+                    $sub->where('members.name_zh', 'like', "%{$keyword}%")
+                        ->orWhere('members.name_fn', 'like', "%{$keyword}%")
+                        ->orWhere('members.display_name', 'like', "%{$keyword}%");
+                });
+            })
+            ->orderBy('training_camps.camp_date')
+            ->get([
+                'training_camp_attendances.member_id',
+                'members.name_zh',
+                'members.name_fn',
+                'members.display_name',
+                'training_camps.id as training_camp_id',
+                'training_camps.title as camp_title',
+                'training_camps.camp_date as camp_date',
+                'training_camps.points as camp_points',
+            ]);
+
+        foreach ($attendances as $attendance) {
+            $key = 'member-'.$attendance->member_id;
+
+            if (! isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'key' => $key,
+                    'member_id' => $attendance->member_id,
+                    'name' => $attendance->display_name ?: ($attendance->name_zh ?: $attendance->name_fn),
+                    'name_zh' => $attendance->name_zh,
+                    'name_fn' => $attendance->name_fn,
+                    'id_num' => null,
+                    'member_number' => null,
+                    'is_member' => true,
+                    'total_score' => 0,
+                    'competition_ids' => [],
+                    'results' => [],
+                    'training' => [],
+                    'training_count' => 0,
+                    'training_score' => 0,
+                ];
+            }
+
+            $grouped[$key]['training'][] = [
+                'training_camp_id' => $attendance->training_camp_id,
+                'title' => $attendance->camp_title,
+                'date' => $attendance->camp_date,
+                'points' => (int) $attendance->camp_points,
+            ];
+            $grouped[$key]['training_count']++;
+            $grouped[$key]['training_score'] += (int) $attendance->camp_points;
+        }
+
         // 補上會員號碼
         $memberIds = collect($grouped)->pluck('member_id')->filter()->values();
         if ($memberIds->isNotEmpty()) {
@@ -190,6 +252,9 @@ class MemberPointController extends Controller
             ->map(function ($row) {
                 $row['competition_count'] = count($row['competition_ids']);
                 unset($row['competition_ids']);
+
+                $row['competition_score'] = (int) $row['total_score'];
+                $row['total_score'] = $row['competition_score'] + (int) ($row['training_score'] ?? 0);
 
                 return $row;
             })

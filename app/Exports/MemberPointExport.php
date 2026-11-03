@@ -42,13 +42,16 @@ class MemberPointExport implements FromArray, WithColumnWidths
         $rows[] = [];
 
         // 積分排行
-        $rows[] = ['排名', '會員', '會員號碼', '場次', '總分'];
+        $rows[] = ['排名', '會員', '會員號碼', '比賽場次', '比賽積分', '集訓次數', '集訓積分', '總分'];
         foreach ($this->ranking as $index => $row) {
             $rows[] = [
                 $index + 1,
                 $row['name'],
                 $row['member_number'] ?: ($row['is_member'] ? '' : '非會員'),
                 $row['competition_count'],
+                $row['competition_score'] ?? $row['total_score'],
+                $row['training_count'] ?? 0,
+                $row['training_score'] ?? 0,
                 $row['total_score'],
             ];
         }
@@ -72,6 +75,21 @@ class MemberPointExport implements FromArray, WithColumnWidths
             }
         }
 
+        // 集訓明細
+        $rows[] = [];
+        $rows[] = ['集訓明細'];
+        $rows[] = ['會員', '集訓日期', '集訓名稱', '積分'];
+        foreach ($this->ranking as $row) {
+            foreach ($row['training'] ?? [] as $training) {
+                $rows[] = [
+                    $row['name'],
+                    $training['date'],
+                    $training['title'],
+                    $training['points'],
+                ];
+            }
+        }
+
         return $rows;
     }
 
@@ -81,5 +99,4 @@ class MemberPointExport implements FromArray, WithColumnWidths
             'A' => 22, 'B' => 34, 'C' => 16, 'D' => 14, 'E' => 14,
             'F' => 12, 'G' => 12, 'H' => 10,
         ];
-    }
-}
+    }}

@@ -83,11 +83,17 @@
                       {{ selectedScore.title }}
                     </span>
                     <span class="ja-pill ja-pill-blue">
-                      {{ $t("competition_score_category") }}：{{ scoreCategoryLabel(selectedScore.category) }}
+                      {{ $t("competition_score_category") }}：{{
+                        scoreCategoryLabel(selectedScore.category)
+                      }}
                     </span>
                   </div>
                   <div class="flex flex-wrap gap-2">
-                    <span v-for="rank in rankFields" :key="rank.key" class="ja-score-chip">
+                    <span
+                      v-for="rank in rankFields"
+                      :key="rank.key"
+                      class="ja-score-chip"
+                    >
                       <span class="ja-score-chip-label">{{ $t(rank.i18n) }}</span>
                       <span class="ja-score-chip-value">
                         {{ selectedScore[rank.key] ?? 0 }}
@@ -96,7 +102,10 @@
                   </div>
                 </div>
                 <p
-                  v-else-if="!competitionData.competition_score_id || competitionData.competition_score_id === '0'"
+                  v-else-if="
+                    !competitionData.competition_score_id ||
+                    competitionData.competition_score_id === '0'
+                  "
                   class="m-0 mt-2 text-xs text-gray-400"
                 >
                   未選擇積分表：這場賽事的成績將不會計算積分。
@@ -164,14 +173,19 @@
               </div>
 
               <a-form-item name="cwSelected">
-                <a-checkbox-group v-model:value="competitionData.cwSelected" class="w-full">
+                <a-checkbox-group
+                  v-model:value="competitionData.cwSelected"
+                  class="w-full"
+                >
                   <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
                     <div
                       v-for="cw in categories_weights"
                       :key="cw.code"
                       class="ja-option-box"
                       :class="{
-                        'ja-option-box-active': competitionData.cwSelected.includes(cw.code),
+                        'ja-option-box-active': competitionData.cwSelected.includes(
+                          cw.code
+                        ),
                       }"
                     >
                       <a-checkbox :value="cw.code">
@@ -188,7 +202,9 @@
                       >
                         <div v-for="group in weightGroups(cw)" :key="group.gender">
                           <div class="mb-1 flex items-center justify-between gap-2">
-                            <span class="ja-mini-label">{{ genderLabel(group.gender) }}</span>
+                            <span class="ja-mini-label">{{
+                              genderLabel(group.gender)
+                            }}</span>
                             <span class="flex items-center gap-2">
                               <button
                                 type="button"
@@ -230,7 +246,8 @@
                           </div>
                         </div>
                         <p class="m-0 text-xs text-gray-400">
-                          已選 {{ selectedWeightCount(cw) }} / {{ totalWeightCount(cw) }} 個公斤級
+                          已選 {{ selectedWeightCount(cw) }} /
+                          {{ totalWeightCount(cw) }} 個公斤級
                         </p>
                       </div>
                     </div>
@@ -309,14 +326,17 @@
                 <div
                   v-if="
                     mode == 'EDIT' &&
-                    competition.media.find((m) => m.collection_name == 'competitionBanner')
+                    competition.media.find(
+                      (m) => m.collection_name == 'competitionBanner'
+                    )
                   "
                   class="relative inline-block"
                 >
                   <img
                     :src="
-                      competition.media.find((m) => m.collection_name == 'competitionBanner')
-                        .preview_url
+                      competition.media.find(
+                        (m) => m.collection_name == 'competitionBanner'
+                      ).preview_url
                     "
                     class="max-h-48 w-auto rounded-lg ring-1 ring-gray-200"
                   />
@@ -607,7 +627,11 @@ export default {
       rankFields: RANK_FIELDS,
       scopeOptions: [
         { value: "PUB", i18n: "public", hintI18n: "scope_public_hint" },
-        { value: "MJA", i18n: "organization_member_only_mja", hintI18n: "scope_mja_hint" },
+        {
+          value: "MJA",
+          i18n: "organization_member_only_mja",
+          hintI18n: "scope_mja_hint",
+        },
         { value: "ORG", i18n: "organization_member_only", hintI18n: "scope_org_hint" },
       ],
       competitionData: {
@@ -1011,9 +1035,7 @@ export default {
 
     beforeAttachmentUpload(file) {
       const isOverSize = file.size / 1024 / 1024 > this.uploadValidator.attachment.size;
-      const isFormatInvalid = !this.uploadValidator.attachment.format.includes(
-        file.type
-      );
+      const isFormatInvalid = !this.uploadValidator.attachment.format.includes(file.type);
 
       if (isOverSize || isFormatInvalid) {
         message.error(
@@ -1197,9 +1219,7 @@ export default {
         this.competitionData.cwSelected,
         this.categories_weights,
         "code"
-      ).find(
-        (cw) => this.totalWeightCount(cw) > 0 && this.selectedWeightCount(cw) === 0
-      );
+      ).find((cw) => this.totalWeightCount(cw) > 0 && this.selectedWeightCount(cw) === 0);
 
       if (emptyCategory) {
         message.error(`「${emptyCategory.name}」至少需要選擇一個公斤級`);

@@ -37,6 +37,16 @@
           </inertia-link>
         </span>
       </a-menu-item>
+      <a-menu-item key="trainingCamps.index">
+        <template #icon>
+          <CalendarOutlined />
+        </template>
+        <span>
+          <inertia-link :href="route('manage.trainingCamps.index')">
+            {{ $t("training_camps") }}
+          </inertia-link>
+        </span>
+      </a-menu-item>
       <a-menu-item key="certificates.index">
         <template #icon>
           <FileProtectOutlined />
