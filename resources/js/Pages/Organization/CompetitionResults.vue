@@ -54,15 +54,14 @@
             {{ $t("category") }} / {{ $t("weight") }}
           </h3>
 
-          <div
-            v-if="!categories.length"
-            class="py-8 text-center text-sm text-gray-400"
-          >
+          <div v-if="!categories.length" class="py-8 text-center text-sm text-gray-400">
             這場賽事沒有設定組別與量級
           </div>
 
           <div v-for="cw in categories" :key="cw.code" class="mb-4 last:mb-0">
-            <p class="m-0 mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-700">
+            <p
+              class="m-0 mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-700"
+            >
               {{ cw.name }}
               <span v-if="cw.description" class="text-xs font-normal text-gray-400">
                 {{ cw.description }}
@@ -75,8 +74,7 @@
                 type="button"
                 class="cw-chip"
                 :class="{
-                  'cw-chip-active':
-                    selectedCategoryWeight === cw.code + '|F|' + w.code,
+                  'cw-chip-active': selectedCategoryWeight === cw.code + '|F|' + w.code,
                 }"
                 @click="selectCategoryWeight(cw.code + '|F|' + w.code)"
               >
@@ -88,8 +86,7 @@
                 type="button"
                 class="cw-chip"
                 :class="{
-                  'cw-chip-active':
-                    selectedCategoryWeight === cw.code + '|M|' + w.code,
+                  'cw-chip-active': selectedCategoryWeight === cw.code + '|M|' + w.code,
                 }"
                 @click="selectCategoryWeight(cw.code + '|M|' + w.code)"
               >
@@ -101,8 +98,7 @@
                 type="button"
                 class="cw-chip"
                 :class="{
-                  'cw-chip-active':
-                    selectedCategoryWeight === cw.code + '|X|' + w.code,
+                  'cw-chip-active': selectedCategoryWeight === cw.code + '|X|' + w.code,
                 }"
                 @click="selectCategoryWeight(cw.code + '|X|' + w.code)"
               >
@@ -130,9 +126,7 @@
               <span class="member-pill member-pill-blue">
                 {{ selectedCategoryWeightLabel }}
               </span>
-              <span class="text-xs text-gray-400">
-                報名 {{ athletes.length }} 人
-              </span>
+              <span class="text-xs text-gray-400"> 報名 {{ athletes.length }} 人 </span>
             </div>
 
             <div
@@ -256,10 +250,22 @@
         </p>
         <p class="ant-upload-text">點擊或拖曳檔案到這裡匯入賽果</p>
         <p class="ant-upload-hint">
-          支援 .xlsx / .xls / .csv，一次一個。欄位格式與「匯出賽果」相同；
-          成績可填代號或中文（first / 第一名），積分留空會依積分表自動計算。
+          只需要填「姓名」同「分數」；分數會自動對應積分表的名次。
+          填埋「年齡組別」「性別」「重量級別」就可以分辨同名選手，
+          本場比賽未有報名嘅選手亦會自動新增報名。
         </p>
       </a-upload-dragger>
+
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <span class="text-xs text-gray-500">名次分數對照：</span>
+        <span
+          v-for="option in rankOptions"
+          :key="option.value"
+          class="member-pill member-pill-gray"
+        >
+          {{ option.label }} {{ pointsOf(option.value) }} 分
+        </span>
+      </div>
 
       <div v-if="imported" class="mt-3">
         <p class="m-0 mb-2 font-semibold text-green-600">
@@ -268,15 +274,17 @@
             （其中 {{ createdCount }} 筆自動新增報名）
           </span>
         </p>
+        <p v-if="rankedCount" class="m-0 mb-1 text-xs text-gray-500">
+          其中 {{ rankedCount }} 筆已依分數自動對應名次
+        </p>
+        <p v-if="unrankedCount" class="m-0 mb-1 text-xs text-yellow-600">
+          有 {{ unrankedCount }} 筆分數對不到積分表的名次，只更新了分數（名次維持不變）
+        </p>
         <div v-if="importErrors.length" class="text-yellow-600">
           <p class="m-0 mb-1 text-sm font-semibold">
             以下 {{ importErrors.length }} 筆未匯入
           </p>
-          <p
-            v-for="(error, index) in importErrors"
-            :key="index"
-            class="m-0 text-xs"
-          >
+          <p v-for="(error, index) in importErrors" :key="index" class="m-0 text-xs">
             <WarningOutlined class="!text-yellow-500" />
             第 {{ error.row }} 行（{{ error.attribute }}）: {{ (error.errors || [])[0] }}
           </p>
@@ -285,12 +293,12 @@
 
       <template #footer>
         <div class="flex w-full flex-wrap items-center justify-between gap-2">
-          <a href="/templates/result_list.xlsx" download>
+          <a href="/templates/competition_result_list.xlsx" download>
             <a-button type="link">
               <template #icon>
                 <DownloadOutlined />
               </template>
-              下載成績範本（result_list.xlsx）
+              下載匯入範本（姓名／分數／組別／性別／量級）
             </a-button>
           </a>
           <a-button
@@ -353,6 +361,8 @@ export default {
       imported: false,
       importedCount: 0,
       createdCount: 0,
+      rankedCount: 0,
+      unrankedCount: 0,
       importErrors: [],
       // 複製一份名次選項，避免直接修改 props
       rankOptions: (this.competitionResults || [])
@@ -360,17 +370,25 @@ export default {
         .map((option) => ({
           value: option.value,
           label: option.label || option.label_zh || option.value,
-          application_id: ["advance", "participate"].includes(option.value)
-            ? []
-            : null,
+          application_id: ["advance", "participate"].includes(option.value) ? [] : null,
         })),
       columns: [
         { title: "display_name", i18n: "display_name", dataIndex: "display_name" },
         { title: "gender", i18n: "gender", dataIndex: "gender", width: 90 },
         { title: "category", i18n: "category", dataIndex: "category", width: 140 },
         { title: "weight", i18n: "weight", dataIndex: "weight", width: 120 },
-        { title: "result_rank", i18n: "result_rank", dataIndex: "result_rank", width: 110 },
-        { title: "result_score", i18n: "result_score", dataIndex: "result_score", width: 100 },
+        {
+          title: "result_rank",
+          i18n: "result_rank",
+          dataIndex: "result_rank",
+          width: 110,
+        },
+        {
+          title: "result_score",
+          i18n: "result_score",
+          dataIndex: "result_score",
+          width: 100,
+        },
       ],
       pagination: {
         defaultPageSize: 20,
@@ -395,8 +413,7 @@ export default {
       }
       const [category, gender, weight] = this.selectedCategoryWeight.split("|");
       const cw = this.categories.find((item) => item.code === category);
-      const list =
-        gender === "F" ? cw?.female : gender === "X" ? cw?.mixed : cw?.male;
+      const list = gender === "F" ? cw?.female : gender === "X" ? cw?.mixed : cw?.male;
       const w = (list || []).find((item) => item.code === weight);
       const genderLabel =
         gender === "F" ? this.$t("female") : gender === "X" ? "混合" : this.$t("male");
@@ -416,7 +433,15 @@ export default {
   methods: {
     refreshRecorded() {
       this.participateAthletes = (this.competition.applications || []).filter(
-        (application) => application.result_rank
+        (application) => this.hasResult(application)
+      );
+    },
+    hasResult(application) {
+      const score = application.result_score;
+
+      return (
+        !!application.result_rank ||
+        (score !== null && score !== undefined && score !== "")
       );
     },
     isMulti(value) {
@@ -461,7 +486,7 @@ export default {
     },
     resetParams() {
       this.participateAthletes = (this.competition.applications || []).filter(
-        (application) => application.result_rank
+        (application) => this.hasResult(application)
       );
       this.selectedCategoryWeight = null;
       this.athletes = [];
@@ -548,16 +573,16 @@ export default {
       formData.append("file", this.importFiles[0].originFileObj);
 
       window.axios
-        .post(
-          route("manage.competition.results.import", this.competition.id),
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        )
+        .post(route("manage.competition.results.import", this.competition.id), formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
         .then(({ data }) => {
           this.importLoading = false;
           this.importFiles = [];
           this.importedCount = data.imported || 0;
           this.createdCount = data.created || 0;
+          this.rankedCount = data.ranked || 0;
+          this.unrankedCount = data.unranked || 0;
           this.importErrors = data.errors || [];
           this.imported = true;
           this.$message.success(`成功匯入 ${this.importedCount} 筆賽果`);
@@ -565,7 +590,9 @@ export default {
         .catch((error) => {
           this.importLoading = false;
           this.$message.error(
-            error?.response?.data?.message || error?.response?.data?.errors?.file?.[0] || "匯入失敗"
+            error?.response?.data?.message ||
+              error?.response?.data?.errors?.file?.[0] ||
+              "匯入失敗"
           );
         });
     },

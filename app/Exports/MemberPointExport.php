@@ -36,13 +36,22 @@ class MemberPointExport implements FromArray, WithColumnWidths
         // 標題
         $rows[] = ['會員積分統計'];
         $rows[] = ['統計期間', ($this->filters['start'] ?? '').' ~ '.($this->filters['end'] ?? '')];
+
+        $scopeLabels = [
+            'all' => '本館運動員 + 集訓隊成員',
+            'club' => '本館運動員',
+            'team' => '集訓隊成員',
+        ];
+        $scope = $this->filters['athlete_scope'] ?? 'all';
+        $rows[] = ['範圍', $scopeLabels[$scope] ?? $scope];
+
         if (! empty($this->filters['keyword'])) {
             $rows[] = ['搜尋', $this->filters['keyword']];
         }
         $rows[] = [];
 
         // 積分排行
-        $rows[] = ['排名', '會員', '會員號碼', '比賽場次', '比賽積分', '集訓次數', '集訓積分', '總分'];
+        $rows[] = ['排名', '會員', '會員號碼', '比賽場次', '比賽積分', '集訓積分', '總分'];
         foreach ($this->ranking as $index => $row) {
             $rows[] = [
                 $index + 1,
@@ -50,7 +59,6 @@ class MemberPointExport implements FromArray, WithColumnWidths
                 $row['member_number'] ?: ($row['is_member'] ? '' : '非會員'),
                 $row['competition_count'],
                 $row['competition_score'] ?? $row['total_score'],
-                $row['training_count'] ?? 0,
                 $row['training_score'] ?? 0,
                 $row['total_score'],
             ];
@@ -75,17 +83,20 @@ class MemberPointExport implements FromArray, WithColumnWidths
             }
         }
 
-        // 集訓明細
+        // 集訓明細（每月四項次數）
         $rows[] = [];
         $rows[] = ['集訓明細'];
-        $rows[] = ['會員', '集訓日期', '集訓名稱', '積分'];
+        $rows[] = ['會員', '月份', '中心/集訓', '得勝', '集訓(節數)', '比賽日數', '積分'];
         foreach ($this->ranking as $row) {
             foreach ($row['training'] ?? [] as $training) {
                 $rows[] = [
                     $row['name'],
-                    $training['date'],
-                    $training['title'],
-                    $training['points'],
+                    $training['month'] ?? '',
+                    $training['centre_count'] ?? 0,
+                    $training['win_count'] ?? 0,
+                    $training['session_count'] ?? 0,
+                    $training['competition_day_count'] ?? 0,
+                    $training['points'] ?? 0,
                 ];
             }
         }

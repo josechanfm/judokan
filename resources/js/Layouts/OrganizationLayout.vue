@@ -64,9 +64,7 @@
               <DropdownLink :href="route('language', 'zh-TW')">
                 <span
                   :class="
-                    $page.props.lang === 'zh-TW'
-                      ? 'font-semibold text-[#0081C8]'
-                      : ''
+                    $page.props.lang === 'zh-TW' ? 'font-semibold text-[#0081C8]' : ''
                   "
                 >
                   {{ $t("chinese") }}
@@ -74,11 +72,7 @@
               </DropdownLink>
               <DropdownLink :href="route('language', 'en')">
                 <span
-                  :class="
-                    $page.props.lang === 'en'
-                      ? 'font-semibold text-[#0081C8]'
-                      : ''
-                  "
+                  :class="$page.props.lang === 'en' ? 'font-semibold text-[#0081C8]' : ''"
                 >
                   {{ $t("english") }}
                 </span>
@@ -141,12 +135,16 @@
                   </inertia-link>
                 </span>
                 <span v-else>
-                  <inertia-link :href="route('manage')"> Home </inertia-link>
+                  <inertia-link :href="route('manage')">
+                    {{ $t("home") }}
+                  </inertia-link>
                 </span>
               </li>
               <li>
                 <span class="pl-2 pr-2">|</span>
-                <a href="javascript:history.back();" class="inline">Back</a>
+                <a href="javascript:history.back();" class="inline">
+                  {{ $t("back") }}
+                </a>
               </li>
             </ol>
           </nav>
@@ -171,17 +169,14 @@ import DropdownLink from "@/Components/DropdownLink.vue";
 import { MenuUnfoldOutlined, MenuFoldOutlined } from "@ant-design/icons-vue";
 import OrganizationMenu from "@/Components/Organization/OrganizationMenu.vue";
 import { loadLanguageAsync } from "laravel-vue-i18n";
-import { getActiveLanguage } from "laravel-vue-i18n";
 
 export default {
   components: {
     Dropdown,
     DropdownLink,
     OrganizationMenu,
-    loadLanguageAsync,
     MenuUnfoldOutlined,
     MenuFoldOutlined,
-    getActiveLanguage,
   },
   props: ["title", "breadcrumb"],
   setup(props) {
@@ -207,7 +202,7 @@ export default {
     };
     const page = usePage();
     // 語系跟著伺服器（HandleInertiaRequests 分享的 lang，預設 zh-TW）
-    loadLanguageAsync(page.props.value.lang || 'zh-TW');
+    loadLanguageAsync(page.props.value.lang || "zh-TW");
     const logout = () => {
       Inertia.post(route("logout"));
     };

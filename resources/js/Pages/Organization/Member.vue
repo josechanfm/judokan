@@ -23,9 +23,7 @@
               <span class="member-pill member-pill-blue">
                 {{ $t("member_number") }} {{ member.member_number }}
               </span>
-              <span v-if="currentTier" class="member-pill member-pill-amber">
-                {{ currentTier }}
-              </span>
+              <span class="member-pill" :class="expiryClass">{{ expiryLabel }}</span>
             </div>
             <p class="m-0 mt-1 text-sm text-gray-500">
               {{ member.name_zh || "—" }}
@@ -80,39 +78,31 @@
         </dl>
       </div>
 
-      <!-- 會員級別 -->
+      <!-- 會員期限 -->
       <div class="card-judo mt-5 p-6">
         <h3 class="m-0 mb-4 text-base font-semibold text-gray-700">
-          {{ $t("member_tiers") }}
+          {{ $t("membership_period") }}
         </h3>
-        <div v-if="tiers.length" class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-gray-500">
-                <th class="py-2 font-semibold">{{ $t("tier") }}</th>
-                <th class="py-2 font-semibold">{{ $t("valid_at") }}</th>
-                <th class="py-2 font-semibold">{{ $t("expired_at") }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="tier in tiers"
-                :key="tier.id"
-                class="border-t border-slate-100"
-              >
-                <td class="py-2">
-                  <span class="member-pill member-pill-blue">
-                    {{ tierName(tier.tier_code) }}
-                  </span>
-                </td>
-                <td class="py-2 text-gray-700">{{ tier.valid_at || "—" }}</td>
-                <td class="py-2 text-gray-700">{{ tier.expired_at || "—" }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p v-else class="m-0 text-sm text-gray-400">
-          {{ $t("no_tiers_added") }}
+        <dl class="grid grid-cols-1 gap-x-8 gap-y-1 lg:grid-cols-3">
+          <div class="flex gap-3 border-b border-slate-100 py-2">
+            <dt class="w-24 shrink-0 text-sm text-gray-500">{{ $t("membership_status") }}</dt>
+            <dd class="m-0 flex-1">
+              <span class="member-pill" :class="expiryClass">{{ expiryLabel }}</span>
+            </dd>
+          </div>
+          <div class="flex gap-3 border-b border-slate-100 py-2">
+            <dt class="w-24 shrink-0 text-sm text-gray-500">{{ $t("valid_at") }}</dt>
+            <dd class="m-0 flex-1 text-sm text-gray-800">{{ member.valid_at || "—" }}</dd>
+          </div>
+          <div class="flex gap-3 border-b border-slate-100 py-2">
+            <dt class="w-24 shrink-0 text-sm text-gray-500">{{ $t("expired_at") }}</dt>
+            <dd class="m-0 flex-1 text-sm text-gray-800">
+              {{ member.expired_at || "—" }}
+            </dd>
+          </div>
+        </dl>
+        <p class="m-0 mt-3 text-xs text-gray-400">
+          續期請到會員列表按「{{ $t("activate_membership") }}」，可選 1 個月／3 個月／半年／一年。
         </p>
       </div>
     </div>
@@ -129,7 +119,7 @@ export default {
     OrganizationLayout,
     EditOutlined,
   },
-  props: ["organization", "member", "memberTiers"],
+  props: ["organization", "member"],
   computed: {
     breadcrumb() {
       return [
@@ -141,9 +131,6 @@ export default {
     initial() {
       const name = (this.member.name_zh || this.member.name_fn || "").trim();
       return name ? name.charAt(0) : "?";
-    },
-    tiers() {
-      return this.member.tiers || [];
     },
     createdDate() {
       return this.member.created_at
@@ -159,9 +146,41 @@ export default {
       }
       return "—";
     },
-    // 目前生效的會員級別（Member 模型的 current_tier）
-    currentTier() {
-      return this.tierName(this.member.current_tier?.tier_code);
+    daysLeft() {
+      if (!this.member.expired_at) {
+        return null;
+      }
+
+      return dayjs(this.member.expired_at)
+        .startOf("day")
+        .diff(dayjs().startOf("day"), "day");
+    },
+    expiryLabel() {
+      const days = this.daysLeft;
+
+      if (days === null) {
+        return "未設定期限";
+      }
+
+      if (days < 0) {
+        return `已過期 ${Math.abs(days)} 天`;
+      }
+
+      if (days === 0) {
+        return "今日到期";
+      }
+
+      return days <= 30 ? `${days} 天後到期` : "有效";
+    },
+    expiryClass() {
+      const days = this.daysLeft;
+
+      return {
+        "member-pill-red": days !== null && days < 0,
+        "member-pill-amber": days !== null && days >= 0 && days <= 30,
+        "member-pill-green": days !== null && days > 30,
+        "member-pill-gray": days === null,
+      };
     },
     fields() {
       return [
@@ -183,21 +202,7 @@ export default {
         { label: this.$t("mobile"), value: this.member.mobile || "—" },
         { label: this.$t("nationality"), value: this.member.nationality || "—" },
         { label: this.$t("country"), value: this.member.country || "—" },
-        { label: this.$t("address"), value: this.member.address || "—" },
-        { label: this.$t("valid_at"), value: this.member.valid_at || "—" },
-        { label: this.$t("expired_at"), value: this.member.expired_at || "—" },
-        { label: this.$t("created_at"), value: this.createdDate },
       ];
-    },
-  },
-  methods: {
-    // 會員級別代號 → 級別名稱（例：TEAM_A → 代表隊A）
-    tierName(code) {
-      if (!code) {
-        return "";
-      }
-      const tier = (this.memberTiers || []).find((t) => t.value === code);
-      return (tier?.label || code).trim();
     },
   },
 };
@@ -236,6 +241,18 @@ export default {
 .member-pill-pink {
   background-color: rgba(219, 39, 119, 0.1);
   color: #be185d;
+}
+.member-pill-red {
+  background-color: rgba(212, 56, 13, 0.12);
+  color: #c2410c;
+}
+.member-pill-green {
+  background-color: rgba(34, 164, 93, 0.12);
+  color: #1c8a4e;
+}
+.member-pill-gray {
+  background-color: #f1f5f9;
+  color: #64748b;
 }
 .member-pill-amber {
   background-color: rgba(217, 119, 6, 0.12);

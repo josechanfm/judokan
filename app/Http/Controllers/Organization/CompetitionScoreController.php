@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Exports\CompetitionScoreExport;
+use App\Imports\CompetitionScoreImport;
 use App\Models\Competition;
 use App\Models\CompetitionApplication;
 use App\Models\CompetitionScore;
 use App\Models\Config;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CompetitionScoreController extends Controller
 {
@@ -50,6 +53,52 @@ class CompetitionScoreController extends Controller
         CompetitionScore::create($data);
 
         return redirect()->back();
+    }
+
+    /**
+     * 匯出積分表。格式與匯入範本相同，可直接再匯入。
+     */
+    public function export()
+    {
+        $scoreCategories = collect(Config::item('competition_score_categories') ?: []);
+        $order = $scoreCategories->pluck('value')->flip();
+
+        $scores = CompetitionScore::where('organization_id', 0)
+            ->get()
+            ->sortBy(fn ($score) => [
+                $order[$score->category] ?? PHP_INT_MAX,
+                $score->id,
+            ])
+            ->values();
+
+        return Excel::download(
+            new CompetitionScoreExport(
+                $scores->all(),
+                $scoreCategories->pluck('value')->all()
+            ),
+            'competition-scores-'.now()->format('Ymd').'.xlsx'
+        );
+    }
+
+    /**
+     * 從 Excel 匯入積分表。回傳 { imported, errors }。
+     *
+     * 範本：public/templates/competition_score_list.xlsx
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv',
+        ]);
+
+        $import = new CompetitionScoreImport();
+
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'imported' => $import->importedCount(),
+            'errors' => $import->failures()->values(),
+        ]);
     }
 
     public function update(Request $request, CompetitionScore $competitionScore)

@@ -19,10 +19,24 @@
               {{ usedCount }} 個
             </p>
           </div>
-          <button type="button" class="btn-judo-primary" @click="createRecord">
-            <PlusOutlined />
-            {{ $t("competition_score_new") }}
-          </button>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" class="btn-judo-outline" @click="openImport">
+              <UploadOutlined />
+              {{ $t("import") }}
+            </button>
+            <a
+              :href="route('manage.competitionScores.export')"
+              class="btn-judo-outline"
+              download
+            >
+              <DownloadOutlined />
+              {{ $t("export") }}
+            </a>
+            <button type="button" class="btn-judo-primary" @click="createRecord">
+              <PlusOutlined />
+              {{ $t("competition_score_new") }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -200,12 +214,84 @@
         </button>
       </div>
     </a-modal>
+
+    <!-- 匯入積分表 -->
+    <a-modal
+      v-model:open="importModal.visible"
+      :title="$t('import')"
+      :width="640"
+      @cancel="closeImport"
+    >
+      <a-upload-dragger
+        v-model:fileList="importModal.files"
+        name="file"
+        :beforeUpload="() => false"
+        :multiple="false"
+        :maxCount="1"
+        accept=".xlsx,.xls"
+      >
+        <p class="ant-upload-drag-icon">
+          <FileExcelOutlined />
+        </p>
+        <p class="ant-upload-text">點擊或拖曳檔案到這裡匯入積分表</p>
+        <p class="ant-upload-hint">
+          支援 .xlsx / .xls 檔案，一次一個。請使用下方範本格式填寫；
+          組別可填代號（例如 LOCAL）或名稱（例如 本地），
+          同組別且同名稱的積分表會被略過。
+        </p>
+      </a-upload-dragger>
+
+      <div v-if="importModal.done" class="mt-3">
+        <div
+          v-if="importModal.errors.length === 0"
+          class="my-3 font-bold text-green-600"
+        >
+          成功匯入 {{ importModal.count }} 個積分表
+        </div>
+        <div v-else class="my-3 font-bold text-yellow-600">
+          成功匯入 {{ importModal.count }} 個，以下
+          {{ importModal.errors.length }} 筆未匯入
+        </div>
+        <p
+          v-for="(error, index) in importModal.errors"
+          :key="index"
+          class="m-0 font-mono"
+        >
+          <WarningOutlined class="!text-yellow-500" />
+          第 {{ error.row }} 行（{{ error.attribute }}）: {{ error.errors[0] }}
+        </p>
+      </div>
+
+      <template #footer>
+        <div class="flex w-full flex-wrap items-center justify-between gap-2">
+          <a :href="templateUrl" download class="btn-judo-outline">
+            <DownloadOutlined />
+            下載匯入範本
+          </a>
+          <a-button
+            type="primary"
+            :loading="importModal.loading"
+            :disabled="importModal.files.length === 0"
+            @click="handleImport"
+          >
+            {{ $t("import") }}
+          </a-button>
+        </div>
+      </template>
+    </a-modal>
   </OrganizationLayout>
 </template>
 
 <script>
 import OrganizationLayout from "@/Layouts/OrganizationLayout.vue";
-import { PlusOutlined } from "@ant-design/icons-vue";
+import {
+  DownloadOutlined,
+  FileExcelOutlined,
+  PlusOutlined,
+  UploadOutlined,
+  WarningOutlined,
+} from "@ant-design/icons-vue";
+import { message } from "ant-design-vue";
 
 const RANK_FIELDS = [
   { key: "first", i18n: "competition_score_first" },
@@ -227,7 +313,14 @@ function emptyScore() {
 }
 
 export default {
-  components: { OrganizationLayout, PlusOutlined },
+  components: {
+    OrganizationLayout,
+    DownloadOutlined,
+    FileExcelOutlined,
+    PlusOutlined,
+    UploadOutlined,
+    WarningOutlined,
+  },
   props: ["competitionScores", "competitionScoreCategories"],
   data() {
     return {
@@ -235,6 +328,15 @@ export default {
       modal: { isOpen: false, mode: "EDIT", data: emptyScore(), usage: 0 },
       syncResults: false,
       saving: false,
+      templateUrl: "/templates/competition_score_list.xlsx",
+      importModal: {
+        visible: false,
+        files: [],
+        done: false,
+        count: 0,
+        errors: [],
+        loading: false,
+      },
       rankFields: RANK_FIELDS,
       rules: {
         title: { required: true, message: "請輸入積分表名稱" },
@@ -283,6 +385,61 @@ export default {
     },
   },
   methods: {
+    openImport() {
+      this.importModal.visible = true;
+      this.importModal.files = [];
+      this.importModal.done = false;
+      this.importModal.count = 0;
+      this.importModal.errors = [];
+      this.importModal.loading = false;
+    },
+    closeImport() {
+      this.importModal.visible = false;
+      this.importModal.files = [];
+      this.importModal.done = false;
+      this.importModal.count = 0;
+      this.importModal.errors = [];
+      this.importModal.loading = false;
+    },
+    handleImport() {
+      if (this.importModal.files.length === 0) {
+        message.warning("請先選擇檔案");
+        return;
+      }
+
+      this.importModal.loading = true;
+
+      const formData = new FormData();
+      formData.append("file", this.importModal.files[0].originFileObj);
+
+      window.axios
+        .post(route("manage.competitionScores.import"), formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then(({ data }) => {
+          this.importModal.loading = false;
+          this.importModal.files = [];
+          this.importModal.count = data.imported || 0;
+          this.importModal.errors = data.errors || [];
+          this.importModal.done = true;
+
+          message.success(`成功匯入 ${this.importModal.count} 個積分表`);
+
+          this.$inertia.reload({ preserveState: true });
+        })
+        .catch((error) => {
+          this.importModal.loading = false;
+
+          const validationErrors = error?.response?.data?.errors;
+          message.error(
+            validationErrors
+              ? Object.values(validationErrors)[0][0]
+              : "匯入失敗，請稍後再試"
+          );
+        });
+    },
     categoryLabel(code) {
       const category = this.categories.find((item) => item.value === code);
 

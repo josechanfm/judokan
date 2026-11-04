@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Organization;
 use App\Exports\MemberPointExport;
 use App\Http\Controllers\Controller;
 use App\Imports\ResultImport;
+use App\Models\AthleteSetting;
 use App\Models\CompetitionApplication;
 use App\Models\Config;
 use App\Models\Member;
-use App\Models\TrainingCampAttendance;
+use App\Models\TrainingRecord;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -76,37 +77,72 @@ class MemberPointController extends Controller
     private function resolveFilters(Request $request): array
     {
         $end = $request->input('end') ?: Carbon::today()->format('Y-m-d');
+        // 預設由「上一年 1 月 1 日」開始統計
         $start = $request->input('start')
-            ?: Carbon::parse($end)->subYears(2)->addDay()->format('Y-m-d');
+            ?: Carbon::parse($end)->startOfYear()->subYear()->format('Y-m-d');
 
         return [
             'start' => $start,
             'end' => $end,
-            'role' => $request->input('role') ?: null,
             'keyword' => trim((string) $request->input('keyword', '')),
+            'athlete_scope' => in_array($request->input('athlete_scope'), ['club', 'team'], true)
+                ? $request->input('athlete_scope')
+                : 'all',
         ];
     }
 
     /**
-     * 依統計條件產生排行資料（會員 + 沒有會員資料的公開賽報名）。
+     * 本館運動員 + 集訓隊成員的會員 id。
+     *
+     * @param  string  $scope  all（兩者都要）| club（只要本館運動員）| team（只要集訓隊成員）
+     */
+    private function athleteIds(int $organizationId, string $scope = 'all'): array
+    {
+        $query = AthleteSetting::where('organization_id', $organizationId);
+
+        if ($scope === 'club') {
+            $query->where('is_club_athlete', true);
+        } elseif ($scope === 'team') {
+            $query->where('is_team_member', true);
+        } else {
+            $query->where(function ($sub) {
+                $sub->where('is_club_athlete', true)
+                    ->orWhere('is_team_member', true);
+            });
+        }
+
+        return $query->pluck('member_id')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * 依統計條件產生排行資料。
+     *
+     * 只統計「本館運動員」及「集訓隊成員」（見運動員設定），
+     * 其他會員及公開賽的臨時報名都不列入。
      */
     private function buildRanking(array $filters)
     {
         $organization = session('organization');
         $start = $filters['start'];
         $end = $filters['end'];
-        $role = $filters['role'];
         $keyword = $filters['keyword'];
+
+        $athleteIds = $this->athleteIds($organization->id, $filters['athlete_scope'] ?? 'all');
+
+        if ($athleteIds === []) {
+            return collect();
+        }
 
         $applications = CompetitionApplication::query()
             ->join('competitions', 'competitions.id', '=', 'competition_applications.competition_id')
             ->where('competition_applications.organization_id', $organization->id)
+            ->whereIn('competition_applications.member_id', $athleteIds)
             ->whereNotNull('competition_applications.result_score')
             ->whereDate('competitions.start_date', '>=', $start)
             ->whereDate('competitions.start_date', '<=', $end)
-            ->when($role, function ($query) use ($role) {
-                $query->where('competition_applications.role', $role);
-            })
             ->when($keyword !== '', function ($query) use ($keyword) {
                 $query->where(function ($q) use ($keyword) {
                     $q->where('competition_applications.name_zh', 'like', "%{$keyword}%")
@@ -179,13 +215,15 @@ class MemberPointController extends Controller
             ];
         }
 
-        // 集訓出席記錄：出席一次得該場集訓設定的分數
-        $attendances = TrainingCampAttendance::query()
-            ->join('training_camps', 'training_camps.id', '=', 'training_camp_attendances.training_camp_id')
-            ->join('members', 'members.id', '=', 'training_camp_attendances.member_id')
-            ->where('training_camps.organization_id', $organization->id)
-            ->whereDate('training_camps.camp_date', '>=', $start)
-            ->whereDate('training_camps.camp_date', '<=', $end)
+        // 每月訓練記錄：四項次數 × 各項設定分數
+        $rates = TrainingRecord::ratesFor($organization->id);
+
+        $trainingRecords = TrainingRecord::query()
+            ->join('members', 'members.id', '=', 'training_records.member_id')
+            ->where('training_records.organization_id', $organization->id)
+            ->whereIn('training_records.member_id', $athleteIds)
+            ->whereDate('training_records.month', '>=', $start)
+            ->whereDate('training_records.month', '<=', $end)
             ->when($keyword !== '', function ($query) use ($keyword) {
                 $query->where(function ($sub) use ($keyword) {
                     $sub->where('members.name_zh', 'like', "%{$keyword}%")
@@ -193,28 +231,29 @@ class MemberPointController extends Controller
                         ->orWhere('members.display_name', 'like', "%{$keyword}%");
                 });
             })
-            ->orderBy('training_camps.camp_date')
+            ->orderBy('training_records.month')
             ->get([
-                'training_camp_attendances.member_id',
+                'training_records.member_id',
+                'training_records.month',
+                'training_records.centre_count',
+                'training_records.win_count',
+                'training_records.session_count',
+                'training_records.competition_day_count',
                 'members.name_zh',
                 'members.name_fn',
                 'members.display_name',
-                'training_camps.id as training_camp_id',
-                'training_camps.title as camp_title',
-                'training_camps.camp_date as camp_date',
-                'training_camps.points as camp_points',
             ]);
 
-        foreach ($attendances as $attendance) {
-            $key = 'member-'.$attendance->member_id;
+        foreach ($trainingRecords as $record) {
+            $key = 'member-'.$record->member_id;
 
             if (! isset($grouped[$key])) {
                 $grouped[$key] = [
                     'key' => $key,
-                    'member_id' => $attendance->member_id,
-                    'name' => $attendance->display_name ?: ($attendance->name_zh ?: $attendance->name_fn),
-                    'name_zh' => $attendance->name_zh,
-                    'name_fn' => $attendance->name_fn,
+                    'member_id' => $record->member_id,
+                    'name' => $record->display_name ?: ($record->name_zh ?: $record->name_fn),
+                    'name_zh' => $record->name_zh,
+                    'name_fn' => $record->name_fn,
                     'id_num' => null,
                     'member_number' => null,
                     'is_member' => true,
@@ -227,14 +266,22 @@ class MemberPointController extends Controller
                 ];
             }
 
+            $points = 0;
+
+            foreach (TrainingRecord::POINT_FIELDS as $field) {
+                $points += (int) $record->{$field} * (int) ($rates[$field] ?? 0);
+            }
+
             $grouped[$key]['training'][] = [
-                'training_camp_id' => $attendance->training_camp_id,
-                'title' => $attendance->camp_title,
-                'date' => $attendance->camp_date,
-                'points' => (int) $attendance->camp_points,
+                'month' => Carbon::parse($record->month)->format('Y-m'),
+                'centre_count' => (int) $record->centre_count,
+                'win_count' => (int) $record->win_count,
+                'session_count' => (int) $record->session_count,
+                'competition_day_count' => (int) $record->competition_day_count,
+                'points' => $points,
             ];
             $grouped[$key]['training_count']++;
-            $grouped[$key]['training_score'] += (int) $attendance->camp_points;
+            $grouped[$key]['training_score'] += $points;
         }
 
         // 補上會員號碼

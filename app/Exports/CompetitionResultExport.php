@@ -2,46 +2,44 @@
 
 namespace App\Exports;
 
-use App\Models\Competition;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 
 /**
- * 單一賽事的賽果匯出。
+ * 單一賽事的賽果匯出（簡化版）。
  *
- * 第一個工作表「賽果」的欄位格式與 public/templates/result_list.xlsx 相同
- * （第 1 列中文標題、第 2 列欄位代號、第 3 列起資料），
- * 因此匯出 → 修改 → 再匯入可以直接循環使用。
+ * 格式與匯入範本相同：第 1 列中文欄名、第 2 列欄位代號、第 3 列起資料，
+ * 所以可以「匯出 → 填分數 → 再匯入」。
  */
-class CompetitionResultExport implements WithMultipleSheets
+class CompetitionResultExport implements FromArray, WithColumnWidths
 {
-    private Competition $competition;
+    /** 欄位代號（第 2 列，程式匯入時用） */
+    public const COLUMNS = ['name', 'score', 'category', 'gender', 'weight'];
+
+    /** 中文欄名（第 1 列） */
+    public const HEADINGS = ['姓名', '分數', '年齡組別', '性別', '重量級別'];
 
     /** @var array 已整理好的資料列 */
     private array $rows;
 
-    /** @var array 名次選項（value / label） */
-    private array $rankOptions;
-
-    /** @var array 積分表（first => 70 ...） */
-    private array $scores;
-
-    public function __construct(
-        Competition $competition,
-        array $rows,
-        array $rankOptions = [],
-        array $scores = []
-    ) {
-        $this->competition = $competition;
+    public function __construct(array $rows)
+    {
         $this->rows = $rows;
-        $this->rankOptions = $rankOptions;
-        $this->scores = $scores;
     }
 
-    public function sheets(): array
+    public function array(): array
+    {
+        return array_merge([self::HEADINGS, self::COLUMNS], $this->rows);
+    }
+
+    public function columnWidths(): array
     {
         return [
-            new CompetitionResultSheet($this->competition, $this->rows),
-            new CompetitionResultGuideSheet($this->competition, $this->rankOptions, $this->scores),
+            'A' => 24,
+            'B' => 10,
+            'C' => 22,
+            'D' => 10,
+            'E' => 22,
         ];
     }
 }

@@ -12,6 +12,7 @@ use App\Models\MemberTier;
 use App\Models\User;
 use App\Exports\MemberExport;
 use App\Imports\MemberImport;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Password;
 
@@ -112,6 +113,35 @@ class MemberController extends Controller
         $this->syncTiers($member, $request->input('tiers', []));
 
         return redirect()->route('manage.members.index');
+    }
+
+    /**
+     * 激活／續期會員：依選擇的月數延長會員期限。
+     *
+     * 未過期 → 由原到期日往後加；已過期或未設定 → 由今天起算。
+     */
+    public function activate(Request $request, Member $member)
+    {
+        $organization = session('organization');
+
+        abort_unless(
+            $member->organizations()->where('organizations.id', $organization->id)->exists(),
+            403
+        );
+
+        $data = $request->validate([
+            'months' => 'required|integer|in:1,3,6,12',
+        ]);
+
+        $today = Carbon::today();
+        $currentExpiry = $member->expired_at ? Carbon::parse($member->expired_at) : null;
+        $base = $currentExpiry && $currentExpiry->greaterThan($today) ? $currentExpiry : $today;
+
+        $member->valid_at = $member->valid_at ?: $today->format('Y-m-d');
+        $member->expired_at = $base->copy()->addMonths((int) $data['months'])->format('Y-m-d');
+        $member->save();
+
+        return redirect()->back();
     }
 
     /**

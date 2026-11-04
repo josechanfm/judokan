@@ -59,29 +59,14 @@ class CompetitionResultController extends Controller
     }
 
     /**
-     * 匯出這場賽事的賽果（欄位與匯入範本相同，可直接修改後再匯入）。
+     * 匯出這場賽事的賽果。只有「姓名、分數（、組別、量級）」四欄，
+     * 填好分數後可以直接再匯入。
      */
     public function export(Competition $competition)
     {
         $competition->load('score');
 
         $categories = $this->decodeJson($competition->categories_weights) ?: [];
-        $roles = $this->decodeJson($competition->roles) ?: [];
-        $rankOptions = collect(Config::item('competition_results') ?: [])
-            ->map(fn ($option) => (array) $option)
-            ->all();
-
-        $rankLabels = collect($rankOptions)->pluck('label', 'value')->all();
-        $roleLabels = collect($roles)
-            ->map(fn ($role) => (array) $role)
-            ->pluck('label', 'value')
-            ->all();
-
-        $scores = $competition->score?->toArray();
-        if (! $scores) {
-            $fallback = $this->decodeJson($competition->result_scores);
-            $scores = is_array($fallback) ? $fallback : [];
-        }
 
         $applications = $competition->applications()
             ->orderBy('category')
@@ -93,28 +78,23 @@ class CompetitionResultController extends Controller
         $rows = [];
         foreach ($applications as $application) {
             $rows[] = [
-                $competition->title_zh ?: $competition->title_fn,
-                $competition->start_date,
-                $competition->score->title ?? '',
-                $application->name_zh,
-                $application->name_fn,
-                $application->id_num,
-                $this->categoryName($categories, $application->category),
-                $this->weightName($categories, $application),
-                $roleLabels[$application->role] ?? $application->role,
-                $rankLabels[$application->result_rank] ?? null,
+                $application->name_zh ?: $application->name_fn,
                 $application->result_score,
+                $this->categoryName($categories, $application->category),
+                $this->genderName($application->gender),
+                $this->weightName($categories, $application),
             ];
         }
 
         return Excel::download(
-            new CompetitionResultExport($competition, $rows, $rankOptions, $scores),
+            new CompetitionResultExport($rows),
             'competition-results-'.$competition->id.'-'.Carbon::today()->format('Ymd').'.xlsx'
         );
     }
 
     /**
-     * 從 Excel 匯入這場賽事的賽果。回傳 { imported, created, errors }。
+     * 從 Excel 匯入這場賽事的賽果。只需要姓名加分數，
+     * 分數會自動對應積分表的名次。回傳 { imported, ranked, unranked, errors }。
      */
     public function import(Request $request, Competition $competition)
     {
@@ -130,6 +110,8 @@ class CompetitionResultController extends Controller
             return response()->json([
                 'imported' => $import->importedCount(),
                 'created' => $import->createdCount(),
+                'ranked' => $import->rankedCount(),
+                'unranked' => max(0, $import->importedCount() - $import->rankedCount()),
                 'errors' => [],
                 'message' => '匯入失敗：'.$e->getMessage(),
             ], 422);
@@ -138,6 +120,8 @@ class CompetitionResultController extends Controller
         return response()->json([
             'imported' => $import->importedCount(),
             'created' => $import->createdCount(),
+            'ranked' => $import->rankedCount(),
+            'unranked' => max(0, $import->importedCount() - $import->rankedCount()),
             'errors' => $import->failures()->values(),
         ]);
     }
@@ -154,9 +138,21 @@ class CompetitionResultController extends Controller
         return (string) $code;
     }
 
+    private function genderName($gender): string
+    {
+        return match ((string) $gender) {
+            'M' => '男',
+            'F' => '女',
+            'X' => '混合',
+            default => '',
+        };
+    }
+
     private function weightName(array $categories, CompetitionApplication $application): string
     {
-        $lists = $application->gender === 'F' ? ['female', 'male'] : ['male', 'female'];
+        $lists = $application->gender === 'F'
+            ? ['female', 'mixed', 'male']
+            : ($application->gender === 'X' ? ['mixed', 'male', 'female'] : ['male', 'mixed', 'female']);
 
         foreach ($categories as $category) {
             $category = (array) $category;

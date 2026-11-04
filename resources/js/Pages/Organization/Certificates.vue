@@ -134,7 +134,7 @@
           key="Store"
           type="primary"
           @click="storeRecord()"
-          >{{ $t("Add") }}</a-button
+          >{{ $t("add") }}</a-button
         >
       </template>
     </a-modal>

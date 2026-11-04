@@ -6,7 +6,7 @@
         <p class="m-0 text-sm text-gray-500">
           共
           <span class="mx-1 text-base font-semibold text-[#0081C8]">{{ ranking.length }}</span>
-          位會員有成績
+          位{{ $t("athlete") }}有積分
         </p>
         <div class="flex flex-wrap items-center gap-2">
           <button type="button" class="btn-judo-outline" @click="openImport">
@@ -34,13 +34,11 @@
             />
           </div>
           <div>
-            <label class="mb-1 block text-xs text-gray-500">{{ $t("role") }}</label>
+            <label class="mb-1 block text-xs text-gray-500">{{ $t("member_scope") }}</label>
             <a-select
-              v-model:value="role"
-              :options="roleOptions"
-              allow-clear
-              :placeholder="$t('all')"
-              style="width: 150px"
+              v-model:value="athleteScope"
+              :options="athleteScopeOptions"
+              style="width: 170px"
             />
           </div>
           <div>
@@ -61,6 +59,16 @@
             {{ $t("reset") }}
           </button>
         </div>
+        <p class="m-0 mt-3 text-xs text-gray-400">
+          只統計{{ $t("club_athlete") }}及{{ $t("team_member") }}，可到
+          <inertia-link
+            :href="route('manage.athleteSettings.index')"
+            class="font-medium text-[#0081C8] hover:underline"
+          >
+            {{ $t("athlete_settings") }}
+          </inertia-link>
+          調整。
+        </p>
       </div>
 
       <!-- 摘要 -->
@@ -201,7 +209,7 @@
                 </table>
               </div>
 
-              <!-- 該會員的集訓記錄 -->
+              <!-- 該會員的每月訓練記錄 -->
               <div v-if="record.training && record.training.length" class="mt-3">
                 <p class="m-0 mb-1 text-xs font-semibold text-gray-500">
                   {{ $t("training_camps") }}
@@ -210,8 +218,11 @@
                   <table class="w-full text-sm">
                     <thead>
                       <tr class="text-left text-gray-500">
-                        <th class="py-2 pr-3 font-semibold">{{ $t("training_camp") }}</th>
-                        <th class="py-2 pr-3 font-semibold">{{ $t("date") }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ $t("month") }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ $t("centre_training") }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ $t("wins") }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ $t("training_sessions") }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ $t("competition_days") }}</th>
                         <th class="py-2 text-right font-semibold">{{ $t("score") }}</th>
                       </tr>
                     </thead>
@@ -221,8 +232,13 @@
                         :key="idx"
                         class="border-t border-slate-100"
                       >
-                        <td class="py-2 pr-3 text-gray-800">{{ training.title }}</td>
-                        <td class="py-2 pr-3 text-gray-600">{{ training.date }}</td>
+                        <td class="py-2 pr-3 text-gray-800">{{ training.month }}</td>
+                        <td class="py-2 pr-3 text-gray-600">{{ training.centre_count }}</td>
+                        <td class="py-2 pr-3 text-gray-600">{{ training.win_count }}</td>
+                        <td class="py-2 pr-3 text-gray-600">{{ training.session_count }}</td>
+                        <td class="py-2 pr-3 text-gray-600">
+                          {{ training.competition_day_count }}
+                        </td>
                         <td class="py-2 text-right font-semibold text-gray-800">
                           {{ training.points }}
                         </td>
@@ -335,7 +351,7 @@ export default {
     return {
       dateFormat: "YYYY-MM-DD",
       range: [this.filters.start, this.filters.end],
-      role: this.filters.role || null,
+      athleteScope: this.filters.athlete_scope || "all",
       keyword: this.filters.keyword || "",
       columns: [
         { title: "rank", dataIndex: "rank", i18n: "rank", width: 80 },
@@ -353,13 +369,6 @@ export default {
           i18n: "competition_points",
           width: 120,
           sorter: (a, b) => a.competition_score - b.competition_score,
-        },
-        {
-          title: "training_count",
-          dataIndex: "training_count",
-          i18n: "training_count",
-          width: 110,
-          sorter: (a, b) => a.training_count - b.training_count,
         },
         {
           title: "training_points",
@@ -397,11 +406,12 @@ export default {
         { label: this.$t("points_statistics"), url: null },
       ];
     },
-    roleOptions() {
-      return (this.competitionRoles || []).map((role) => ({
-        value: role.value,
-        label: role.label,
-      }));
+    athleteScopeOptions() {
+      return [
+        { value: "all", label: `${this.$t("club_athlete")} + ${this.$t("team_member")}` },
+        { value: "club", label: this.$t("club_athlete") },
+        { value: "team", label: this.$t("team_member") },
+      ];
     },
     topScore() {
       return this.ranking.length
@@ -414,8 +424,8 @@ export default {
         start: this.filters.start,
         end: this.filters.end,
       });
-      if (this.filters.role) {
-        params.set("role", this.filters.role);
+      if (this.filters.athlete_scope && this.filters.athlete_scope !== "all") {
+        params.set("athlete_scope", this.filters.athlete_scope);
       }
       if (this.filters.keyword) {
         params.set("keyword", this.filters.keyword);
@@ -496,7 +506,7 @@ export default {
         {
           start: this.range?.[0] || null,
           end: this.range?.[1] || null,
-          role: this.role || null,
+          athlete_scope: this.athleteScope || "all",
           keyword: this.keyword || null,
         },
         { preserveState: true, preserveScroll: true }
@@ -505,10 +515,10 @@ export default {
     resetFilters() {
       const end = dayjs().format(this.dateFormat);
       this.range = [
-        dayjs(end).subtract(2, "year").add(1, "day").format(this.dateFormat),
+        dayjs(end).subtract(1, "year").startOf("year").format(this.dateFormat),
         end,
       ];
-      this.role = null;
+      this.athleteScope = "all";
       this.keyword = "";
       this.applyFilters();
     },

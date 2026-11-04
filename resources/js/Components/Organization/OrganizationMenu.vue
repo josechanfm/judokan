@@ -37,13 +37,23 @@
           </inertia-link>
         </span>
       </a-menu-item>
-      <a-menu-item key="trainingCamps.index">
+      <a-menu-item key="trainingRecords.index">
         <template #icon>
           <CalendarOutlined />
         </template>
         <span>
-          <inertia-link :href="route('manage.trainingCamps.index')">
+          <inertia-link :href="route('manage.trainingRecords.index')">
             {{ $t("training_camps") }}
+          </inertia-link>
+        </span>
+      </a-menu-item>
+      <a-menu-item key="athleteSettings.index">
+        <template #icon>
+          <TeamOutlined />
+        </template>
+        <span>
+          <inertia-link :href="route('manage.athleteSettings.index')">
+            {{ $t("athlete_settings") }}
           </inertia-link>
         </span>
       </a-menu-item>

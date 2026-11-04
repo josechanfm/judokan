@@ -6,32 +6,31 @@
           ref="formRef"
           :model="form"
           name="memberForm"
-          :label-col="{ flex: '150px' }"
+          layout="vertical"
           autocomplete="off"
           :rules="rules"
           :validate-messages="validateMessages"
         >
-          <!-- 會員等級信息 -->
-          <a-form-item v-if="isEditMode" :label="$t('tier')">
-            {{ form.current_tier?.tier_code || "-" }}
-          </a-form-item>
-          <a-form-item
-            v-if="isEditMode"
-            :label="$t('valid_at')"
-            :label-col="{ span: 12 }"
-          >
-            {{ form.current_tier?.valid_at || "-" }}
-          </a-form-item>
-          <a-form-item
-            v-if="isEditMode"
-            :label="$t('expired_at')"
-            :label-col="{ span: 8 }"
-          >
-            {{ form.current_tier?.expired_at || "-" }}
-          </a-form-item>
+          <!-- 會員期限（唯讀，由會員列表的「激活會員」處理） -->
+          <div v-if="isEditMode" class="mb-6 rounded-lg bg-slate-50 p-4">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              <span class="text-gray-500">{{ $t("membership_period") }}：</span>
+              <span class="member-pill" :class="expiryClass">{{ expiryLabel }}</span>
+              <span class="text-gray-500">
+                {{ $t("valid_at") }}：{{ form.valid_at || "—" }}
+              </span>
+              <span class="text-gray-500">
+                {{ $t("expired_at") }}：{{ form.expired_at || "—" }}
+              </span>
+            </div>
+            <p class="m-0 mt-2 text-xs text-gray-400">
+              會員期限請在會員列表按「{{ $t("activate_membership") }}」選擇 1 個月／3
+              個月／半年／一年續期。
+            </p>
+          </div>
 
           <!-- 頭像顯示 -->
-          <div class="flex justify-center mb-6">
+          <div v-if="form.avatar_url" class="flex justify-center mb-6">
             <img
               v-if="form.avatar_url"
               :src="form.avatar_url"
@@ -42,7 +41,8 @@
           </div>
 
           <!-- 基本資料 -->
-          <a-form-item :label="$t('name_zh')" name="name_zh">
+          <div class="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+            <a-form-item :label="$t('name_zh')" name="name_zh">
             <a-input
               v-model:value="form.name_zh"
               :placeholder="$t('enter_chinese_name')"
@@ -92,7 +92,7 @@
             />
           </a-form-item>
 
-          <a-form-item :label="$t('mobile_number')" name="mobile">
+          <a-form-item :label="$t('mobile')" name="mobile">
             <a-input
               v-model:value="form.mobile"
               :placeholder="$t('enter_mobile')"
@@ -100,108 +100,25 @@
             />
           </a-form-item>
 
-          <!-- 會員等級管理 -->
-          <div class="border-t pt-6 mt-6">
-            <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-              <h3 class="m-0 text-lg font-semibold">{{ $t("member_tiers") }}</h3>
-              <a-button class="btn-judo-outline" @click="addTier">
-                <PlusOutlined />
-                {{ $t("add_tier") }}
-              </a-button>
-            </div>
+          <a-form-item :label="$t('nationality')" name="nationality">
+            <a-input
+              v-model:value="form.nationality"
+              :placeholder="$t('enter_nationality')"
+              size="large"
+            />
+          </a-form-item>
 
-            <!-- 會員等級表格 -->
-            <div v-if="form.tiers && form.tiers.length > 0" class="ant-table">
-              <div class="ant-table-container">
-                <table style="table-layout: auto" class="w-full">
-                  <thead class="ant-table-thead">
-                    <tr>
-                      <th class="p-3">{{ $t("tier") }}</th>
-                      <th class="p-3">{{ $t("valid_at") }}</th>
-                      <th class="p-3">{{ $t("expired_at") }}</th>
-                      <th class="p-3">{{ $t("operation") }}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(tier, idx) in form.tiers" :key="idx">
-                      <td class="p-3">
-                        <a-form-item
-                          :name="['tiers', idx, 'tier_code']"
-                          :rules="[
-                            {
-                              required: true,
-                              message: $t('select_tier_required'),
-                            },
-                          ]"
-                          class="mb-0"
-                        >
-                          <a-select
-                            v-model:value="tier.tier_code"
-                            :options="memberTiers"
-                            :fieldNames="{ value: 'value', label: 'label' }"
-                            style="width: 100%"
-                            :placeholder="$t('select_tier')"
-                          />
-                        </a-form-item>
-                      </td>
-                      <td class="p-3">
-                        <a-form-item
-                          :name="['tiers', idx, 'valid_at']"
-                          :rules="[
-                            {
-                              required: true,
-                              message: $t('select_valid_at_required'),
-                            },
-                          ]"
-                          class="mb-0"
-                        >
-                          <a-date-picker
-                            v-model:value="tier.valid_at"
-                            :format="dateFormat"
-                            :valueFormat="dateFormat"
-                            style="width: 100%"
-                            :placeholder="$t('select_valid_at')"
-                          />
-                        </a-form-item>
-                      </td>
-                      <td class="p-3">
-                        <a-form-item
-                          :name="['tiers', idx, 'expired_at']"
-                          class="mb-0"
-                        >
-                          <a-date-picker
-                            v-model:value="tier.expired_at"
-                            :format="dateFormat"
-                            :valueFormat="dateFormat"
-                            style="width: 100%"
-                            :placeholder="$t('select_expired_at')"
-                          />
-                        </a-form-item>
-                      </td>
-                      <td class="p-3 text-center">
-                        <a-popconfirm
-                          :title="$t('confirm_delete_record')"
-                          :ok-text="$t('yes')"
-                          :cancel-text="$t('no')"
-                          @confirm="deleteMemberTier(idx, tier)"
-                        >
-                          <a-button danger size="small">
-                            <DeleteOutlined />
-                          </a-button>
-                        </a-popconfirm>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div v-else class="text-center py-8 text-gray-400">
-              {{ $t("no_tiers_added") }}
-            </div>
+          <a-form-item :label="$t('country')" name="country">
+            <a-input
+              v-model:value="form.country"
+              :placeholder="$t('enter_country')"
+              size="large"
+            />
+          </a-form-item>
           </div>
 
           <!-- 表單操作按鈕 -->
-          <div class="mt-8 flex flex-wrap justify-end gap-3 border-t pt-6">
+          <div class="mt-8 flex flex-wrap items-center justify-end gap-3 border-t pt-6">
             <inertia-link
               :href="route('manage.members.index')"
               class="btn-judo-outline"
@@ -209,15 +126,14 @@
             >
               {{ $t("cancel") }}
             </inertia-link>
-            <a-button
-              type="primary"
+            <button
+              type="button"
               class="btn-judo-primary"
-              @click="handleSubmit"
-              :loading="loading"
               :disabled="loading"
+              @click="handleSubmit"
             >
-              {{ isEditMode ? $t("update") : $t("add") }}
-            </a-button>
+              {{ loading ? "儲存中…" : isEditMode ? $t("update") : $t("add") }}
+            </button>
           </div>
         </a-form>
       </div>
@@ -227,20 +143,14 @@
 
 <script>
 import OrganizationLayout from "@/Layouts/OrganizationLayout.vue";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons-vue";
 import { defineComponent } from "vue";
+import dayjs from "dayjs";
 
 export default {
   components: {
     OrganizationLayout,
-    PlusOutlined,
-    DeleteOutlined,
   },
   props: {
-    memberTiers: {
-      type: Array,
-      required: true,
-    },
     member: {
       type: Object,
       default: null,
@@ -260,16 +170,9 @@ export default {
       dateFormat: "YYYY-MM-DD",
       form: this.getInitialForm(),
       rules: {
+        // 只有中文姓名必填，其餘欄位可留空（電郵填了仍會檢查格式）
         name_zh: { required: true, message: this.$t("name_zh_required") },
-        name_fn: { required: true, message: this.$t("name_fn_required") },
-        gender: { required: true, message: this.$t("gender_required") },
-        dob: { required: true, message: this.$t("dob_required") },
-        email: {
-          required: true,
-          type: "email",
-          message: this.$t("email_required"),
-        },
-        display_name: { required: true, message: this.$t("display_name_required") },
+        email: { type: "email", message: this.$t("is_not_valid_email") },
       },
       validateMessages: {
         required: "${label} " + this.$t("is_required"),
@@ -304,15 +207,52 @@ export default {
       ];
       return breadcrumb;
     },
+    daysLeft() {
+      if (!this.form.expired_at) {
+        return null;
+      }
+
+      return dayjs(this.form.expired_at)
+        .startOf("day")
+        .diff(dayjs().startOf("day"), "day");
+    },
+    expiryLabel() {
+      const days = this.daysLeft;
+
+      if (days === null) {
+        return "未設定期限";
+      }
+
+      if (days < 0) {
+        return `已過期 ${Math.abs(days)} 天`;
+      }
+
+      if (days === 0) {
+        return "今日到期";
+      }
+
+      return days <= 30 ? `${days} 天後到期` : "有效";
+    },
+    expiryClass() {
+      const days = this.daysLeft;
+
+      return {
+        "member-pill-red": days !== null && days < 0,
+        "member-pill-amber": days !== null && days >= 0 && days <= 30,
+        "member-pill-green": days !== null && days > 30,
+        "member-pill-gray": days === null,
+      };
+    },
   },
   methods: {
     getInitialForm() {
       if (this.member) {
-        return {
-          ...this.member,
-          tiers: this.member.tiers || [],
-        };
+        // 會員期限（valid_at / expired_at）由列表的「激活會員」處理，不在表單送出
+        const { tiers, current_tier, ...member } = this.member;
+
+        return { ...member };
       }
+
       return {
         name_zh: "",
         name_fn: "",
@@ -321,9 +261,9 @@ export default {
         dob: "",
         email: "",
         mobile: "",
+        nationality: "",
+        country: "",
         avatar_url: "",
-        current_tier: {},
-        tiers: [],
       };
     },
     handleSubmit() {
@@ -363,33 +303,6 @@ export default {
           this.loading = false;
         });
     },
-    addTier() {
-      if (!this.form.tiers) {
-        this.form.tiers = [];
-      }
-      this.form.tiers.unshift({
-        tier_code: null,
-        valid_at: null,
-        expired_at: null,
-      });
-    },
-    deleteMemberTier(tierIdx, tier) {
-      if (tier.id) {
-        // 如果有ID，表示是從數據庫獲取的，需要調用API刪除
-        axios
-          .delete(route("manage.member.tier.destroy", tier.id))
-          .then(() => {
-            this.form.tiers.splice(tierIdx, 1);
-            this.$message.success(this.$t("delete_success"));
-          })
-          .catch(() => {
-            this.$message.error(this.$t("delete_failed"));
-          });
-      } else {
-        // 如果沒有ID，表示是新增的，直接刪除本地數據
-        this.form.tiers.splice(tierIdx, 1);
-      }
-    },
   },
   watch: {
     member: {
@@ -401,3 +314,32 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.member-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  padding: 1px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.member-pill-red {
+  background-color: rgba(212, 56, 13, 0.12);
+  color: #c2410c;
+}
+.member-pill-amber {
+  background-color: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+.member-pill-green {
+  background-color: rgba(34, 164, 93, 0.12);
+  color: #1c8a4e;
+}
+.member-pill-gray {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+</style>

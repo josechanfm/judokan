@@ -2,8 +2,9 @@
 
 namespace App\Imports;
 
+use App\Models\AthleteSetting;
 use App\Models\Organization;
-use App\Models\TrainingCamp;
+use App\Models\TrainingRecord;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -16,16 +17,16 @@ use Maatwebsite\Excel\Validators\Failure;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 /**
- * 匯入集訓出席名單。
+ * 匯入每月運動員訓練記錄。
  *
- * 對應的範本：public/templates/training_camp_list.xlsx
+ * 對應的範本：public/templates/training_record_list.xlsx
  *  第 1 列 = 中文欄名（給人看）
  *  第 2 列 = 欄位代號（程式用，WithHeadingRow 讀這一列）
- *  第 3 列起 = 資料（一行 = 一位會員的出席記錄）
+ *  第 3 列起 = 資料（一行 = 一位運動員一個月）
  *
- * 同一日、同一名稱的列會歸入同一場集訓（以第一列的分數為準）。
+ * 匯入會覆蓋該月該運動員原有的四項次數；四項都是 0 時會刪除該筆記錄。
  */
-class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, SkipsOnFailure
+class TrainingRecordImport implements ToCollection, WithHeadingRow, WithStartRow, SkipsOnFailure
 {
     use Importable, SkipsFailures;
 
@@ -35,9 +36,6 @@ class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, 
     private Organization $organization;
 
     private int $imported = 0;
-
-    /** @var array<string, TrainingCamp> 本次檔案已建立的集訓 */
-    private array $camps = [];
 
     private ?Collection $members = null;
 
@@ -76,24 +74,29 @@ class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, 
 
             $errors = [];
 
-            $date = $this->parseDate($cells['camp_date'] ?? null);
-            $title = trim((string) ($cells['camp_title'] ?? ''));
-            $points = $this->parsePoints($cells['points'] ?? null, $errors);
+            $month = $this->parseMonth($cells['month'] ?? null);
             $member = $this->findMember(
                 $cells['member_number'] ?? null,
                 $cells['member_name'] ?? null,
                 $errors
             );
 
-            if ($date === null) {
-                $errors['camp_date'][] = '集訓日期格式不正確（請用 YYYY-MM-DD）';
+            if ($month === null) {
+                $errors['month'][] = '月份格式不正確（請用 YYYY-MM，例如 2026-11）';
             }
 
-            if ($title === '') {
-                $errors['camp_title'][] = '集訓名稱不能空白';
+            // 集訓記錄只接受集訓隊成員
+            if ($member !== null && ! $this->isTeamMember($member->id)) {
+                $errors['member_number'][] = '此會員不是集訓隊成員，請先到「運動員設定」加入';
             }
 
-            if ($errors !== [] || $date === null || $member === null) {
+            $counts = [];
+
+            foreach (TrainingRecord::POINT_FIELDS as $field) {
+                $counts[$field] = $this->parseCount($cells[$field] ?? null, $field, $errors);
+            }
+
+            if ($errors !== [] || $month === null || $member === null) {
                 foreach ($errors as $attribute => $messages) {
                     $this->onFailure(new Failure($rowNumber, $attribute, $messages));
                 }
@@ -103,27 +106,28 @@ class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, 
                 continue;
             }
 
-            $camp = $this->camp($date, $title, $points);
+            $where = [
+                'organization_id' => $this->organization->id,
+                'member_id' => $member->id,
+            ];
 
-            if ($camp->members()->where('members.id', $member->id)->exists()) {
-                $this->onFailure(new Failure(
-                    $rowNumber,
-                    'member_number',
-                    ['此會員已在此場集訓的出席名單內']
-                ));
+            $monthValue = $month->format('Y-m-d');
+
+            if (array_sum($counts) === 0) {
+                TrainingRecord::where($where)->whereDate('month', $monthValue)->delete();
             } else {
-                $camp->members()->attach($member->id);
-                $this->imported++;
+                TrainingRecord::updateOrCreate($where + ['month' => $monthValue], $counts);
             }
 
+            $this->imported++;
             $rowNumber++;
         }
     }
 
     /**
-     * 集訓日期可填 Excel 日期或 YYYY-MM-DD 文字。
+     * 月份可填 2026-11、2026-11-01 或 Excel 日期。
      */
-    private function parseDate(mixed $raw): ?Carbon
+    private function parseMonth(mixed $raw): ?Carbon
     {
         if ($raw === null || $raw === '') {
             return null;
@@ -131,26 +135,51 @@ class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, 
 
         try {
             if (is_numeric($raw)) {
-                return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $raw))->startOfDay();
+                return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $raw))->startOfMonth();
             }
 
-            return Carbon::parse((string) $raw)->startOfDay();
+            $value = trim((string) $raw);
+
+            // 2026-11 / 2026/11
+            if (preg_match('/^(\d{4})[-\/](\d{1,2})$/', $value, $matches)) {
+                $month = (int) $matches[2];
+
+                if ($month < 1 || $month > 12) {
+                    return null;
+                }
+
+                return Carbon::createFromDate((int) $matches[1], $month, 1)->startOfMonth();
+            }
+
+            // 2026-11-01 / 2026/11/01
+            if (preg_match('/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/', $value, $matches)) {
+                $month = (int) $matches[2];
+
+                if ($month < 1 || $month > 12) {
+                    return null;
+                }
+
+                return Carbon::createFromDate(
+                    (int) $matches[1],
+                    $month,
+                    (int) $matches[3]
+                )->startOfMonth();
+            }
+
+            return Carbon::parse($value)->startOfMonth();
         } catch (\Throwable) {
             return null;
         }
     }
 
-    /**
-     * 每次集訓的分數，空白視為 0 分。
-     */
-    private function parsePoints(mixed $raw, array &$errors): int
+    private function parseCount(mixed $raw, string $field, array &$errors): int
     {
         if ($raw === null || $raw === '') {
             return 0;
         }
 
         if (! is_numeric($raw) || (float) $raw < 0) {
-            $errors['points'][] = '分數必須是 0 或以上的數字';
+            $errors[$field][] = '必須是 0 或以上的數字';
 
             return 0;
         }
@@ -212,24 +241,6 @@ class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, 
         return null;
     }
 
-    private function camp(Carbon $date, string $title, int $points): TrainingCamp
-    {
-        $key = $date->format('Y-m-d').'|'.$title;
-
-        if (isset($this->camps[$key])) {
-            return $this->camps[$key];
-        }
-
-        return $this->camps[$key] = TrainingCamp::firstOrCreate(
-            [
-                'organization_id' => $this->organization->id,
-                'camp_date' => $date->format('Y-m-d'),
-                'title' => $title,
-            ],
-            ['points' => $points]
-        );
-    }
-
     private function members(): Collection
     {
         if ($this->members === null) {
@@ -237,6 +248,14 @@ class TrainingCampImport implements ToCollection, WithHeadingRow, WithStartRow, 
         }
 
         return $this->members;
+    }
+
+    private function isTeamMember(int $memberId): bool
+    {
+        return AthleteSetting::where('organization_id', $this->organization->id)
+            ->where('member_id', $memberId)
+            ->where('is_team_member', true)
+            ->exists();
     }
 
     private function isEmptyRow(array $cells): bool

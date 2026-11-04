@@ -18,32 +18,35 @@ use Maatwebsite\Excel\Validators\Failure;
 /**
  * 單一賽事的賽果匯入。
  *
- * 使用與 public/templates/result_list.xlsx 相同的欄位格式：
- * 第 1 列中文標題、第 2 列欄位代號、第 3 列起資料。
+ * 格式同 public/templates/competition_result_list.xlsx：
+ *  第 1 列中文欄名、第 2 列欄位代號（name / score / category / gender / weight）、第 3 列起資料。
  *
- * 成績可以填代號（first）或中文（第一名）；
- * 組別／量級／職位同樣可以用代號或名稱。
- * 找不到報名資料時會自動建立一筆報名（方便補登沒有報名紀錄的成績）。
+ * - 只需要填「姓名」同「分數」，年齡組別／性別／重量級別是用來新增報名同分辨同名選手。
+ * - 分數會自動對應積分表的名次；對不到名次時只更新分數，名次維持不變。
+ * - 本場比賽找不到這位選手的報名時，會自動新增一筆報名（俗稱補登成績）。
  */
 class CompetitionResultImport implements ToCollection, WithStartRow, WithHeadingRow, SkipsOnFailure
 {
     use Importable, SkipsFailures;
+
+    public const HEADING_ROW = 2;
+
+    public const START_ROW = 3;
 
     private Competition $competition;
 
     /** @var array 組別與量級設定 */
     private array $categories;
 
-    /** @var array 名次積分（first => 70 ...） */
-    private array $scores;
+    /** @var array 分數 => 名次代號（同分取較前的名次） */
+    private array $scoreToRank = [];
 
-    /** @var array 成績代號／名稱 => 代號 */
-    private array $rankMap = [];
-
-    /** @var array 職位代號／名稱 => 代號 */
-    private array $roleMap = [];
+    /** @var CompetitionApplication[] 本場比賽的報名（含本次新增的） */
+    private array $applications = [];
 
     private int $importedCount = 0;
+
+    private int $rankedCount = 0;
 
     private int $createdCount = 0;
 
@@ -57,43 +60,33 @@ class CompetitionResultImport implements ToCollection, WithStartRow, WithHeading
             $fallback = $this->decodeJson($competition->result_scores);
             $scores = is_array($fallback) ? $fallback : [];
         }
-        $this->scores = $scores;
 
         foreach ((array) (Config::item('competition_results') ?: []) as $option) {
             $option = (array) $option;
             $value = (string) ($option['value'] ?? '');
-            $label = (string) ($option['label'] ?? '');
-            if ($value === '') {
+
+            if ($value === '' || ! isset($scores[$value]) || ! is_numeric($scores[$value])) {
                 continue;
             }
-            $this->rankMap[$value] = $value;
-            if ($label !== '') {
-                $this->rankMap[$label] = $value;
+
+            $score = (int) round((float) $scores[$value]);
+
+            if (! isset($this->scoreToRank[$score])) {
+                $this->scoreToRank[$score] = $value;
             }
         }
 
-        foreach ($this->decodeJson($competition->roles) ?: [] as $role) {
-            $role = (array) $role;
-            $value = (string) ($role['value'] ?? '');
-            $label = (string) ($role['label'] ?? '');
-            if ($value === '') {
-                continue;
-            }
-            $this->roleMap[$value] = $value;
-            if ($label !== '') {
-                $this->roleMap[$label] = $value;
-            }
-        }
-    }
-
-    public function startRow(): int
-    {
-        return 3;
+        $this->applications = $competition->applications()->get()->all();
     }
 
     public function headingRow(): int
     {
-        return 2;
+        return self::HEADING_ROW;
+    }
+
+    public function startRow(): int
+    {
+        return self::START_ROW;
     }
 
     public function importedCount(): int
@@ -101,6 +94,13 @@ class CompetitionResultImport implements ToCollection, WithStartRow, WithHeading
         return $this->importedCount;
     }
 
+    /** 成功對應到名次的筆數 */
+    public function rankedCount(): int
+    {
+        return $this->rankedCount;
+    }
+
+    /** 本次自動新增的報名筆數 */
     public function createdCount(): int
     {
         return $this->createdCount;
@@ -108,231 +108,370 @@ class CompetitionResultImport implements ToCollection, WithStartRow, WithHeading
 
     public function collection(Collection $rows): void
     {
-        $rowNumber = $this->startRow() - 1;
+        $rowNumber = self::START_ROW - 1;
 
         foreach ($rows as $row) {
             $rowNumber++;
 
-            $values = collect($row)->map(function ($value) {
+            $cells = collect($row)->map(function ($value) {
                 return is_string($value) ? trim($value) : $value;
             });
 
-            if ($values->filter(fn ($value) => $value !== null && $value !== '')->isEmpty()) {
+            if ($cells->filter(fn ($value) => $value !== null && $value !== '')->isEmpty()) {
                 continue;
             }
 
-            $fail = function (string $attribute, string $message) use ($rowNumber, $row) {
-                $this->onFailure(new Failure($rowNumber, $attribute, [$message], $row->toArray()));
-            };
+            $name = $this->normalizeName($cells['name'] ?? $cells['name_zh'] ?? '');
+            $scoreInput = $cells['score'] ?? null;
+            $categoryText = trim((string) ($cells['category'] ?? ''));
+            $genderText = trim((string) ($cells['gender'] ?? ''));
+            $weightText = trim((string) ($cells['weight'] ?? ''));
 
-            $nameZh = (string) ($values['name_zh'] ?? '');
-            $nameFn = (string) ($values['name_fn'] ?? '');
-            $idNum = (string) ($values['id_num'] ?? '');
-            $resultText = (string) ($values['result'] ?? '');
-            $scoreInput = $values['score'] ?? null;
-
-            if ($nameZh === '' && $nameFn === '' && $idNum === '') {
-                $fail('name_zh', '中文名、外文名、證件號碼至少要填一個');
+            if ($name === '') {
+                $this->addFailure($rowNumber, $row, 'name', '姓名不能空白');
 
                 continue;
             }
 
-            if ($resultText === '') {
-                $fail('result', '成績不可為空');
+            if ($scoreInput === null || $scoreInput === '') {
+                // 匯出檔會包含沒有成績的報名，留空即代表這次不匯入這一行
+                continue;
+            }
+
+            if (! is_numeric($scoreInput) || (float) $scoreInput < 0) {
+                $this->addFailure($rowNumber, $row, 'score', '分數必須是 0 或以上的數字');
 
                 continue;
             }
 
-            $rank = $this->resolveRank($resultText);
-            if (! $rank) {
-                $fail(
-                    'result',
-                    "成績「{$resultText}」無法辨識，可用：".implode('、', array_keys($this->rankMap))
+            $score = (int) round((float) $scoreInput);
+            $categoryCode = $categoryText === '' ? null : $this->resolveCategoryCode($categoryText);
+            $genderCode = $genderText === '' ? null : $this->resolveGender($genderText);
+
+            $byName = array_values(array_filter(
+                $this->applications,
+                fn (CompetitionApplication $application) => $this->nameMatches($application, $name)
+            ));
+
+            if ($byName === []) {
+                $application = $this->createApplication(
+                    $rowNumber,
+                    $row,
+                    $name,
+                    $categoryText,
+                    $categoryCode,
+                    $genderText,
+                    $genderCode,
+                    $weightText
                 );
 
-                continue;
-            }
-
-            $categoryCode = $this->resolveCategory($values['category'] ?? null);
-            $weightCode = $this->resolveWeight($categoryCode, $values['weight'] ?? null);
-            $role = $this->roleMap[(string) ($values['role'] ?? '')] ?? null;
-
-            $application = $this->findApplication($idNum, $nameZh, $nameFn, $categoryCode, $weightCode);
-
-            if ($application === false) {
-                $fail(
-                    'weight',
-                    '此選手在這場比賽有多筆報名，且組別／量級對不上，請確認後再匯入'
-                );
-
-                continue;
-            }
-
-            if (! $application) {
-                $application = new CompetitionApplication([
-                    'competition_id' => $this->competition->id,
-                    'organization_id' => $this->competition->organization_id,
-                ]);
-                $application->role = $role ?: 'athlete';
-                $application->name_zh = $nameZh ?: null;
-                $application->name_fn = $nameFn ?: null;
-                $application->display_name = $nameZh ?: ($nameFn ?: null);
-                $application->id_num = $idNum ?: null;
-                $application->category = $categoryCode;
-                $application->weight = $weightCode;
-                $application->accepted = true;
-                $this->createdCount++;
+                if ($application === null) {
+                    continue;
+                }
             } else {
-                // 只補上原本空白的欄位，不覆蓋既有報名資料
-                $application->name_zh = $application->name_zh ?: ($nameZh ?: null);
-                $application->name_fn = $application->name_fn ?: ($nameFn ?: null);
-                $application->display_name = $application->display_name
-                    ?: ($nameZh ?: ($nameFn ?: null));
-                $application->id_num = $application->id_num ?: ($idNum ?: null);
-                $application->category = $application->category ?: $categoryCode;
-                $application->weight = $application->weight ?: $weightCode;
+                $matched = array_values(array_filter(
+                    $byName,
+                    fn (CompetitionApplication $application) => $this->attributeMatches(
+                        $application,
+                        $categoryText,
+                        $categoryCode,
+                        $genderCode,
+                        $weightText
+                    )
+                ));
+
+                if ($matched === []) {
+                    $this->addFailure(
+                        $rowNumber,
+                        $row,
+                        'name',
+                        "「{$name}」的報名資料與填寫的年齡組別／性別／重量級別不符"
+                    );
+
+                    continue;
+                }
+
+                if (count($matched) > 1) {
+                    $this->addFailure(
+                        $rowNumber,
+                        $row,
+                        'name',
+                        "「{$name}」在本場比賽有 ".count($matched).' 筆報名，請填寫年齡組別／性別／重量級別分辨'
+                    );
+
+                    continue;
+                }
+
+                $application = $matched[0];
             }
 
-            $application->result_rank = $rank;
-            $application->result_score = is_numeric($scoreInput)
-                ? (int) $scoreInput
-                : ($this->scores[$rank] ?? null);
-            $application->save();
+            $application->result_score = $score;
 
+            $rank = $this->scoreToRank[$score] ?? null;
+
+            // 分數對不到積分表的名次時只更新分數，不覆蓋原本的名次
+            if ($rank !== null) {
+                $application->result_rank = $rank;
+                $this->rankedCount++;
+            }
+
+            $application->save();
             $this->importedCount++;
         }
 
-        // 匯入後把報名資料的組別／量級／性別對齊賽事設定，
-        // 這樣賽果頁重新整理後就能選到這些運動員
-        if ($this->importedCount > 0) {
+        // 賽事本身沒有組別設定時，用剛新增的報名補回組別／量級設定
+        if ($this->createdCount > 0 && $this->categories === []) {
             (new CompetitionCategoryNormalizer())->normalize($this->competition);
         }
     }
 
-    private function resolveRank(string $text): ?string
-    {
-        $text = trim($text);
-        if ($text === '') {
+    /**
+     * 新增一筆報名。驗證不通過時回傳 null（已記錄錯誤）。
+     */
+    private function createApplication(
+        int $rowNumber,
+        $row,
+        string $name,
+        string $categoryText,
+        ?string $categoryCode,
+        string $genderText,
+        ?string $genderCode,
+        string $weightText
+    ): ?CompetitionApplication {
+        $hasSettings = $this->categories !== [];
+
+        if ($categoryText === '') {
+            $this->addFailure($rowNumber, $row, 'category', '本場比賽沒有這位選手的報名，請填寫年齡組別以新增報名');
+
             return null;
         }
 
-        if (isset($this->rankMap[$text])) {
-            return $this->rankMap[$text];
+        if ($hasSettings && $categoryCode === null) {
+            $this->addFailure($rowNumber, $row, 'category', "組別「{$categoryText}」不在這場賽事的設定中");
+
+            return null;
         }
 
-        $lower = mb_strtolower($text);
+        if ($genderText === '') {
+            $this->addFailure($rowNumber, $row, 'gender', '本場比賽沒有這位選手的報名，請填寫性別以新增報名');
 
-        return $this->rankMap[$lower] ?? null;
+            return null;
+        }
+
+        if ($genderCode === null) {
+            $this->addFailure($rowNumber, $row, 'gender', "性別「{$genderText}」無法辨識，請填 男／女／混合（或 M／F／X）");
+
+            return null;
+        }
+
+        if ($weightText === '') {
+            $this->addFailure($rowNumber, $row, 'weight', '本場比賽沒有這位選手的報名，請填寫重量級別以新增報名');
+
+            return null;
+        }
+
+        $weightCode = $hasSettings
+            ? $this->resolveWeightCode($categoryCode, $genderCode, $weightText)
+            : $weightText;
+
+        if ($hasSettings && $weightCode === null) {
+            $this->addFailure($rowNumber, $row, 'weight', "量級「{$weightText}」不在這場賽事的設定中");
+
+            return null;
+        }
+
+        $application = new CompetitionApplication([
+            'competition_id' => $this->competition->id,
+            'organization_id' => $this->competition->organization_id,
+        ]);
+
+        $isChinese = (bool) preg_match('/\p{Han}/u', $name);
+
+        $application->role = 'athlete';
+        $application->name_zh = $isChinese ? $name : null;
+        $application->name_fn = $isChinese ? null : $name;
+        $application->display_name = $name;
+        $application->category = $hasSettings ? $categoryCode : $categoryText;
+        $application->gender = $genderCode;
+        $application->weight = $hasSettings ? $weightCode : $weightText;
+        $application->accepted = true;
+
+        $this->createdCount++;
+        $this->applications[] = $application;
+
+        return $application;
     }
 
-    private function resolveCategory($text): ?string
+    private function nameMatches(CompetitionApplication $application, string $name): bool
     {
-        $text = trim((string) $text);
-        if ($text === '') {
-            return null;
+        foreach ([$application->name_zh, $application->name_fn, $application->display_name] as $value) {
+            if ($value !== null && $this->normalizeName($value) === $name) {
+                return true;
+            }
         }
 
+        return false;
+    }
+
+    private function attributeMatches(
+        CompetitionApplication $application,
+        string $categoryText,
+        ?string $categoryCode,
+        ?string $genderCode,
+        string $weightText
+    ): bool {
+        if ($categoryText !== '') {
+            $matched = ($categoryCode !== null && (string) $application->category === $categoryCode)
+                || (string) $application->category === $categoryText
+                || $this->categoryNameOf($application->category) === $categoryText;
+
+            if (! $matched) {
+                return false;
+            }
+        }
+
+        if ($genderCode !== null && (string) $application->gender !== $genderCode) {
+            return false;
+        }
+
+        if ($weightText !== '' && ! $this->weightMatches($application, $weightText)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function weightMatches(CompetitionApplication $application, string $text): bool
+    {
+        if ((string) $application->weight === $text) {
+            return true;
+        }
+
+        $code = $this->resolveWeightCode(
+            (string) $application->category,
+            (string) $application->gender,
+            $text
+        );
+
+        return $code !== null && (string) $application->weight === (string) $code;
+    }
+
+    private function resolveCategoryCode(string $text): ?string
+    {
         foreach ($this->categories as $category) {
             $category = (array) $category;
-            if ((string) ($category['code'] ?? '') === $text) {
-                return $text;
+            $code = (string) ($category['code'] ?? '');
+
+            if ($code === '') {
+                continue;
             }
+
+            if ($code === $text || mb_strtoupper($code) === mb_strtoupper($text)) {
+                return $code;
+            }
+
             if (trim((string) ($category['name'] ?? '')) === $text) {
-                return (string) $category['code'];
+                return $code;
             }
         }
 
-        return $text;
+        return null;
     }
 
-    private function resolveWeight(?string $categoryCode, $text): ?string
+    private function categoryNameOf($code): string
     {
-        $text = trim((string) $text);
-        if ($text === '') {
-            return null;
+        foreach ($this->categories as $category) {
+            $category = (array) $category;
+
+            if ((string) ($category['code'] ?? '') === (string) $code) {
+                return trim((string) ($category['name'] ?? ''));
+            }
         }
 
+        return '';
+    }
+
+    /**
+     * 量級可以填代號（60-）或名稱（-60kg）；只在指定的組別＋性別清單裡找。
+     */
+    private function resolveWeightCode(?string $categoryCode, ?string $genderCode, string $text): ?string
+    {
         $category = null;
+
         foreach ($this->categories as $item) {
             $item = (array) $item;
-            if ($categoryCode !== null && (string) ($item['code'] ?? '') === $categoryCode) {
+
+            if ($categoryCode === null || (string) ($item['code'] ?? '') === (string) $categoryCode) {
                 $category = $item;
+
                 break;
             }
         }
 
-        if (! $category) {
-            return $text;
-        }
+        $lists = match ($genderCode) {
+            'F' => ['female', 'mixed', 'male'],
+            'X' => ['mixed', 'male', 'female'],
+            default => ['male', 'mixed', 'female'],
+        };
 
-        foreach (['male', 'female'] as $genderKey) {
-            foreach ((array) ($category[$genderKey] ?? []) as $weight) {
-                $weight = (array) $weight;
-                if ((string) ($weight['code'] ?? '') === $text) {
-                    return $text;
+        $search = function (array $category) use ($lists, $text): ?string {
+            foreach ($lists as $gender) {
+                foreach ((array) ($category[$gender] ?? []) as $weight) {
+                    $weight = (array) $weight;
+                    $code = (string) ($weight['code'] ?? '');
+
+                    if ($code === '') {
+                        continue;
+                    }
+
+                    if ($code === $text || trim((string) ($weight['name'] ?? '')) === $text) {
+                        return $code;
+                    }
                 }
-                if (trim((string) ($weight['name'] ?? '')) === $text) {
-                    return (string) $weight['code'];
-                }
+            }
+
+            return null;
+        };
+
+        if ($category) {
+            $code = $search($category);
+
+            if ($code !== null) {
+                return $code;
             }
         }
 
-        return $text;
+        // 找不到指定組別的清單時，再找其他組別
+        foreach ($this->categories as $item) {
+            $code = $search((array) $item);
+
+            if ($code !== null) {
+                return $code;
+            }
+        }
+
+        return null;
     }
 
-    /**
-     * 在本賽事的報名資料中找出對應選手。
-     *
-     * 回傳：
-     * - CompetitionApplication：找到對應報名
-     * - null：找不到報名（由上層自動新增）
-     * - false：有多筆報名但組別／量級對不上（避免寫到錯的量級）
-     */
-    private function findApplication(
-        string $idNum,
-        string $nameZh,
-        string $nameFn,
-        ?string $category,
-        ?string $weight
-    ) {
-        $query = CompetitionApplication::where('competition_id', $this->competition->id);
+    private function resolveGender(string $text): ?string
+    {
+        $map = [
+            '男' => 'M', '男子' => 'M', '男性' => 'M', 'm' => 'M', 'male' => 'M', 'men' => 'M',
+            '女' => 'F', '女子' => 'F', '女性' => 'F', 'f' => 'F', 'female' => 'F', 'women' => 'F',
+            '混合' => 'X', '男女混合' => 'X', 'x' => 'X', 'mixed' => 'X',
+        ];
 
-        if ($idNum !== '') {
-            $candidates = (clone $query)->where('id_num', $idNum)->get();
-        } elseif ($nameZh !== '') {
-            $candidates = (clone $query)->where('name_zh', $nameZh)->get();
-        } elseif ($nameFn !== '') {
-            $candidates = (clone $query)->where('name_fn', $nameFn)->get();
-        } else {
-            return null;
-        }
+        return $map[mb_strtolower(trim($text))] ?? null;
+    }
 
-        if ($candidates->isEmpty()) {
-            return null;
-        }
+    private function normalizeName($value): string
+    {
+        return mb_strtolower(preg_replace('/\s+/u', ' ', trim((string) $value)));
+    }
 
-        // 同一人報名多個量級時，用組別／量級挑出正確那一筆
-        $matched = $candidates->first(function ($application) use ($category, $weight) {
-            if ($category && (string) $application->category !== $category) {
-                return false;
-            }
-            if ($weight && (string) $application->weight !== $weight) {
-                return false;
-            }
-
-            return true;
-        });
-
-        if ($matched) {
-            return $matched;
-        }
-
-        // 有指定組別／量級但完全對不上：多筆報名時不猜測，直接回報錯誤
-        if ($candidates->count() > 1 && ($category || $weight)) {
-            return false;
-        }
-
-        return $candidates->first();
+    private function addFailure(int $rowNumber, $row, string $attribute, string $message): void
+    {
+        $this->onFailure(new Failure($rowNumber, $attribute, [$message], (array) $row));
     }
 
     private function decodeJson($value)
