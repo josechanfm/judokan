@@ -149,6 +149,8 @@ Route::group([
     Route::get('send/applicationMail', [\App\Http\Controllers\Organization\SendMailController::class, 'sendApplicationMailWithAttachment']);
     Route::resource('members', \App\Http\Controllers\Organization\MemberController::class)->names('manage.members');
     Route::post('member/create/login/{member}', [\App\Http\Controllers\Organization\MemberController::class, 'createLogin'])->name('manage.member.createLogin');
+    Route::post('member/admin', [\App\Http\Controllers\Organization\MemberController::class, 'storeAdmin'])->name('manage.member.admin.store');
+    Route::delete('member/admin/{user}', [\App\Http\Controllers\Organization\MemberController::class, 'destroyAdmin'])->name('manage.member.admin.destroy');
     Route::post('member/{member}/activate', [\App\Http\Controllers\Organization\MemberController::class, 'activate'])->name('manage.member.activate');
     Route::delete('member/tier/{tier}', [\App\Http\Controllers\Organization\MemberController::class, 'destroyTier'])->name('manage.member.tier.destroy');
     Route::get('member/points', [\App\Http\Controllers\Organization\MemberPointController::class, 'index'])->name('manage.member.points');

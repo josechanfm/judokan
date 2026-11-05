@@ -114,6 +114,7 @@ const logout = () => {
 
                         <!-- Team Settings -->
                         <DropdownLink
+                          v-if="$page.props.user.current_team"
                           :href="route('teams.show', $page.props.user.current_team)"
                         >
                           Team Settings
@@ -337,6 +338,7 @@ const logout = () => {
 
                 <!-- Team Settings -->
                 <ResponsiveNavLink
+                  v-if="$page.props.user.current_team"
                   :href="route('teams.show', $page.props.user.current_team)"
                   :active="route().current('teams.show')"
                 >

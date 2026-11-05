@@ -1,5 +1,19 @@
 <template>
   <OrganizationLayout :title="$t('members')" :breadcrumb="breadcrumb">
+    <!-- 分頁：會員名單 / 管理員 -->
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <a-radio-group v-model:value="activeTab" button-style="solid">
+        <a-radio-button value="members">{{ $t("members") }}</a-radio-button>
+        <a-radio-button value="admins">
+          {{ $t("organization_admins") }}
+        </a-radio-button>
+      </a-radio-group>
+      <span class="text-xs text-gray-400">
+        {{ activeTab === "members" ? `${filteredMembers.length} 位會員` : `${admins.length} 位管理員` }}
+      </span>
+    </div>
+
+    <template v-if="activeTab === 'members'">
     <!-- 工具列：統計 + 操作按鈕 -->
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <p class="m-0 text-sm text-gray-500">
@@ -156,10 +170,10 @@
                   <a-button
                     type="link"
                     size="small"
-                    :disabled="record.user != null || !record.email"
-                    @click="createLogin(record.id)"
+                    :disabled="!record.email"
+                    @click="openLoginModal(record)"
                   >
-                    {{ $t("create_login") }}
+                    {{ record.user ? $t("reset_password") : $t("create_login") }}
                   </a-button>
                 </a-tooltip>
               </div>
@@ -203,6 +217,81 @@
         </a-table>
       </div>
     </div>
+    </template>
+
+    <!-- 管理員分頁 -->
+    <template v-else>
+      <div class="card-judo p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="min-w-0">
+            <h2 class="m-0 text-xl font-bold text-gray-800">
+              {{ $t("organization_admins") }}
+            </h2>
+            <p class="m-0 mt-2 text-sm text-gray-500">
+              {{ $t("admin_hint") }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-judo-primary"
+            :disabled="adminCandidates.length === 0"
+            @click="openGrantAdmin"
+          >
+            <PlusOutlined />
+            {{ $t("add_admin") }}
+          </button>
+        </div>
+        <p v-if="adminCandidates.length === 0" class="m-0 mt-3 text-xs text-gray-400">
+          {{ $t("admin_no_candidate") }}
+        </p>
+      </div>
+
+      <div class="card-judo mt-4">
+        <div class="overflow-x-auto">
+          <a-table
+            :dataSource="admins"
+            :columns="adminColumns"
+            :pagination="false"
+            row-key="user_id"
+          >
+            <template #headerCell="{ column }">
+              {{ column.i18n ? $t(column.i18n) : column.title }}
+            </template>
+            <template #emptyText>
+              <div class="py-10 text-center text-sm text-gray-400">
+                {{ $t("admin_no_member") }}
+              </div>
+            </template>
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.dataIndex == 'admin_operation'">
+                <a-tooltip
+                  :title="record.is_self ? $t('admin_cannot_remove_self') : ''"
+                >
+                  <a-button
+                    type="link"
+                    size="small"
+                    danger
+                    :disabled="record.is_self"
+                    @click="openRevokeAdmin(record)"
+                  >
+                    {{ $t("remove_admin") }}
+                  </a-button>
+                </a-tooltip>
+              </template>
+              <template v-else-if="column.dataIndex == 'is_me'">
+                <span v-if="record.is_self" class="member-pill member-pill-blue">
+                  我
+                </span>
+                <span v-else class="text-gray-300">—</span>
+              </template>
+              <template v-else>
+                {{ record[column.dataIndex] ?? "—" }}
+              </template>
+            </template>
+          </a-table>
+        </div>
+      </div>
+    </template>
 
     <!-- 激活／續期會員 -->
     <a-modal
@@ -308,6 +397,179 @@
         </div>
       </template>
     </a-modal>
+
+    <!-- 建立帳號 / 重設密碼 -->
+    <a-modal
+      v-model:open="loginModal.visible"
+      :title="loginModal.member && loginModal.member.user ? $t('reset_password') : $t('create_login')"
+      :width="520"
+      @cancel="closeLoginModal"
+    >
+      <div v-if="loginModal.member" class="space-y-4">
+        <div class="rounded-lg bg-slate-50 px-3 py-2">
+          <p class="m-0 text-sm font-semibold text-gray-800">
+            {{ loginModal.member.display_name || loginModal.member.name_zh }}
+          </p>
+          <p class="m-0 mt-0.5 text-xs text-gray-500">
+            {{ loginModal.member.email }}
+          </p>
+        </div>
+
+        <template v-if="!loginModal.member.user">
+          <a-radio-group v-model:value="loginModal.mode" class="flex flex-col gap-2">
+            <a-radio value="email">{{ $t("create_login_by_email") }}</a-radio>
+            <a-radio value="password">{{ $t("create_login_by_password") }}</a-radio>
+          </a-radio-group>
+          <p class="m-0 text-xs text-gray-500">
+            {{
+              loginModal.mode === "email"
+                ? $t("create_login_by_email_hint")
+                : $t("create_login_by_password_hint")
+            }}
+          </p>
+        </template>
+
+        <template v-if="loginModal.mode === 'password'">
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">
+              {{ $t("password") }}
+            </label>
+            <a-input-password
+              v-model:value="loginModal.password"
+              :placeholder="$t('password_min_hint')"
+              autocomplete="new-password"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs text-gray-500">
+              {{ $t("confirm_password") }}
+            </label>
+            <a-input-password
+              v-model:value="loginModal.password_confirmation"
+              :placeholder="$t('confirm_password')"
+              autocomplete="new-password"
+            />
+          </div>
+        </template>
+      </div>
+
+      <template #footer>
+        <button type="button" class="btn-judo-outline" @click="closeLoginModal">
+          {{ $t("cancel") }}
+        </button>
+        <button
+          type="button"
+          class="btn-judo-primary"
+          :disabled="loginModal.loading"
+          @click="confirmLogin"
+        >
+          {{ loginModal.member && loginModal.member.user ? $t("reset_password") : $t("create_login") }}
+        </button>
+      </template>
+    </a-modal>
+
+    <!-- 新增管理員 -->
+    <a-modal
+      v-model:open="grantModal.visible"
+      :title="$t('add_admin')"
+      :width="520"
+      @cancel="closeGrantModal"
+    >
+      <div class="space-y-4">
+        <div>
+          <label class="mb-1 block text-xs text-gray-500">
+            {{ $t("select_member") }}
+          </label>
+          <a-select
+            v-model:value="grantModal.member_id"
+            :options="adminCandidateOptions"
+            show-search
+            allow-clear
+            :filter-option="filterCandidate"
+            :placeholder="$t('select_member_placeholder')"
+            style="width: 100%"
+          />
+          <p class="m-0 mt-1 text-xs text-gray-400">
+            {{ $t("admin_only_with_account") }}
+          </p>
+        </div>
+
+        <div class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          {{ $t("confirm_your_password") }}
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs text-gray-500">
+            {{ $t("password") }}
+          </label>
+          <a-input-password
+            v-model:value="grantModal.password"
+            :placeholder="$t('password')"
+            autocomplete="current-password"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <button type="button" class="btn-judo-outline" @click="closeGrantModal">
+          {{ $t("cancel") }}
+        </button>
+        <button
+          type="button"
+          class="btn-judo-primary"
+          :disabled="grantModal.loading"
+          @click="confirmGrantAdmin"
+        >
+          {{ $t("add_admin") }}
+        </button>
+      </template>
+    </a-modal>
+
+    <!-- 移除管理員 -->
+    <a-modal
+      v-model:open="revokeModal.visible"
+      :title="$t('remove_admin')"
+      :width="480"
+      @cancel="closeRevokeModal"
+    >
+      <div class="space-y-4">
+        <div class="rounded-lg bg-slate-50 px-3 py-2">
+          <p class="m-0 text-sm font-semibold text-gray-800">
+            {{ revokeModal.admin ? revokeModal.admin.name : "" }}
+          </p>
+          <p class="m-0 mt-0.5 text-xs text-gray-500">
+            {{ revokeModal.admin ? revokeModal.admin.email : "" }}
+          </p>
+        </div>
+        <p class="m-0 text-xs text-gray-500">
+          {{ $t("remove_admin_hint") }}
+        </p>
+        <div>
+          <label class="mb-1 block text-xs text-gray-500">
+            {{ $t("password") }}
+          </label>
+          <a-input-password
+            v-model:value="revokeModal.password"
+            :placeholder="$t('confirm_your_password')"
+            autocomplete="current-password"
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <button type="button" class="btn-judo-outline" @click="closeRevokeModal">
+          {{ $t("cancel") }}
+        </button>
+        <button
+          type="button"
+          class="btn-judo-primary"
+          :disabled="revokeModal.loading"
+          @click="confirmRevokeAdmin"
+        >
+          {{ $t("remove_admin") }}
+        </button>
+      </template>
+    </a-modal>
   </OrganizationLayout>
 </template>
 
@@ -334,9 +596,37 @@ export default {
     UploadOutlined,
     WarningOutlined,
   },
-  props: ["members", "organization"],
+  props: ["members", "organization", "admins", "adminCandidates"],
   data() {
     return {
+      activeTab: "members",
+      adminColumns: [
+        { title: "name_zh", dataIndex: "name", i18n: "name_zh", width: 180 },
+        { title: "email", dataIndex: "email", i18n: "email", width: 240 },
+        { title: "member_number", dataIndex: "member_number", i18n: "member_number", width: 130 },
+        { title: "is_me", dataIndex: "is_me", width: 90 },
+        { title: "operation", dataIndex: "admin_operation", i18n: "operation", width: 120 },
+      ],
+      loginModal: {
+        visible: false,
+        loading: false,
+        member: null,
+        mode: "email",
+        password: "",
+        password_confirmation: "",
+      },
+      grantModal: {
+        visible: false,
+        loading: false,
+        member_id: null,
+        password: "",
+      },
+      revokeModal: {
+        visible: false,
+        loading: false,
+        admin: null,
+        password: "",
+      },
       breadcrumb: [
         {
           label: this.$t("home"),
@@ -420,6 +710,14 @@ export default {
     };
   },
   computed: {
+    adminCandidateOptions() {
+      return (this.adminCandidates || []).map((member) => ({
+        value: member.id,
+        label: `${member.name}${member.email ? "（" + member.email + "）" : ""}`,
+        name: member.name,
+        email: member.email,
+      }));
+    },
     genderOptions() {
       return [
         { value: "M", label: this.$t("male") },
@@ -607,31 +905,171 @@ export default {
         },
       });
     },
-    createLogin(recordId) {
-      PopupModal.confirm({
-        title: this.$t("create_login_confirm"),
-        content: this.$t("create_login_content"),
-        okText: this.$t("yes"),
-        cancelText: this.$t("no"),
-        onOk: () => {
-          axios
-            .post(route("manage.member.createLogin", recordId))
-            .then((response) => {
-              if (response.data.result === false) {
-                PopupModal.warning({
-                  title: this.$t("create_login"),
-                  content: response.data.message,
-                });
-              } else {
-                this.$message.success(this.$t("create_login_success"));
-              }
-            })
-            .catch((error) => {
-              console.error(error);
-              this.$message.error(this.$t("create_login_failed"));
-            });
-        },
-      });
+    // ---------- 建立帳號 / 重設密碼 ----------
+    openLoginModal(record) {
+      this.loginModal.member = record;
+      this.loginModal.mode = record.user ? "password" : "email";
+      this.loginModal.password = "";
+      this.loginModal.password_confirmation = "";
+      this.loginModal.loading = false;
+      this.loginModal.visible = true;
+    },
+    closeLoginModal() {
+      this.loginModal.visible = false;
+      this.loginModal.member = null;
+      this.loginModal.password = "";
+      this.loginModal.password_confirmation = "";
+      this.loginModal.loading = false;
+    },
+    confirmLogin() {
+      const member = this.loginModal.member;
+
+      if (!member) {
+        return;
+      }
+
+      if (this.loginModal.mode === "password") {
+        if (!this.loginModal.password || this.loginModal.password.length < 8) {
+          this.$message.error(this.$t("password_min_hint"));
+          return;
+        }
+
+        if (this.loginModal.password !== this.loginModal.password_confirmation) {
+          this.$message.error(this.$t("password_mismatch"));
+          return;
+        }
+      }
+
+      this.loginModal.loading = true;
+
+      window.axios
+        .post(route("manage.member.createLogin", member.id), {
+          mode: this.loginModal.mode,
+          password: this.loginModal.password || null,
+          password_confirmation: this.loginModal.password_confirmation || null,
+        })
+        .then(({ data }) => {
+          this.loginModal.loading = false;
+
+          if (data.result === false) {
+            this.$message.error(data.message || this.$t("create_login_failed"));
+            return;
+          }
+
+          this.$message.success(data.message || this.$t("create_login_success"));
+          this.closeLoginModal();
+          this.$inertia.reload({ preserveState: true });
+        })
+        .catch((error) => {
+          this.loginModal.loading = false;
+          const errors = error?.response?.data?.errors;
+          this.$message.error(
+            errors
+              ? Object.values(errors)[0][0]
+              : error?.response?.data?.message || this.$t("create_login_failed")
+          );
+        });
+    },
+
+    // ---------- 管理員權限 ----------
+    filterCandidate(input, option) {
+      const keyword = String(input || "").toLowerCase();
+
+      return (
+        String(option.name || "").toLowerCase().includes(keyword) ||
+        String(option.email || "").toLowerCase().includes(keyword)
+      );
+    },
+    openGrantAdmin() {
+      this.grantModal.member_id = null;
+      this.grantModal.password = "";
+      this.grantModal.loading = false;
+      this.grantModal.visible = true;
+    },
+    closeGrantModal() {
+      this.grantModal.visible = false;
+      this.grantModal.password = "";
+      this.grantModal.loading = false;
+    },
+    confirmGrantAdmin() {
+      if (!this.grantModal.member_id) {
+        this.$message.warning(this.$t("select_member"));
+        return;
+      }
+
+      if (!this.grantModal.password) {
+        this.$message.warning(this.$t("confirm_your_password"));
+        return;
+      }
+
+      this.grantModal.loading = true;
+
+      window.axios
+        .post(route("manage.member.admin.store"), {
+          member_id: this.grantModal.member_id,
+          password: this.grantModal.password,
+        })
+        .then(({ data }) => {
+          this.grantModal.loading = false;
+          this.$message.success(data.message || this.$t("admin_granted"));
+          this.closeGrantModal();
+          this.$inertia.reload({ preserveState: true });
+        })
+        .catch((error) => {
+          this.grantModal.loading = false;
+          const errors = error?.response?.data?.errors;
+          this.$message.error(
+            errors
+              ? Object.values(errors)[0][0]
+              : error?.response?.data?.message || this.$t("admin_grant_failed")
+          );
+        });
+    },
+    openRevokeAdmin(admin) {
+      this.revokeModal.admin = admin;
+      this.revokeModal.password = "";
+      this.revokeModal.loading = false;
+      this.revokeModal.visible = true;
+    },
+    closeRevokeModal() {
+      this.revokeModal.visible = false;
+      this.revokeModal.admin = null;
+      this.revokeModal.password = "";
+      this.revokeModal.loading = false;
+    },
+    confirmRevokeAdmin() {
+      const admin = this.revokeModal.admin;
+
+      if (!admin) {
+        return;
+      }
+
+      if (!this.revokeModal.password) {
+        this.$message.warning(this.$t("confirm_your_password"));
+        return;
+      }
+
+      this.revokeModal.loading = true;
+
+      window.axios
+        .delete(route("manage.member.admin.destroy", admin.user_id), {
+          data: { password: this.revokeModal.password },
+        })
+        .then(({ data }) => {
+          this.revokeModal.loading = false;
+          this.$message.success(data.message || this.$t("admin_removed"));
+          this.closeRevokeModal();
+          this.$inertia.reload({ preserveState: true });
+        })
+        .catch((error) => {
+          this.revokeModal.loading = false;
+          const errors = error?.response?.data?.errors;
+          this.$message.error(
+            errors
+              ? Object.values(errors)[0][0]
+              : error?.response?.data?.message || this.$t("admin_remove_failed")
+          );
+        });
     },
     // 會員級別代號 → 級別名稱（例：TEAM_A → 代表隊A）
     // 沒有頭像時用姓名第一個字當預設頭像

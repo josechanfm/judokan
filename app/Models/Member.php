@@ -59,15 +59,27 @@ class Member extends Model
     public function getMemberNumberAttribute(){
         return substr('000000'.$this->id,-5);
     }
-    public function createUser(): User
+    /**
+     * 建立登入帳號。
+     *
+     * 傳入 $password 代表由管理員直接設定密碼（帳號即時可用）；
+     * 不傳則建立一個待設定密碼的帳號（密碼 = need-to-set），由電郵邀請本人設定。
+     */
+    public function createUser(?string $password = null): User
     {
         $user = new User();
         $user->email = $this->email;
-        $user->name = $this->name_zh;
-        $user->password = 'need-to-set';
+        $user->name = $this->name_zh ?: $this->display_name;
+        $user->password = $password === null ? 'need-to-set' : Hash::make($password);
+
+        if ($password !== null) {
+            $user->email_verified_at = now();
+        }
+
         $user->save();
-        $this->user_id=$user->id;
+        $this->user_id = $user->id;
         $this->save();
+
         return $user;
     }
 
