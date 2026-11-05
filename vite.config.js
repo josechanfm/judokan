@@ -29,6 +29,39 @@ export default defineConfig(({ mode }) => {
                 },
             }),
         ],
-    
+        build: {
+            // 這個專案的第三方依賴很大（ant-design-vue 4 + ckeditor + quill + 裁剪器 + QR），
+            // 拆開 vendor chunk 可以明顯降低 Rollup 打包時的記憶體峰值，亦方便瀏覽器快取
+            chunkSizeWarningLimit: 1600,
+            rollupOptions: {
+                output: {
+                    manualChunks(id) {
+                        if (!id.includes('node_modules')) {
+                            return undefined;
+                        }
+                        if (id.includes('ant-design-vue') || id.includes('@ant-design')) {
+                            return 'vendor-antd';
+                        }
+                        if (id.includes('@ckeditor')) {
+                            return 'vendor-ckeditor';
+                        }
+                        if (id.includes('quill')) {
+                            return 'vendor-quill';
+                        }
+                        if (id.includes('vue-advanced-cropper')) {
+                            return 'vendor-cropper';
+                        }
+                        if (id.includes('qrcode')) {
+                            return 'vendor-qrcode';
+                        }
+                        if (id.includes('lodash')) {
+                            return 'vendor-lodash';
+                        }
+
+                        return 'vendor';
+                    },
+                },
+            },
+        },
     }
 });
