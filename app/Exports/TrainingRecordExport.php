@@ -29,14 +29,15 @@ class TrainingRecordExport implements FromArray, WithColumnWidths
         $rows[] = ['月份', $this->month];
         $rows[] = [];
 
-        $rows[] = ['會員號碼', '運動員', '中心/集訓', '得勝', '集訓(節數)', '比賽日數', '積分'];
+        $rows[] = ['會員號碼', '運動員', '類別', '中心/集訓', '得勝', '集訓(節數)', '比賽日數', '積分'];
 
-        $total = ['合計', '', 0, 0, 0, 0, 0];
+        $total = ['合計', '', '', 0, 0, 0, 0, 0];
 
         foreach ($this->rows as $row) {
             $rows[] = [
                 $row['member_number'],
                 $row['name'],
+                $row['athlete_type'] ?? '',
                 $row['centre_count'],
                 $row['win_count'],
                 $row['session_count'],
@@ -44,11 +45,11 @@ class TrainingRecordExport implements FromArray, WithColumnWidths
                 $row['points'],
             ];
 
-            $total[2] += $row['centre_count'];
-            $total[3] += $row['win_count'];
-            $total[4] += $row['session_count'];
-            $total[5] += $row['competition_day_count'];
-            $total[6] += $row['points'];
+            $total[3] += $row['centre_count'];
+            $total[4] += $row['win_count'];
+            $total[5] += $row['session_count'];
+            $total[6] += $row['competition_day_count'];
+            $total[7] += $row['points'];
         }
 
         if ($this->rows !== []) {
@@ -61,7 +62,8 @@ class TrainingRecordExport implements FromArray, WithColumnWidths
     public function columnWidths(): array
     {
         return [
-            'A' => 14, 'B' => 26, 'C' => 12, 'D' => 10, 'E' => 12, 'F' => 12, 'G' => 10,
+            'A' => 14, 'B' => 26, 'C' => 16, 'D' => 12,
+            'E' => 10, 'F' => 12, 'G' => 12, 'H' => 10,
         ];
     }
 }

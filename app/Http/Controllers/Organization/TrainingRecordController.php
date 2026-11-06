@@ -54,7 +54,7 @@ class TrainingRecordController extends Controller
             ->startOfMonth()
             ->format('Y-m-d');
 
-        $allowed = array_flip(AthleteSetting::teamMemberIds($organizationId));
+        $allowed = array_flip(AthleteSetting::athleteIds($organizationId));
 
         foreach ($validated['records'] ?? [] as $row) {
             $memberId = (int) $row['member_id'];
@@ -161,6 +161,12 @@ class TrainingRecordController extends Controller
                     'member_id' => $member->id,
                     'name' => $member->display_name ?: ($member->name_zh ?: $member->name_fn),
                     'member_number' => $member->member_number,
+                    'is_team_member' => (bool) $member->is_team_member,
+                    'is_club_athlete' => (bool) $member->is_club_athlete,
+                    'athlete_type' => $this->athleteType(
+                        (bool) $member->is_team_member,
+                        (bool) $member->is_club_athlete
+                    ),
                 ];
 
                 $points = 0;
@@ -179,24 +185,56 @@ class TrainingRecordController extends Controller
     }
 
     /**
-     * 只有「集訓隊成員」才會出現在集訓記錄。
+     * 集訓記錄會列出本屬會所有運動員（集訓隊成員 + 本館運動員）。
      */
     private function members(int $organizationId)
     {
-        $teamMemberIds = AthleteSetting::teamMemberIds($organizationId);
+        $athleteIds = AthleteSetting::athleteIds($organizationId);
 
-        if ($teamMemberIds === []) {
+        if ($athleteIds === []) {
             return collect();
         }
 
+        $settings = AthleteSetting::where('organization_id', $organizationId)
+            ->whereIn('member_id', $athleteIds)
+            ->get()
+            ->keyBy('member_id');
+
         return Organization::find($organizationId)
             ->members()
-            ->whereIn('members.id', $teamMemberIds)
+            ->whereIn('members.id', $athleteIds)
             ->get()
-            ->sortBy(fn ($member) => mb_strtolower(
-                $member->display_name ?: ($member->name_zh ?: (string) $member->name_fn)
-            ))
+            ->each(function ($member) use ($settings) {
+                $setting = $settings->get($member->id);
+                $member->is_team_member = (bool) ($setting->is_team_member ?? false);
+                $member->is_club_athlete = (bool) ($setting->is_club_athlete ?? false);
+            })
+            // 先按類型排：集訓隊在上，然後本館運動員，同類型再按姓名
+            ->sortBy([
+                fn ($a, $b) => (int) $b->is_team_member <=> (int) $a->is_team_member,
+                fn ($a, $b) => (int) $b->is_club_athlete <=> (int) $a->is_club_athlete,
+                fn ($a, $b) => strcmp(
+                    mb_strtolower($a->display_name ?: ($a->name_zh ?: (string) $a->name_fn)),
+                    mb_strtolower($b->display_name ?: ($b->name_zh ?: (string) $b->name_fn))
+                ),
+            ])
             ->values();
+    }
+
+    /**
+     * 運動員類別文字：集訓隊 / 本館運動員 / 集訓隊＋本館。
+     */
+    private function athleteType(bool $isTeamMember, bool $isClubAthlete): string
+    {
+        if ($isTeamMember && $isClubAthlete) {
+            return '集訓隊＋本館';
+        }
+
+        if ($isTeamMember) {
+            return '集訓隊';
+        }
+
+        return $isClubAthlete ? '本館運動員' : '';
     }
 
     private function resolveMonth(?string $value): Carbon

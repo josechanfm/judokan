@@ -85,9 +85,9 @@ class TrainingRecordImport implements ToCollection, WithHeadingRow, WithStartRow
                 $errors['month'][] = '月份格式不正確（請用 YYYY-MM，例如 2026-11）';
             }
 
-            // 集訓記錄只接受集訓隊成員
-            if ($member !== null && ! $this->isTeamMember($member->id)) {
-                $errors['member_number'][] = '此會員不是集訓隊成員，請先到「運動員設定」加入';
+            // 集訓記錄接受集訓隊成員同本館運動員
+            if ($member !== null && ! $this->isAthlete($member->id)) {
+                $errors['member_number'][] = '此會員不是集訓隊成員或本館運動員，請先到「運動員設定」加入';
             }
 
             $counts = [];
@@ -250,11 +250,14 @@ class TrainingRecordImport implements ToCollection, WithHeadingRow, WithStartRow
         return $this->members;
     }
 
-    private function isTeamMember(int $memberId): bool
+    private function isAthlete(int $memberId): bool
     {
         return AthleteSetting::where('organization_id', $this->organization->id)
             ->where('member_id', $memberId)
-            ->where('is_team_member', true)
+            ->where(function ($query) {
+                $query->where('is_team_member', true)
+                    ->orWhere('is_club_athlete', true);
+            })
             ->exists();
     }
 

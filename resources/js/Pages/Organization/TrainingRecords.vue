@@ -5,7 +5,7 @@
       <p class="m-0 text-sm text-gray-500">
         共
         <span class="mx-1 text-base font-semibold text-[#0081C8]">{{ tableRows.length }}</span>
-        位{{ $t("team_member") }}
+        位{{ $t("athlete") }}（{{ $t("team_member") }} + {{ $t("club_athlete") }}）
         <span class="ml-2 text-xs text-gray-400">{{ monthValue }}</span>
       </p>
       <div class="flex flex-wrap items-center gap-2">
@@ -62,7 +62,7 @@
           />
         </div>
         <p class="m-0 pb-1 text-xs text-gray-400">
-          只顯示{{ $t("team_member") }}，可到
+          顯示{{ $t("team_member") }}及{{ $t("club_athlete") }}，可到
           <inertia-link
             :href="route('manage.athleteSettings.index')"
             class="font-medium text-[#0081C8] hover:underline"
@@ -81,7 +81,7 @@
           :dataSource="filteredRows"
           :columns="columns"
           :pagination="pagination"
-          :scroll="{ x: 900 }"
+          :scroll="{ x: 1150 }"
           row-key="member_id"
         >
           <template #headerCell="{ column }">
@@ -91,7 +91,7 @@
             <div class="py-12 text-center text-gray-400">
               <p class="m-0 text-3xl">🏋️</p>
               <p class="m-0 mt-3 text-sm">
-                尚未有{{ $t("team_member") }}，請先到「{{ $t("athlete_settings") }}」勾選
+                尚未有{{ $t("team_member") }}或{{ $t("club_athlete") }}，請先到「{{ $t("athlete_settings") }}」勾選
               </p>
             </div>
           </template>
@@ -100,6 +100,22 @@
               <div class="flex flex-wrap items-center gap-2">
                 <span class="font-medium text-gray-800">{{ record.name }}</span>
                 <span class="member-pill">{{ record.member_number }}</span>
+              </div>
+            </template>
+            <template v-else-if="column.dataIndex === 'athlete_type'">
+              <div class="flex flex-wrap items-center gap-1">
+                <span
+                  v-if="record.is_team_member"
+                  class="member-pill member-pill-blue"
+                >
+                  {{ $t("team_member") }}
+                </span>
+                <span
+                  v-if="record.is_club_athlete"
+                  class="member-pill member-pill-gray"
+                >
+                  {{ $t("club_athlete") }}
+                </span>
               </div>
             </template>
             <template v-else-if="column.dataIndex === 'points'">
@@ -270,7 +286,17 @@ export default {
           title: "member",
           dataIndex: "name",
           i18n: "member",
-          width: 240,
+          width: 220,
+        },
+        {
+          title: "athlete_type",
+          dataIndex: "athlete_type",
+          i18n: "type",
+          width: 210,
+          // 集訓隊排最前，同類型再按姓名
+          sorter: (a, b) =>
+            Number(b.is_team_member) - Number(a.is_team_member) ||
+            Number(b.is_club_athlete) - Number(a.is_club_athlete),
         },
         {
           title: "centre",
@@ -508,6 +534,14 @@ export default {
   font-size: 12px;
   font-weight: 500;
   line-height: 20px;
+  color: #475569;
+}
+.member-pill-blue {
+  background-color: rgba(0, 129, 200, 0.1);
+  color: #0081c8;
+}
+.member-pill-gray {
+  background-color: #f1f5f9;
   color: #475569;
 }
 </style>
