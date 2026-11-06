@@ -78,8 +78,11 @@ const submit = () => {
       </div>
 
       <div class="text-right">
-        <a :href="route('register')">
-          <ResponsiveNavLink as="button"> {{ $t("register") }} </ResponsiveNavLink>
+        <a
+          :href="route('register')"
+          class="text-sm text-gray-600 underline hover:text-gray-900"
+        >
+          {{ $t("register") }}
         </a>
       </div>
 
