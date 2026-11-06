@@ -13,9 +13,13 @@
             <UploadOutlined />
             {{ $t("import_results") }}
           </button>
-          <a :href="exportUrl" class="btn-judo-primary" download>
+          <a :href="exportUrlAll" class="btn-judo-primary" download>
             <DownloadOutlined />
-            {{ $t("export_points") }}
+            匯出全部（比賽＋集訓）
+          </a>
+          <a :href="exportUrlCompetition" class="btn-judo-outline" download>
+            <DownloadOutlined />
+            匯出比賽積分
           </a>
         </div>
       </div>
@@ -271,19 +275,24 @@
         <p class="ant-upload-drag-icon">
           <FileExcelOutlined />
         </p>
-        <p class="ant-upload-text">點擊或拖曳檔案到這裡匯入比賽成績</p>
+        <p class="ant-upload-text">點擊或拖曳檔案到這裡匯入比賽／集訓記錄</p>
         <p class="ant-upload-hint">
-          支援 .xlsx / .xls 檔案，一次一個。請先下載下方的成績匯入範本填寫；
-          新的比賽會自動建立，姓名會自動比對本屬會會員。
+          支援 .xlsx / .xls，一次一個。可以直接匯入本頁「匯出全部」或「匯出比賽積分」的檔案
+          （「匯出全部」會同時更新比賽積分同集訓記錄）；
+          亦可以下載下方的成績範本填寫。新的比賽會自動建立，姓名會自動比對本屬會會員。
         </p>
       </a-upload-dragger>
 
       <div v-if="importDone" class="mt-3">
         <div v-if="importErrors.length === 0" class="font-bold my-3 text-green-600">
-          成功匯入 {{ importedCount }} 筆成績
+          成功匯入 {{ importedCount }} 筆
+          <span class="font-normal text-gray-500">
+            （比賽 {{ competitionImported }} 筆、集訓 {{ trainingImported }} 筆）
+          </span>
         </div>
         <div v-else class="font-bold my-3 text-yellow-600">
-          成功匯入 {{ importedCount }} 筆，以下 {{ importErrors.length }} 筆未匯入
+          成功匯入 {{ importedCount }} 筆（比賽 {{ competitionImported }} 筆、集訓 {{ trainingImported }} 筆），
+          以下 {{ importErrors.length }} 筆未匯入
         </div>
         <p
           v-for="(error, index) in importErrors"
@@ -395,6 +404,8 @@ export default {
       importDone: false,
       importErrors: [],
       importedCount: 0,
+      competitionImported: 0,
+      trainingImported: 0,
       importLoading: false,
       files: [],
     };
@@ -419,10 +430,19 @@ export default {
         : 0;
     },
     // 匯出時帶上目前的篩選條件
-    exportUrl() {
+    exportUrlAll() {
+      return this.buildExportUrl("all");
+    },
+    exportUrlCompetition() {
+      return this.buildExportUrl("competition");
+    },
+  },
+  methods: {
+    buildExportUrl(type) {
       const params = new URLSearchParams({
         start: this.filters.start,
         end: this.filters.end,
+        type,
       });
       if (this.filters.athlete_scope && this.filters.athlete_scope !== "all") {
         params.set("athlete_scope", this.filters.athlete_scope);
@@ -433,8 +453,6 @@ export default {
 
       return `${route("manage.member.points.export")}?${params.toString()}`;
     },
-  },
-  methods: {
     openImport() {
       this.importVisible = true;
       this.importDone = false;
@@ -468,16 +486,22 @@ export default {
           this.importLoading = false;
           this.files = [];
           this.importedCount = data.imported || 0;
+          this.competitionImported = data.competition_imported || 0;
+          this.trainingImported = data.training_imported || 0;
           this.importErrors = data.errors || [];
           this.importDone = true;
-          this.$message.success(`成功匯入 ${this.importedCount} 筆成績`);
+          this.$message.success(`成功匯入 ${this.importedCount} 筆`);
 
           this.$inertia.reload({ preserveState: true });
         })
         .catch((error) => {
           this.importLoading = false;
-          console.error(error);
-          this.$message.error("匯入失敗");
+          const errors = error?.response?.data?.errors;
+          this.$message.error(
+            errors
+              ? Object.values(errors)[0][0]
+              : error?.response?.data?.message || "匯入失敗"
+          );
         });
     },
     rankLabel(value) {

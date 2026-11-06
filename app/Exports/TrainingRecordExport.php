@@ -4,8 +4,9 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
-class TrainingRecordExport implements FromArray, WithColumnWidths
+class TrainingRecordExport implements FromArray, WithColumnWidths, WithStrictNullComparison
 {
     private array $rows;
 

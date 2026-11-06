@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
 /**
  * 單一賽事的賽果匯出（簡化版）。
@@ -11,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
  * 格式與匯入範本相同：第 1 列中文欄名、第 2 列欄位代號、第 3 列起資料，
  * 所以可以「匯出 → 填分數 → 再匯入」。
  */
-class CompetitionResultExport implements FromArray, WithColumnWidths
+class CompetitionResultExport implements FromArray, WithColumnWidths, WithStrictNullComparison
 {
     /** 欄位代號（第 2 列，程式匯入時用） */
     public const COLUMNS = ['name', 'score', 'category', 'gender', 'weight'];

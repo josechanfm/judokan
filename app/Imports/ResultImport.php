@@ -103,8 +103,8 @@ class ResultImport implements ToCollection, WithStartRow, WithHeadingRow, SkipsO
                 continue;
             }
 
-            if ($resultText === '') {
-                $fail('result', '成績不可為空');
+            if ($resultText === '' && ! is_numeric($scoreInput)) {
+                $fail('result', '成績或分數至少要填一個');
 
                 continue;
             }
@@ -150,7 +150,8 @@ class ResultImport implements ToCollection, WithStartRow, WithHeadingRow, SkipsO
             }
 
             $scores = $competition->score?->toArray() ?? ($competition->result_scores ?? []);
-            $rank = $this->normalizeRank($resultText, $resultOptions);
+            // 名次可以留空（只填分數），方便把「匯出的積分統計」原樣再匯入
+            $rank = $resultText === '' ? null : $this->normalizeRank($resultText, $resultOptions);
             $score = is_numeric($scoreInput) ? (int) $scoreInput : (int) ($scores[$rank] ?? 0);
 
             $application = $this->findApplication($competition, $idNum, $nameZh, $nameFn);

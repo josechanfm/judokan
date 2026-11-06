@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
+use Maatwebsite\Excel\Concerns\WithStrictNullComparison;
 
 /**
  * 匯出積分表。
@@ -11,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
  * 刻意使用與匯入範本相同的格式（第 1 列中文欄名、第 2 列欄位代號、第 3 列起資料），
  * 這樣匯出的檔案可以直接再匯入。
  */
-class CompetitionScoreExport implements FromArray, WithColumnWidths
+class CompetitionScoreExport implements FromArray, WithColumnWidths, WithStrictNullComparison
 {
     private array $scores;
 

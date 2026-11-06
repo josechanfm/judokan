@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Organization;
 
 use App\Exports\MemberPointExport;
 use App\Http\Controllers\Controller;
-use App\Imports\ResultImport;
+use App\Imports\MemberPointImport;
 use App\Models\AthleteSetting;
+use App\Models\CompetitionScore;
 use App\Models\CompetitionApplication;
 use App\Models\Config;
 use App\Models\Member;
@@ -36,7 +37,10 @@ class MemberPointController extends Controller
     }
 
     /**
-     * 匯出目前篩選條件下的積分統計（排行 + 成績明細）。
+     * 匯出目前篩選條件下的積分統計（可直接再匯入）。
+     *
+     * type = all（預設）→ 比賽積分 + 集訓記錄
+     * type = competition → 只有比賽積分
      */
     public function export(Request $request)
     {
@@ -46,14 +50,18 @@ class MemberPointController extends Controller
         $rankLabels = collect(Config::item('competition_results') ?: [])->pluck('label', 'value')->all();
         $roleLabels = collect(Config::item('competition_roles') ?: [])->pluck('label', 'value')->all();
 
+        $type = $request->input('type') === 'competition' ? 'competition' : 'all';
+
         return Excel::download(
-            new MemberPointExport($ranking, $filters, $rankLabels, $roleLabels),
-            'member-points-'.Carbon::today()->format('Ymd').'.xlsx'
+            new MemberPointExport($ranking, $rankLabels, $roleLabels, $type === 'all'),
+            'member-points-'.$type.'-'.Carbon::today()->format('Ymd').'.xlsx'
         );
     }
 
     /**
-     * 從 Excel 匯入比賽成績（前端「匯入成績」）。回傳 { imported, errors }。
+     * 匯入積分統計檔案（比賽積分 + 集訓記錄）。回傳 { imported, errors }。
+     *
+     * 可以匯入本頁匯出的檔案，或成績範本 result_list.xlsx。
      */
     public function import(Request $request)
     {
@@ -61,12 +69,14 @@ class MemberPointController extends Controller
             'file' => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
-        $import = new ResultImport(session('organization'));
+        $import = new MemberPointImport(session('organization'));
 
         Excel::import($import, $request->file('file'));
 
         return response()->json([
             'imported' => $import->importedCount(),
+            'competition_imported' => $import->competitionCount(),
+            'training_imported' => $import->trainingCount(),
             'errors' => $import->failures()->values(),
         ]);
     }
@@ -166,7 +176,10 @@ class MemberPointController extends Controller
                 'competitions.id as competition_id',
                 'competitions.title_zh as competition_title',
                 'competitions.start_date as competition_date',
+                'competitions.competition_score_id as competition_score_id',
             ]);
+
+        $scoreTitles = CompetitionScore::pluck('title', 'id')->all();
 
         $grouped = [];
         foreach ($applications as $application) {
@@ -207,6 +220,7 @@ class MemberPointController extends Controller
                 'competition_id' => $application->competition_id,
                 'competition_title' => $application->competition_title,
                 'date' => $application->competition_date,
+                'score_scheme' => $scoreTitles[$application->competition_score_id] ?? null,
                 'role' => $application->role,
                 'category' => $application->category,
                 'weight' => $application->weight,
