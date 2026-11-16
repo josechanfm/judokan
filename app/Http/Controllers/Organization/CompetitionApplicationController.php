@@ -316,6 +316,7 @@ class CompetitionApplicationController extends Controller
 
         return response()->json([
             'imported' => $import->importedCount(),
+            'bound' => $import->boundCount(),
             'errors' => $import->failures()->values(),
         ]);
     }

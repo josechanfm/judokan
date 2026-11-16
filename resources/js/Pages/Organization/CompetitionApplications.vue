@@ -653,17 +653,18 @@
         </p>
         <p class="ant-upload-text">點擊或拖曳檔案到這裡導入報名資料</p>
         <p class="ant-upload-hint">
-          支援 .xlsx / .xls 檔案，一次一個。請先下載下方的選手名單模板填寫；
-          屬會名稱需與系統一致，組別、重量與角色必須是這場比賽有開放的項目。
+          支援 .xlsx / .xls 檔案，一次一個。必填欄位為中文名、出生日期、性別、組別與重量，其餘可留空；
+          組別與重量必須是這場比賽有開放的項目。
+          中文名＋性別若對到會員會自動綁定，之後匯入的成績會計入該會員。
         </p>
       </a-upload-dragger>
 
       <div class="mt-3" v-if="imported">
-        <div class="font-bold my-3 text-green-600" v-if="errors.length === 0">
-          成功導入 {{ importedCount }} 筆報名資料
-        </div>
-        <div class="font-bold my-3 text-yellow-600" v-else>
-          成功導入 {{ importedCount }} 筆，以下 {{ errors.length }} 筆未導入
+        <div
+          class="font-bold my-3"
+          :class="errors.length === 0 ? 'text-green-600' : 'text-yellow-600'"
+        >
+          {{ importedMessage }}
         </div>
         <p v-for="(error, index) in errors" :key="index" class="font-mono m-0">
           <warning-outlined class="!text-yellow-500" />
@@ -850,6 +851,7 @@ export default {
       errors: [],
       imported: false,
       importedCount: 0,
+      importedBound: 0,
       importLoading: false,
     };
   },
@@ -862,6 +864,16 @@ export default {
     },
     applications() {
       return this.competition.applications || [];
+    },
+    importedMessage() {
+      const base =
+        this.errors.length === 0
+          ? `成功導入 ${this.importedCount} 筆報名資料`
+          : `成功導入 ${this.importedCount} 筆，以下 ${this.errors.length} 筆未導入`;
+
+      return this.importedBound
+        ? `${base}（其中 ${this.importedBound} 筆已綁定會員）`
+        : base;
     },
     memberOptions() {
       return (this.members || []).map((member) => ({
@@ -1305,8 +1317,9 @@ export default {
           this.importLoading = false;
           this.files = [];
           this.importedCount = data.imported || 0;
+          this.importedBound = data.bound || 0;
           this.errors = data.errors || [];
-          this.$message.success(`成功導入 ${this.importedCount} 筆報名資料`);
+          this.$message.success(this.importedMessage);
           this.imported = true;
         })
         .catch((error) => {
@@ -1320,6 +1333,7 @@ export default {
       this.visible = false;
       if (this.imported) {
         this.imported = false;
+        this.importedBound = 0;
         this.errors = [];
         this.$inertia.reload({ preserveScroll: true });
       }
