@@ -191,6 +191,8 @@ Route::group([
     Route::post('competition/{competition}/applications/import',[\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'import'])->name('manage.competition.applications.import');
     Route::get('competition/{competition}/applications/export', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'export'])->name('manage.competition.applications.export');
     Route::get('competition/{competition}/applications/receipts', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'receipts'])->name('manage.competition.applications.receipts');
+    Route::get('competition/{competition}/applications/member-matches', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'memberMatches'])->name('manage.competition.applications.memberMatches');
+    Route::post('competition/{competition}/applications/bind-members', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'bindMembers'])->name('manage.competition.applications.bindMembers');
     Route::resource('competition/{competition}/applications', \App\Http\Controllers\Organization\CompetitionApplicationController::class)->names('manage.competition.applications');
     Route::post('competition/{competition}/results/import', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'import'])->name('manage.competition.results.import');
     Route::get('competition/{competition}/results/export', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'export'])->name('manage.competition.results.export');

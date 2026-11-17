@@ -18,6 +18,7 @@ use App\Exports\CompetitionApplicationExport;
 use App\Imports\CompetitionApplicationImport;
 use App\Mail\TestMail;
 use App\Models\Organization;
+use App\Models\Member;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -123,6 +124,218 @@ class CompetitionApplicationController extends Controller
             'sortDirection' => $sortField ? $sortDirection : null,
             'competition' => $competition
         ]);
+    }
+
+    /**
+     * 自動對應會員：把「未有會員」的報名，按電郵／手機／姓名+出生日期比對會員資料。
+     * 只回傳比對結果，不寫入資料庫。
+     */
+    public function memberMatches(Competition $competition)
+    {
+        [$matches, $unmatched] = $this->collectMemberMatches($competition);
+
+        return response()->json([
+            'matches' => $matches,
+            'unmatched' => $unmatched,
+            'summary' => [
+                'matched' => count($matches),
+                'unmatched' => $unmatched,
+            ],
+        ]);
+    }
+
+    /**
+     * 套用自動對應：按同樣規則把符合的報名綁定到會員。
+     */
+    public function bindMembers(Competition $competition)
+    {
+        [$matches] = $this->collectMemberMatches($competition);
+
+        $bound = 0;
+        foreach ($matches as $match) {
+            $updated = CompetitionApplication::where('competition_id', $competition->id)
+                ->where('id', $match['application_id'])
+                ->whereNull('member_id')
+                ->update(['member_id' => $match['member_id']]);
+
+            $bound += $updated;
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json(['bound' => $bound, 'unmatched' => count($matches) - $bound]);
+        }
+
+        return redirect()->back();
+    }
+
+    /**
+     * 逐一比對未有會員的報名與會員資料。
+     *
+     * @return array{0: array, 1: int} [比對結果, 找不到會員的報名數]
+     */
+    private function collectMemberMatches(Competition $competition): array
+    {
+        $organization = session('organization');
+        $members = Member::with('organizations')->get();
+        $categories = $this->decodeJson($competition->categories_weights) ?: [];
+
+        $applications = CompetitionApplication::where('competition_id', $competition->id)
+            ->whereNull('member_id')
+            ->orderBy('category')
+            ->orderBy('weight')
+            ->orderBy('id')
+            ->get();
+
+        $matches = [];
+        $unmatched = 0;
+
+        foreach ($applications as $application) {
+            $result = $this->findMemberFor($application, $members, $organization);
+
+            if (! $result) {
+                $unmatched++;
+                continue;
+            }
+
+            [$member, $matchedBy] = $result;
+
+            $matches[] = [
+                'application_id' => $application->id,
+                'name' => $application->display_name ?: ($application->name_zh ?: $application->name_fn),
+                'id_num' => $application->id_num,
+                'gender' => $application->gender,
+                'category' => $this->categoryName($categories, $application->category),
+                'weight' => $application->weight,
+                'member_id' => $member->id,
+                'member_name' => $member->name_zh ?: ($member->display_name ?: $member->name_fn),
+                'member_number' => $member->member_number,
+                'matched_by' => $matchedBy,
+            ];
+        }
+
+        return [$matches, $unmatched];
+    }
+
+    /**
+     * 依序以電郵 → 手機 → 姓名＋出生日期找出對應會員，
+     * 同一組候選人優先取本屬會的會員；有多位可能時不自動對應。
+     *
+     * @return array{0: Member, 1: string}|null [會員, 比對依據]
+     */
+    private function findMemberFor(CompetitionApplication $application, $members, $organization): ?array
+    {
+        $email = strtolower(trim((string) $application->email));
+        if ($email !== '') {
+            $member = $this->pickMember(
+                $members->filter(fn ($item) => strtolower(trim((string) $item->email)) === $email),
+                $organization
+            );
+            if ($member) {
+                return [$member, 'email'];
+            }
+        }
+
+        $mobile = $this->normalizeMobile($application->mobile);
+        if (strlen($mobile) >= 6) {
+            $member = $this->pickMember(
+                $members->filter(function ($item) use ($mobile) {
+                    $memberMobile = $this->normalizeMobile($item->mobile);
+
+                    // 手機可能帶國碼，只要尾碼相同就當作同一支號碼
+                    return $memberMobile !== ''
+                        && (str_ends_with($memberMobile, $mobile) || str_ends_with($mobile, $memberMobile));
+                }),
+                $organization
+            );
+            if ($member) {
+                return [$member, 'mobile'];
+            }
+        }
+
+        // 姓名比對必須同時有出生日期，避免同名同姓誤配
+        $nameZh = trim((string) $application->name_zh);
+        $dob = substr((string) $application->dob, 0, 10);
+        if ($nameZh !== '' && $dob !== '') {
+            $member = $this->pickMember(
+                $members->filter(function ($item) use ($nameZh, $dob, $application) {
+                    if (trim((string) $item->name_zh) !== $nameZh) {
+                        return false;
+                    }
+
+                    if (substr((string) $item->dob, 0, 10) !== $dob) {
+                        return false;
+                    }
+
+                    // 兩邊都有性別時要一致（舊資料可能是 0/1）
+                    if (! $application->gender || ! $item->gender) {
+                        return true;
+                    }
+
+                    return $this->normalizeGender($item->gender) === $application->gender;
+                }),
+                $organization
+            );
+            if ($member) {
+                return [$member, 'name_dob'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 會員性別舊資料可能是 0/1（0 = 男、1 = 女），統一轉成 M／F。
+     */
+    private function normalizeGender($value): ?string
+    {
+        return match ((string) $value) {
+            'M', 'm', '0' => 'M',
+            'F', 'f', '1' => 'F',
+            default => null,
+        };
+    }
+
+    /**
+     * 從候選會員中選出唯一一位：先看本屬會，沒有的話要全體只有一位才採用。
+     */
+    private function pickMember($candidates, $organization): ?Member
+    {
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        if ($organization) {
+            $inOrganization = $candidates->filter(
+                fn ($member) => $member->organizations->contains('id', $organization->id)
+            );
+
+            if ($inOrganization->count() === 1) {
+                return $inOrganization->first();
+            }
+
+            if ($inOrganization->count() > 1) {
+                return null;
+            }
+        }
+
+        return $candidates->count() === 1 ? $candidates->first() : null;
+    }
+
+    private function normalizeMobile($value): string
+    {
+        return preg_replace('/\D/', '', (string) $value);
+    }
+
+    private function categoryName(array $categories, $code): string
+    {
+        foreach ($categories as $category) {
+            $category = (array) $category;
+            if ((string) ($category['code'] ?? '') === (string) $code) {
+                return (string) ($category['name'] ?? $code);
+            }
+        }
+
+        return (string) $code;
     }
 
     /**

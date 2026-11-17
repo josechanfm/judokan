@@ -53,6 +53,16 @@
               <UploadOutlined />
               {{ $t("import_athletes") }}
             </button>
+            <button
+              type="button"
+              class="btn-judo-outline"
+              :disabled="!unlinkedCount || memberMatchLoading"
+              @click="openMemberMatch"
+            >
+              <LinkOutlined />
+              自動對應會員
+              <span v-if="unlinkedCount" class="ja-count">{{ unlinkedCount }}</span>
+            </button>
             <inertia-link
               :href="route('manage.competition.results.index', competition.id)"
               class="btn-judo-outline"
@@ -711,6 +721,75 @@
         </div>
       </template>
     </a-modal>
+
+    <!-- 自動對應會員 -->
+    <a-modal
+      v-model:open="memberMatchVisible"
+      title="自動對應會員"
+      :width="860"
+      :footer="null"
+    >
+      <p class="m-0 text-sm text-gray-500">
+        把未連結會員的報名，按「電郵 → 手機 → 姓名＋出生日期」比對現有會員資料（優先本屬會）。
+        會員在報名之後才入會的情況，可以用這個功能補回連結。
+      </p>
+
+      <div v-if="memberMatchLoading" class="py-10 text-center text-sm text-gray-400">
+        比對中…
+      </div>
+
+      <template v-else>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="ja-pill ja-pill-green">
+            可自動對應 {{ memberMatches.length }} 筆
+          </span>
+          <span v-if="memberMatchUnmatched" class="ja-pill ja-pill-gray">
+            另有 {{ memberMatchUnmatched }} 筆未連結的報名找不到會員
+          </span>
+        </div>
+
+        <div v-if="memberMatches.length" class="mt-3 max-h-[420px] overflow-auto">
+          <a-table
+            :dataSource="memberMatches"
+            :columns="memberMatchColumns"
+            :pagination="false"
+            row-key="application_id"
+            size="small"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.dataIndex === 'matched_by'">
+                {{ matchReasonLabel(record.matched_by) }}
+              </template>
+              <template v-else-if="column.dataIndex === 'member'">
+                <span class="text-gray-700">{{ record.member_name }}</span>
+                <span class="ml-1 text-xs text-gray-400">#{{ record.member_number }}</span>
+              </template>
+              <template v-else-if="column.dataIndex === 'category'">
+                <span class="text-gray-700">{{ record.category }}</span>
+                <span v-if="record.weight" class="ml-1 text-xs text-gray-400">
+                  {{ record.weight }}
+                </span>
+              </template>
+            </template>
+          </a-table>
+        </div>
+
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" class="btn-judo-outline" @click="memberMatchVisible = false">
+            取消
+          </button>
+          <button
+            type="button"
+            class="btn-judo-primary"
+            :disabled="!memberMatches.length || memberMatchSaving"
+            @click="applyMemberMatch"
+          >
+            <LinkOutlined />
+            套用對應
+          </button>
+        </div>
+      </template>
+    </a-modal>
     <!-- Modal End-->
   </OrganizationLayout>
 </template>
@@ -728,6 +807,7 @@ import {
   DownloadOutlined,
   ExclamationCircleOutlined,
   FileExcelOutlined,
+  LinkOutlined,
   PlusOutlined,
   PrinterOutlined,
   SaveOutlined,
@@ -747,6 +827,7 @@ export default {
     DownloadOutlined,
     ExclamationCircleOutlined,
     FileExcelOutlined,
+    LinkOutlined,
     PlusOutlined,
     PrinterOutlined,
     SaveOutlined,
@@ -775,6 +856,19 @@ export default {
       },
       currentPage: 1,
       pageSize: 20,
+      // 自動對應會員
+      memberMatchVisible: false,
+      memberMatchLoading: false,
+      memberMatchSaving: false,
+      memberMatches: [],
+      memberMatchUnmatched: 0,
+      memberMatchColumns: [
+        { title: "報名選手", dataIndex: "name", width: 130 },
+        { title: "證件號碼", dataIndex: "id_num", width: 120 },
+        { title: "組別／量級", dataIndex: "category", width: 200 },
+        { title: "對應會員", dataIndex: "member", width: 170 },
+        { title: "比對方式", dataIndex: "matched_by", width: 110 },
+      ],
       modal: {
         isOpen: false,
         data: {},
@@ -900,6 +994,10 @@ export default {
     },
     applications() {
       return this.competition.applications || [];
+    },
+    // 尚未連結會員的報名數（用來決定「自動對應會員」按鈕是否可用）
+    unlinkedCount() {
+      return this.applications.filter((application) => !application.member_id).length;
     },
     importedMessage() {
       const base =
@@ -1313,6 +1411,59 @@ export default {
     // 報名時有連結到會員（member_id）才算會員，公開報名者為非會員
     isMember(record) {
       return !!record.member_id;
+    },
+    // ---- 自動對應會員 ----
+    matchReasonLabel(value) {
+      return (
+        {
+          id_card: "證件號碼",
+          email: "電郵",
+          mobile: "手機",
+          name_dob: "姓名＋出生日期",
+        }[value] || value
+      );
+    },
+    openMemberMatch() {
+      this.memberMatchVisible = true;
+      this.memberMatchLoading = true;
+      this.memberMatches = [];
+      this.memberMatchUnmatched = 0;
+
+      window.axios
+        .get(
+          route("manage.competition.applications.memberMatches", this.competition.id)
+        )
+        .then(({ data }) => {
+          this.memberMatchLoading = false;
+          this.memberMatches = data.matches || [];
+          this.memberMatchUnmatched = data.unmatched || 0;
+        })
+        .catch(() => {
+          this.memberMatchLoading = false;
+          this.$message.error("比對失敗，請稍後再試");
+        });
+    },
+    applyMemberMatch() {
+      if (!this.memberMatches.length) {
+        return;
+      }
+
+      this.memberMatchSaving = true;
+
+      window.axios
+        .post(
+          route("manage.competition.applications.bindMembers", this.competition.id)
+        )
+        .then(({ data }) => {
+          this.memberMatchSaving = false;
+          this.memberMatchVisible = false;
+          this.$message.success(`已自動對應 ${data.bound ?? 0} 筆報名到會員`);
+          this.$inertia.reload({ preserveScroll: true, preserveState: true });
+        })
+        .catch(() => {
+          this.memberMatchSaving = false;
+          this.$message.error("套用失敗，請稍後再試");
+        });
     },
     // 表頭排序：交回後端以 ORDER BY 重新載入（取消排序則回到預設次序）
     handleTableChange(pagination, tableFilters, sorter) {
