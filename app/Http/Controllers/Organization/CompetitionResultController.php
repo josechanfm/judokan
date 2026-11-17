@@ -229,6 +229,55 @@ class CompetitionResultController extends Controller
     }
 
     /**
+     * 以「選手」為單位更新成績：只改這一位選手的名次與積分。
+     * 名次屬於個人（第一名…），同一組別／量級只會有一位；晉級／出席可多人。
+     */
+    public function storeAthlete(Request $request, Competition $competition)
+    {
+        $data = $request->validate([
+            'application_id' => 'required|integer',
+            'result_rank' => 'nullable|string',
+        ]);
+
+        $validRanks = collect(Config::item('competition_results') ?: [])
+            ->pluck('value')
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($data['result_rank'] && $validRanks && ! in_array($data['result_rank'], $validRanks, true)) {
+            return back()->withErrors(['result_rank' => '無效的名次']);
+        }
+
+        $application = CompetitionApplication::where('competition_id', $competition->id)
+            ->findOrFail($data['application_id']);
+
+        $scores = $competition->score?->toArray() ?? $competition->result_scores ?? [];
+        $rank = $data['result_rank'] ?: null;
+
+        if ($rank && ! in_array($rank, ['advance', 'participate'], true)) {
+            // 同組別／性別／量級內，同一個名次只能有一位選手
+            CompetitionApplication::where('competition_id', $competition->id)
+                ->where('category', $application->category)
+                ->where('gender', $application->gender)
+                ->where('weight', $application->weight)
+                ->where('id', '<>', $application->id)
+                ->where('result_rank', $rank)
+                ->update([
+                    'result_rank' => null,
+                    'result_score' => null,
+                ]);
+        }
+
+        $application->update([
+            'result_rank' => $rank,
+            'result_score' => $rank ? ($scores[$rank] ?? null) : null,
+        ]);
+
+        return redirect()->back();
+    }
+
+    /**
      * Display the specified resource.
      *
      * @param  int  $id

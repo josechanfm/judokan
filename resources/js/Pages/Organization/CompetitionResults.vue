@@ -47,7 +47,28 @@
         </div>
       </div>
 
-      <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <!-- 輸入方式 -->
+      <div class="card-judo mt-4 p-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-sm font-medium text-gray-600">輸入方式</span>
+          <a-radio-group v-model:value="entryMode" button-style="solid">
+            <a-radio-button value="group">依組別／量級</a-radio-button>
+            <a-radio-button value="athlete">依選手</a-radio-button>
+          </a-radio-group>
+          <span class="text-xs text-gray-400">
+            {{
+              entryMode === "group"
+                ? "先選組別與量級，再為該量級的各名次挑選選手。"
+                : "直接挑選選手，再選擇他／她的名次。"
+            }}
+          </span>
+        </div>
+      </div>
+
+      <div
+        v-if="entryMode === 'group'"
+        class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2"
+      >
         <!-- 選擇組別／量級 -->
         <div class="card-judo p-6">
           <h3 class="m-0 mb-4 text-base font-semibold text-gray-700">
@@ -157,6 +178,115 @@
                 {{ $t("reset") }}
               </button>
               <button type="button" class="btn-judo-primary" @click="submitResult">
+                <SaveOutlined />
+                {{ $t("save") }}
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- 以選手為單位輸入成績 -->
+      <div v-else class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <div class="card-judo p-6">
+          <h3 class="m-0 mb-4 text-base font-semibold text-gray-700">
+            {{ $t("athlete") }}
+          </h3>
+
+          <a-select
+            v-model:value="selectedAthleteId"
+            :options="athleteOptions"
+            show-search
+            allow-clear
+            :filter-option="filterAthleteOption"
+            placeholder="輸入姓名／組別／量級搜尋"
+            class="w-full"
+            @change="onSelectAthlete"
+          />
+
+          <div v-if="selectedAthlete" class="mt-4 space-y-2 text-sm">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-gray-500">{{ $t("category") }}</span>
+              <span class="font-medium text-gray-800">
+                {{ categoryLabel(selectedAthlete.category) }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-gray-500">{{ $t("weight") }}</span>
+              <span class="font-medium text-gray-800">
+                {{ weightLabel(selectedAthlete) }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-gray-500">{{ $t("gender") }}</span>
+              <span class="font-medium text-gray-800">
+                {{
+                  selectedAthlete.gender === "F"
+                    ? $t("female")
+                    : selectedAthlete.gender === "M"
+                    ? $t("male")
+                    : selectedAthlete.gender === "X"
+                    ? "混合"
+                    : "—"
+                }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+              <span class="text-gray-500">{{ $t("result_rank") }}</span>
+              <span v-if="selectedAthlete.result_rank" class="member-pill member-pill-blue">
+                {{ rankLabel(selectedAthlete.result_rank) }}
+                （{{ selectedAthlete.result_score ?? 0 }} 分）
+              </span>
+              <span v-else class="text-gray-300">未記錄</span>
+            </div>
+          </div>
+          <div v-else class="py-10 text-center text-sm text-gray-400">
+            請先選擇選手
+          </div>
+        </div>
+
+        <div class="card-judo p-6">
+          <h3 class="m-0 mb-4 text-base font-semibold text-gray-700">
+            {{ $t("result_rank") }} / {{ $t("result_score") }}
+          </h3>
+
+          <div v-if="!selectedAthlete" class="py-10 text-center text-sm text-gray-400">
+            請先在左邊選擇選手
+          </div>
+
+          <template v-else>
+            <div class="mb-3 flex flex-wrap items-center gap-2">
+              <span class="member-pill member-pill-blue">{{ selectedAthleteLabel }}</span>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="option in rankOptions"
+                :key="option.value"
+                type="button"
+                class="cw-chip"
+                :class="{ 'cw-chip-active': athleteRank === option.value }"
+                @click="toggleAthleteRank(option.value)"
+              >
+                {{ option.label }}
+                <span class="cw-chip-gender">{{ pointsOf(option.value) }} 分</span>
+              </button>
+            </div>
+
+            <p class="m-0 mt-3 text-xs text-gray-400">
+              再點一次已選的名次可以取消；「晉級／出席」可同時給多位選手。
+            </p>
+
+            <div class="mt-4 flex justify-end gap-2">
+              <button type="button" class="btn-judo-outline" @click="clearAthleteRank">
+                {{ $t("reset") }}
+              </button>
+              <button
+                type="button"
+                class="btn-judo-primary"
+                :disabled="savingAthlete"
+                @click="saveAthleteResult"
+              >
                 <SaveOutlined />
                 {{ $t("save") }}
               </button>
@@ -351,8 +481,13 @@ export default {
   props: ["competitionResults", "competition"],
   data() {
     return {
+      entryMode: "group",
       selectedCategoryWeight: null,
       athletes: [],
+      // 以選手為單位
+      selectedAthleteId: null,
+      athleteRank: null,
+      savingAthlete: false,
       participateAthletes: [],
       // 匯入賽果
       importVisible: false,
@@ -406,6 +541,60 @@ export default {
     },
     categories() {
       return this.competition.categories_weights || [];
+    },
+    allApplications() {
+      return this.competition.applications || [];
+    },
+    // 「以選手為單位」的下拉選項：姓名 · 組別 · 量級（可搜尋）
+    athleteOptions() {
+      return [...this.allApplications]
+        .sort((a, b) => {
+          const categoryA = this.categoryLabel(a.category);
+          const categoryB = this.categoryLabel(b.category);
+          if (categoryA !== categoryB) return categoryA.localeCompare(categoryB);
+          const weightA = this.weightLabel(a);
+          const weightB = this.weightLabel(b);
+          if (weightA !== weightB) return weightA.localeCompare(weightB);
+
+          return (a.display_name || a.name_zh || "").localeCompare(
+            b.display_name || b.name_zh || ""
+          );
+        })
+        .map((application) => ({
+          value: application.id,
+          label: [
+            application.display_name || application.name_zh || application.name_fn || "—",
+            this.categoryLabel(application.category),
+            this.weightLabel(application),
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        }));
+    },
+    selectedAthlete() {
+      if (!this.selectedAthleteId) {
+        return null;
+      }
+
+      return (
+        this.allApplications.find(
+          (application) => application.id === this.selectedAthleteId
+        ) || null
+      );
+    },
+    selectedAthleteLabel() {
+      if (!this.selectedAthlete) {
+        return "";
+      }
+      const athlete = this.selectedAthlete;
+
+      return [
+        athlete.display_name || athlete.name_zh || athlete.name_fn || "—",
+        this.categoryLabel(athlete.category),
+        this.weightLabel(athlete),
+      ]
+        .filter(Boolean)
+        .join(" · ");
     },
     selectedCategoryWeightLabel() {
       if (!this.selectedCategoryWeight) {
@@ -561,9 +750,55 @@ export default {
         }
       );
     },
+    // ---- 以選手為單位輸入成績 ----
+    filterAthleteOption(input, option) {
+      const keyword = (input || "").trim().toLowerCase();
+
+      return (option.label || "").toLowerCase().includes(keyword);
+    },
+    onSelectAthlete(id) {
+      const athlete = this.allApplications.find(
+        (application) => application.id === id
+      );
+      this.athleteRank = athlete?.result_rank || null;
+    },
+    toggleAthleteRank(value) {
+      this.athleteRank = this.athleteRank === value ? null : value;
+    },
+    clearAthleteRank() {
+      this.athleteRank = null;
+    },
+    saveAthleteResult() {
+      if (!this.selectedAthleteId) {
+        return;
+      }
+
+      const clearing = !this.athleteRank;
+      this.savingAthlete = true;
+
+      this.$inertia.post(
+        route("manage.competition.results.athlete", {
+          competition: this.competition.id,
+        }),
+        {
+          application_id: this.selectedAthleteId,
+          result_rank: this.athleteRank || null,
+        },
+        {
+          preserveScroll: true,
+          onSuccess: () => {
+            this.savingAthlete = false;
+            this.$message.success(clearing ? "已清除成績" : "成績已儲存");
+          },
+          onError: () => {
+            this.savingAthlete = false;
+            this.$message.error("儲存失敗");
+          },
+        }
+      );
+    },
     // 匯入賽果
-    submitImport() {
-      if (!this.importFiles.length) {
+    submitImport() {      if (!this.importFiles.length) {
         this.$message.warning("請先選擇檔案");
         return;
       }

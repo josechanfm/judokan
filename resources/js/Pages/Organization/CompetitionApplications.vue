@@ -179,8 +179,9 @@
             :columns="columns"
             :pagination="pagination"
             :rowSelection="rowSelection"
-            :scroll="{ x: 1342 }"
+            :scroll="{ x: 1452 }"
             rowKey="id"
+            @change="handleTableChange"
           >
             <template #headerCell="{ column }">
               <span class="whitespace-nowrap">
@@ -241,6 +242,14 @@
               </template>
               <template v-else-if="column.dataIndex == 'organization'">
                 <span class="text-gray-700">{{ organizationName(record) }}</span>
+              </template>
+              <template v-else-if="column.dataIndex == 'member'">
+                <span
+                  class="ja-pill"
+                  :class="isMember(record) ? 'ja-pill-green' : 'ja-pill-gray'"
+                >
+                  {{ isMember(record) ? $t("member") : $t("non_member") }}
+                </span>
               </template>
               <template v-else-if="column.dataIndex == 'role'">
                 <span
@@ -747,7 +756,14 @@ export default {
     UserOutlined,
     WarningOutlined,
   },
-  props: ["competitionResults", "competition", "organizations", "members"],
+  props: [
+    "competitionResults",
+    "competition",
+    "organizations",
+    "members",
+    "sort",
+    "sortDirection",
+  ],
   data() {
     return {
       dateFormat: "YYYY-MM-DD",
@@ -766,36 +782,6 @@ export default {
         mode: "",
       },
       acceptDisabled: false,
-      columns: [
-        { title: "athlete", i18n: "athlete", dataIndex: "athlete", width: 230 },
-        { title: "gender", i18n: "gender", dataIndex: "gender", width: 80 },
-        {
-          title: "organization",
-          i18n: "organization",
-          dataIndex: "organization",
-          width: 150,
-        },
-        { title: "role", i18n: "role", dataIndex: "role", width: 110 },
-        { title: "category", i18n: "category", dataIndex: "category", width: 200 },
-        {
-          title: "accepted",
-          i18n: "competition_accepted",
-          dataIndex: "accepted",
-          width: 90,
-        },
-        {
-          title: "result",
-          i18n: "competition_result",
-          dataIndex: "competition_result",
-          width: 190,
-        },
-        {
-          title: "operation",
-          i18n: "operation",
-          dataIndex: "operation",
-          width: 260,
-        },
-      ],
       rules: {
         organization_id: { required: true },
         name_fn: { required: true },
@@ -856,6 +842,56 @@ export default {
     };
   },
   computed: {
+    // 排序由後端處理（sorter: true），這裡只負責顯示目前的排序箭頭
+    columns() {
+      const columns = [
+        { title: "athlete", i18n: "athlete", dataIndex: "athlete", width: 230 },
+        { title: "gender", i18n: "gender", dataIndex: "gender", width: 80 },
+        {
+          title: "organization",
+          i18n: "organization",
+          dataIndex: "organization",
+          width: 150,
+        },
+        {
+          title: "member",
+          i18n: "member_status",
+          dataIndex: "member",
+          width: 110,
+        },
+        { title: "role", i18n: "role", dataIndex: "role", width: 110 },
+        { title: "category", i18n: "category", dataIndex: "category", width: 200 },
+        {
+          title: "accepted",
+          i18n: "competition_accepted",
+          dataIndex: "accepted",
+          width: 90,
+        },
+        {
+          title: "result",
+          i18n: "competition_result",
+          dataIndex: "competition_result",
+          width: 190,
+        },
+        {
+          title: "operation",
+          i18n: "operation",
+          dataIndex: "operation",
+          width: 260,
+        },
+      ];
+
+      return columns.map((column) => ({
+        ...column,
+        sorter: column.dataIndex !== "operation",
+        sortOrder:
+          this.sort === column.dataIndex
+            ? this.sortDirection === "desc"
+              ? "descend"
+              : "ascend"
+            : null,
+      }));
+    },
     breadcrumb() {
       return [
         { label: this.$t("competitions"), url: route("manage.competitions.index") },
@@ -1273,6 +1309,29 @@ export default {
       );
 
       return organization?.title || "—";
+    },
+    // 報名時有連結到會員（member_id）才算會員，公開報名者為非會員
+    isMember(record) {
+      return !!record.member_id;
+    },
+    // 表頭排序：交回後端以 ORDER BY 重新載入（取消排序則回到預設次序）
+    handleTableChange(pagination, tableFilters, sorter) {
+      const field = sorter && sorter.order ? sorter.columnKey || sorter.field : null;
+      const direction =
+        sorter && sorter.order ? (sorter.order === "descend" ? "desc" : "asc") : null;
+
+      // 只是換頁／套用篩選，排序沒變就不重新載入
+      if ((this.sort || null) === (field || null) && (this.sortDirection || null) === direction) {
+        return;
+      }
+
+      this.currentPage = 1;
+
+      this.$inertia.get(
+        route("manage.competition.applications.index", this.competition.id),
+        field ? { sort: field, direction } : {},
+        { preserveState: true, preserveScroll: true, replace: true }
+      );
     },
     // 統一的更新入口：儲存後保留滾動位置並重新載入資料
     saveRecord(record, data, successMessage) {

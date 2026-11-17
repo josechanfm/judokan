@@ -168,7 +168,7 @@
               <div class="mb-3">
                 <h3 class="ja-section-title m-0 border-0 pb-0">{{ $t("group") }}</h3>
                 <p class="m-0 mt-1 text-xs text-gray-400">
-                  勾選組別後，可在組別下方選擇要舉辦的公斤級，預設為全部選取。
+                  已按賽事類型（澳門賽／國際賽）分類，展開後勾選組別，再於組別下方選擇要舉辦的公斤級，預設為全部選取。
                 </p>
               </div>
 
@@ -177,81 +177,123 @@
                   v-model:value="competitionData.cwSelected"
                   class="w-full"
                 >
-                  <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-                    <div
-                      v-for="cw in categories_weights"
-                      :key="cw.code"
-                      class="ja-option-box"
-                      :class="{
-                        'ja-option-box-active': competitionData.cwSelected.includes(
-                          cw.code
-                        ),
-                      }"
+                  <a-collapse
+                    v-model:activeKey="expandedGroupSections"
+                    class="ja-group-collapse"
+                    ghost
+                  >
+                    <a-collapse-panel
+                      v-for="section in groupSections"
+                      :key="section.key"
                     >
-                      <a-checkbox :value="cw.code">
-                        <span class="font-medium">{{ cw.name }}</span>
-                        <span v-if="cw.description" class="ml-1 text-xs text-gray-400">
-                          {{ cw.description }}
+                      <template #header>
+                        <span class="flex items-center gap-2">
+                          <a-tag
+                            :color="section.key === 'macau' ? 'blue' : 'purple'"
+                            class="m-0 rounded-full px-3 py-1 font-medium"
+                          >
+                            {{ section.label }}
+                          </a-tag>
+                          <span class="text-xs text-gray-400">
+                            已選 {{ selectedGroupCount(section) }} /
+                            {{ section.items.length }}
+                          </span>
                         </span>
-                      </a-checkbox>
+                      </template>
 
-                      <!-- 選了組別才顯示該組別的各級重量 -->
-                      <div
-                        v-if="competitionData.cwSelected.includes(cw.code)"
-                        class="mt-2 space-y-2 border-t border-slate-100 pt-2"
-                      >
-                        <div v-for="group in weightGroups(cw)" :key="group.gender">
-                          <div class="mb-1 flex items-center justify-between gap-2">
-                            <span class="ja-mini-label">{{
-                              genderLabel(group.gender)
-                            }}</span>
-                            <span class="flex items-center gap-2">
-                              <button
-                                type="button"
-                                class="ja-link"
-                                @click="selectAllWeights(cw.code, group.gender, true)"
-                              >
-                                全選
-                              </button>
-                              <span class="text-xs text-slate-300">|</span>
-                              <button
-                                type="button"
-                                class="ja-link ja-link-muted"
-                                @click="selectAllWeights(cw.code, group.gender, false)"
-                              >
-                                全不選
-                              </button>
-                            </span>
-                          </div>
-                          <div class="flex flex-wrap gap-1">
-                            <button
-                              v-for="weight in group.items"
-                              :key="group.gender + '-' + weight.code"
-                              type="button"
-                              class="ja-weight-chip ja-weight-chip-toggle"
-                              :class="{
-                                'ja-weight-chip-off': !isWeightSelected(
-                                  cw.code,
-                                  group.gender,
-                                  weight.code
-                                ),
-                              }"
-                              :aria-pressed="
-                                isWeightSelected(cw.code, group.gender, weight.code)
-                              "
-                              @click="toggleWeight(cw.code, group.gender, weight.code)"
+                      <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                        <div
+                          v-for="cw in section.items"
+                          :key="cw.code"
+                          class="ja-option-box"
+                          :class="{
+                            'ja-option-box-active': competitionData.cwSelected.includes(
+                              cw.code
+                            ),
+                          }"
+                        >
+                          <a-checkbox :value="cw.code">
+                            <span class="font-medium">{{ cw.name }}</span>
+                            <span
+                              v-if="cw.description"
+                              class="ml-1 text-xs text-gray-400"
                             >
-                              {{ weight.name }}
-                            </button>
+                              {{ cw.description }}
+                            </span>
+                          </a-checkbox>
+
+                          <!-- 選了組別才顯示該組別的各級重量 -->
+                          <div
+                            v-if="competitionData.cwSelected.includes(cw.code)"
+                            class="mt-2 space-y-2 border-t border-slate-100 pt-2"
+                          >
+                            <div
+                              v-for="group in weightGroups(cw)"
+                              :key="group.gender"
+                            >
+                              <div
+                                class="mb-1 flex items-center justify-between gap-2"
+                              >
+                                <span class="ja-mini-label">{{
+                                  genderLabel(group.gender)
+                                }}</span>
+                                <span class="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    class="ja-link"
+                                    @click="selectAllWeights(cw.code, group.gender, true)"
+                                  >
+                                    全選
+                                  </button>
+                                  <span class="text-xs text-slate-300">|</span>
+                                  <button
+                                    type="button"
+                                    class="ja-link ja-link-muted"
+                                    @click="
+                                      selectAllWeights(cw.code, group.gender, false)
+                                    "
+                                  >
+                                    全不選
+                                  </button>
+                                </span>
+                              </div>
+                              <div class="flex flex-wrap gap-1">
+                                <button
+                                  v-for="weight in group.items"
+                                  :key="group.gender + '-' + weight.code"
+                                  type="button"
+                                  class="ja-weight-chip ja-weight-chip-toggle"
+                                  :class="{
+                                    'ja-weight-chip-off': !isWeightSelected(
+                                      cw.code,
+                                      group.gender,
+                                      weight.code
+                                    ),
+                                  }"
+                                  :aria-pressed="
+                                    isWeightSelected(
+                                      cw.code,
+                                      group.gender,
+                                      weight.code
+                                    )
+                                  "
+                                  @click="
+                                    toggleWeight(cw.code, group.gender, weight.code)
+                                  "
+                                >
+                                  {{ weight.name }}
+                                </button>
+                              </div>
+                            </div>
+                            <p class="m-0 text-xs text-gray-400">
+                              已選 {{ selectedWeightCount(cw) }} /
+                              {{ totalWeightCount(cw) }} 個公斤級
+                            </p>
                           </div>
                         </div>
-                        <p class="m-0 text-xs text-gray-400">
-                          已選 {{ selectedWeightCount(cw) }} /
-                          {{ totalWeightCount(cw) }} 個公斤級
-                        </p>
                       </div>
-                    </div>
-                  </div>
+                    </a-collapse-panel>
+                  </a-collapse>
                 </a-checkbox-group>
               </a-form-item>
             </div>
@@ -621,6 +663,8 @@ export default {
       mode: null,
       // { [組別 code]: { male: [量級 code], female: [量級 code], mixed: [量級 code] } }
       cwWeightSelected: {},
+      // 已展開的組別分類（macau / international），預設收起，有選擇時才自動展開
+      expandedGroupSections: [],
       dateFormat: "YYYY-MM-DD",
       dateList: [],
       loading: false,
@@ -691,6 +735,24 @@ export default {
     };
   },
   computed: {
+    // 組別依賽事類型分類（澳門賽 / 國際賽），未設定分類的舊資料一律歸入澳門賽
+    groupSections() {
+      const sections = [
+        { key: "macau", label: this.$t("macau_competition"), items: [] },
+        {
+          key: "international",
+          label: this.$t("international_competition"),
+          items: [],
+        },
+      ];
+
+      (this.categories_weights || []).forEach((cw) => {
+        const key = cw.group_type === "international" ? "international" : "macau";
+        sections.find((section) => section.key === key).items.push(cw);
+      });
+
+      return sections.filter((section) => section.items.length > 0);
+    },
     // 積分表選項（0 = 不計分）
     scoreOptions() {
       const options = (this.competitionScores || []).map((score) => ({
@@ -753,6 +815,15 @@ export default {
         "code"
       );
 
+      // 編輯時自動展開已勾選組別所屬的分類
+      this.expandedGroupSections = this.groupSections
+        .filter((section) =>
+          section.items.some((cw) =>
+            this.competitionData.cwSelected.includes(cw.code)
+          )
+        )
+        .map((section) => section.key);
+
       this.initWeightSelectionFromSaved(
         this.parseJsonArray(this.competition.categories_weights)
       );
@@ -807,6 +878,12 @@ export default {
     },
 
     // 取得組別中某性別的完整量級清單
+    selectedGroupCount(section) {
+      return section.items.filter((cw) =>
+        this.competitionData.cwSelected.includes(cw.code)
+      ).length;
+    },
+
     weightListOf(category, gender) {
       if (!category || !Array.isArray(category[gender])) return [];
 
@@ -1271,6 +1348,19 @@ export default {
 </script>
 
 <style scoped>
+.ja-group-collapse :deep(.ant-collapse-item) {
+  border-bottom: 1px solid #f1f5f9;
+}
+.ja-group-collapse :deep(.ant-collapse-item:last-child) {
+  border-bottom: 0;
+}
+.ja-group-collapse :deep(.ant-collapse-header) {
+  align-items: center !important;
+  padding: 8px 0 !important;
+}
+.ja-group-collapse :deep(.ant-collapse-content-box) {
+  padding: 4px 0 12px !important;
+}
 .ja-section-title {
   margin: 0 0 12px;
   padding-bottom: 8px;

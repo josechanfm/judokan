@@ -47,7 +47,7 @@
           />
         </div>
         <p class="m-0 pb-1 text-xs text-gray-400">
-          勾選後按右上角「{{ $t("save") }}」套用；「{{ $t("training_camps") }}」只會顯示{{ $t("team_member") }}。
+          勾選後按右上角「{{ $t("save") }}」套用；「{{ $t("training_camps") }}」會顯示{{ $t("team_member") }}及{{ $t("club_athlete") }}。
         </p>
       </div>
 

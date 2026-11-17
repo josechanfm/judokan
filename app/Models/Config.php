@@ -10,7 +10,7 @@ class Config extends Model
 {
     use HasFactory;
     //protected $casts=['value'=>'json'];
-    protected $fillable=['organization_id','key','value','remark'];
+    protected $fillable=['organization_id','key','group_type','value','remark'];
     
     static function item($key,$organization=null)
     {
@@ -58,7 +58,12 @@ class Config extends Model
         $collections=[];
         if(!empty($items)){
             foreach($items as $item){
-                $collections[]=json_decode($item->value,true);
+                $value=json_decode($item->value,true);
+                // 讓前端可分辨組別屬於澳門賽（macau）還是國際賽（international）
+                if(is_array($value)){
+                    $value['group_type']=$item->group_type;
+                }
+                $collections[]=$value;
             }
         }
         return $collections;

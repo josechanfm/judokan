@@ -18,6 +18,7 @@ class ConfigSeeder extends Seeder
        DB::table('configs')->insert([
         'organization_id'=>0,
         'key'=>'categories_weights',
+        'group_type'=>'macau',
         'value'=>'{
             "code": "public",
             "name": "公開組",
@@ -89,6 +90,7 @@ class ConfigSeeder extends Seeder
     DB::table('configs')->insert([
         'organization_id'=>0,
         'key'=>'categories_weights',
+        'group_type'=>'macau',
         'value'=>'{
             "code":"junior_a",
             "name": "少年A組",
@@ -160,6 +162,7 @@ class ConfigSeeder extends Seeder
     DB::table('configs')->insert([
         'organization_id'=>0,
         'key'=>'categories_weights',
+        'group_type'=>'macau',
         'value'=>'{
             "code": "junior_b",
             "name": "少年B組",
@@ -239,6 +242,7 @@ class ConfigSeeder extends Seeder
     DB::table('configs')->insert([
         'organization_id'=>0,
         'key'=>'categories_weights',
+        'group_type'=>'macau',
         'value'=>'{
             "code": "child_c",
             "name": "兒童C組",
@@ -334,6 +338,7 @@ class ConfigSeeder extends Seeder
     DB::table('configs')->insert([
         'organization_id' => 0,
         'key' => 'categories_weights',
+        'group_type' => 'macau',
         'value' => '{
             "code": "child_d",
             "name": "兒童D組",
@@ -365,6 +370,7 @@ class ConfigSeeder extends Seeder
     DB::table('configs')->insert([
         'organization_id' => 0,
         'key' => 'categories_weights',
+        'group_type' => 'macau',
         'value' => '{
             "code": "child_e",
             "name": "兒童E組",
@@ -390,6 +396,8 @@ class ConfigSeeder extends Seeder
             ]
         }'
     ]);
+
+    $this->call(InternationalCategoryConfigSeeder::class);
 
         DB::table('configs')->insert([
             'organization_id'=>0,

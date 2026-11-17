@@ -194,6 +194,7 @@ Route::group([
     Route::resource('competition/{competition}/applications', \App\Http\Controllers\Organization\CompetitionApplicationController::class)->names('manage.competition.applications');
     Route::post('competition/{competition}/results/import', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'import'])->name('manage.competition.results.import');
     Route::get('competition/{competition}/results/export', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'export'])->name('manage.competition.results.export');
+    Route::post('competition/{competition}/results/athlete', [\App\Http\Controllers\Organization\CompetitionResultController::class, 'storeAthlete'])->name('manage.competition.results.athlete');
     Route::resource('competition/{competition}/results', \App\Http\Controllers\Organization\CompetitionResultController::class)->names('manage.competition.results');
     Route::post('competition/delete_media', [\App\Http\Controllers\Organization\CompetitionController::class, 'deleteMedia'])->name('manage.competition.deleteMedia');
     Route::get('competition/application/{competition_application}/success', [\App\Http\Controllers\Organization\CompetitionApplicationController::class, 'success'])->name('manage.competition.application.success');

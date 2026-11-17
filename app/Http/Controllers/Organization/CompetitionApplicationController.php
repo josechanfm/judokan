@@ -28,16 +28,56 @@ class CompetitionApplicationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(Competition $competition)
+    public function index(Request $request, Competition $competition)
     {
-        $competition->setRelation(
-            'applications',
-            $competition->applications()
-                ->orderBy('category')
-                ->orderBy('weight')
-                ->orderBy('id')
-                ->get()
-        );
+        $sortField = $request->query('sort');
+        $sortDirection = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $applications = $competition->applications();
+
+        // 欄位排序（後端處理），未指定時預設「會員先 → 組別 → 量級 → 姓名」
+        switch ($sortField) {
+            case 'athlete':
+                $applications->orderBy('name_zh', $sortDirection)
+                    ->orderBy('name_fn', $sortDirection);
+                break;
+            case 'gender':
+                $applications->orderBy('gender', $sortDirection);
+                break;
+            case 'organization':
+                $applications->orderBy('organization_id', $sortDirection);
+                break;
+            case 'member':
+                // member_id 有值＝會員，asc 時會員排前面
+                $applications->orderByRaw("member_id IS NULL {$sortDirection}");
+                break;
+            case 'role':
+                $applications->orderBy('role', $sortDirection);
+                break;
+            case 'category':
+                $applications->orderBy('category', $sortDirection);
+                break;
+            case 'accepted':
+                $applications->orderBy('accepted', $sortDirection);
+                break;
+            case 'competition_result':
+                $applications->orderBy('result_rank', $sortDirection);
+                break;
+            default:
+                $sortField = null;
+                $applications->orderByRaw('member_id IS NULL asc')
+                    ->orderBy('category')
+                    ->orderBy('weight')
+                    ->orderBy('name_zh');
+                break;
+        }
+
+        if ($sortField) {
+            // 同一排序值時保持組別／量級的穩定次序
+            $applications->orderBy('category')->orderBy('weight')->orderBy('id');
+        }
+
+        $competition->setRelation('applications', $applications->get());
         $competition->score;
         // competitions 的 JSON 欄位可能是雙重編碼，一律正規化
         $competition->roles = $this->decodeJson($competition->roles);
@@ -79,6 +119,8 @@ class CompetitionApplicationController extends Controller
             'competitionResults' => Config::item('competition_results'),
             'organizations' => Organization::all(),
             'members' => $members,
+            'sort' => $sortField,
+            'sortDirection' => $sortField ? $sortDirection : null,
             'competition' => $competition
         ]);
     }

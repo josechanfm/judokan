@@ -87,10 +87,13 @@
               class="w-full sm:w-64 rounded-xl"
               @search="handleSearch"
             />
-            <a-button class="flex items-center justify-center border-gray-300 rounded-xl">
-              <FilterOutlined />
-              {{ $t("filter") }}
-            </a-button>
+            <a-select
+              v-model:value="groupTypeFilter"
+              :options="groupTypeFilterOptions"
+              class="w-full sm:w-48 rounded-xl"
+            >
+              <template #suffixIcon><FilterOutlined /></template>
+            </a-select>
           </div>
         </div>
 
@@ -168,11 +171,30 @@
                 </template>
 
                 <template v-else-if="column.dataIndex == 'key'">
-                  <code
-                    class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800"
+                  <div class="flex flex-col gap-1">
+                    <code
+                      class="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800"
+                    >
+                      {{ record.key }}
+                    </code>
+                    <span
+                      v-if="groupName(record)"
+                      class="text-xs font-medium text-gray-500"
+                    >
+                      {{ groupName(record) }}
+                    </span>
+                  </div>
+                </template>
+
+                <template v-else-if="column.dataIndex == 'group_type'">
+                  <a-tag
+                    v-if="record.group_type"
+                    :color="record.group_type === 'macau' ? 'blue' : 'purple'"
+                    class="rounded-full px-3 py-1 font-medium"
                   >
-                    {{ record.key }}
-                  </code>
+                    {{ groupTypeLabel(record.group_type) }}
+                  </a-tag>
+                  <span v-else class="text-gray-400 text-sm">-</span>
                 </template>
 
                 <template v-else-if="column.dataIndex == 'value'">
@@ -274,6 +296,20 @@
         </a-form-item>
 
         <a-form-item
+          :label="$t('group_type')"
+          name="group_type"
+          :label-style="{ fontWeight: '500', color: '#374151' }"
+        >
+          <a-select
+            v-model:value="modal.data.group_type"
+            :options="groupTypeOptions"
+            :placeholder="$t('select_group_type')"
+            allowClear
+            class="w-full rounded-xl"
+          />
+        </a-form-item>
+
+        <a-form-item
           :label="$t('value')"
           name="value"
           :label-style="{ fontWeight: '500', color: '#374151' }"
@@ -360,6 +396,7 @@ export default {
   data() {
     return {
       searchText: "",
+      groupTypeFilter: "",
       submitting: false,
       modal: {
         isOpen: false,
@@ -379,6 +416,12 @@ export default {
           i18n: "key",
           dataIndex: "key",
           width: 200,
+        },
+        {
+          title: "Group Type",
+          i18n: "group_type",
+          dataIndex: "group_type",
+          width: 130,
         },
         {
           title: "Remark",
@@ -422,14 +465,38 @@ export default {
         ...this.organizations,
       ];
     },
+    groupTypeOptions() {
+      return [
+        { value: "macau", label: this.$t("macau_competition") },
+        { value: "international", label: this.$t("international_competition") },
+      ];
+    },
+    groupTypeFilterOptions() {
+      return [{ value: "", label: this.$t("all") }, ...this.groupTypeOptions];
+    },
     filteredConfigs() {
-      if (!this.searchText) return this.configs;
+      let configs = this.configs;
+
+      if (this.groupTypeFilter) {
+        configs = configs.filter(
+          (config) =>
+            config.group_type === this.groupTypeFilter ||
+            // 未設定分類的組別設定一律視為澳門賽
+            (!config.group_type &&
+              config.key === "categories_weights" &&
+              this.groupTypeFilter === "macau")
+        );
+      }
+
+      if (!this.searchText) return configs;
+
       const search = this.searchText.toLowerCase();
-      return this.configs.filter(
+      return configs.filter(
         (config) =>
           config.key?.toLowerCase().includes(search) ||
           config.value?.toLowerCase().includes(search) ||
           config.remark?.toLowerCase().includes(search) ||
+          this.groupTypeLabel(config.group_type)?.toLowerCase().includes(search) ||
           this.getOrganizationName(config.organization_id)?.toLowerCase().includes(search)
       );
     },
@@ -439,6 +506,20 @@ export default {
       if (organizationId === 0) return this.$t("general");
       const org = this.organizations.find((org) => org.id === organizationId);
       return org ? org.full_name : "-";
+    },
+    groupTypeLabel(groupType) {
+      if (groupType === "macau") return this.$t("macau_competition");
+      if (groupType === "international") return this.$t("international_competition");
+      return "";
+    },
+    // 組別設定（categories_weights）的 value 是單一組別的 JSON，列表上顯示組別名稱方便辨識
+    groupName(record) {
+      if (record.key !== "categories_weights") return "";
+      try {
+        return JSON.parse(record.value)?.name || "";
+      } catch (e) {
+        return "";
+      }
     },
     formatDate(dateString) {
       if (!dateString) return "-";
@@ -465,12 +546,16 @@ export default {
       this.modal.isOpen = false;
       this.modal.data = {};
     },
+    // 清空分類時 a-select 會給 undefined，這裡轉成 null 才會寫回資料庫
+    modalPayload() {
+      return { ...this.modal.data, group_type: this.modal.data.group_type || null };
+    },
     storeRecord() {
       this.submitting = true;
       this.$refs.modalRef
         .validateFields()
         .then(() => {
-          this.$inertia.post(route("admin.configs.store"), this.modal.data, {
+          this.$inertia.post(route("admin.configs.store"), this.modalPayload(), {
             onSuccess: (page) => {
               this.modal.isOpen = false;
               this.submitting = false;
@@ -494,7 +579,7 @@ export default {
         .then(() => {
           this.$inertia.patch(
             route("admin.configs.update", this.modal.data.id),
-            this.modal.data,
+            this.modalPayload(),
             {
               onSuccess: (page) => {
                 this.modal.isOpen = false;
